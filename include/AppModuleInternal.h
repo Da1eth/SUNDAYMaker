@@ -51,6 +51,9 @@ HRESULT AppUiResourcesInitialise( HINSTANCE );
 VOID    AppUiResourcesFinalise( VOID );
 HRESULT AppUiFontsInitialise( VOID );
 VOID    AppUiFontsFinalise( VOID );
+HRESULT AppTrayIconInitialise( HWND );
+VOID    AppTrayIconFinalise( VOID );
+BOOLEAN AppTrayIconHandleWindowMessage( HWND, UINT, WPARAM, LPARAM, LRESULT * );
 VOID    AppBackgroundPageLoadTick( HWND );
 
 BOOLEAN AppHandleMainCommand( HWND, INT );

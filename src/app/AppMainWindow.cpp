@@ -80,6 +80,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hWnd, WM_WINDOWPOSCHANGING, Cls_OnWindowPosChanging);
 
     default:
+        if (AppTrayIconHandleWindowMessage(hWnd, message, wParam, lParam, &lResult))
+        {
+            return lResult;
+        }
+
         if (WndProcHandleMiscMessage(hWnd, message, wParam, lParam, &lResult))
         {
             return lResult;
