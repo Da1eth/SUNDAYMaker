@@ -1,0 +1,91 @@
+#pragma code_page(65001)
+
+#include "resource.h"
+#include "UiText.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+#ifndef APSTUDIO_INVOKED
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDR_HEADKASEN_TTF       RCDATA                  "font\\HeadKasen.ttf"
+
+#include "rc/Icon.rc"
+#include "rc/SundayMain.rc"
+#include "rc/DocSearchCtrl.rc"
+#include "rc/FrameCtrl.rc"
+#include "rc/InsertColor.rc"
+#include "rc/LayerBox.rc"
+#include "rc/PageCtrl.rc"
+#include "rc/Setting.rc"
+#include "rc/ViewTrace.rc"
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+    END
+
+    IDD_FRAME_EDIT_DLG_2, DIALOG
+    BEGIN
+    END
+
+    IDD_PAGE_NAME_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_GENERAL_OPTION_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_TRACEADJUST_DLG2, DIALOG
+    BEGIN
+    END
+
+    IDD_IMAGE_OPEN_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_MSGCHECKBOX_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_CONTEXT_ITEM_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_FIND_STRING_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_COLOUR_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_COLOUR_TAG_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_GRADIENT_TAG_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_ACCEL_KEY_DLG, DIALOG
+    BEGIN
+    END
+END
+
+#endif
+
+#endif
+
+#ifndef APSTUDIO_INVOKED
+#endif
+
