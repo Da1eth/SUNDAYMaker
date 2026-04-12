@@ -95,6 +95,7 @@ BOOLEAN Cls_OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 {
     RECT clRect, tbRect;
     RECT tiRect;
+    TCHAR atInitialTabName[MAX_PATH];
     TCITEM stTcItem;
     TTTOOLINFO stToolInfo;
     HINSTANCE lcInst = lpCreateStruct->hInstance;
@@ -114,7 +115,9 @@ BOOLEAN Cls_OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 
     ZeroMemory(&stTcItem, sizeof(TCITEM));
     stTcItem.mask = TCIF_TEXT;
-    stTcItem.pszText = NAMELESS_DUMMY;
+    StringCchPrintf(atInitialTabName, MAX_PATH, TEXT("%s1.%s"),
+                    NAME_DUMMY_NAME, NAME_DUMMY_EXT);
+    stTcItem.pszText = atInitialTabName;
     TabCtrl_InsertItem(ghFileTabWnd, 0, &stTcItem);
 
     ToolBarSizeGet(&tbRect);

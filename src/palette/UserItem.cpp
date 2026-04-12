@@ -12,29 +12,12 @@ struct UserItemEntry
 };
 
 TCHAR gatUserItemPath[MAX_PATH]{};
-UINT gdUserItemCount = 0;
-UserItemEntry gstUserItems[USER_ITEM_MAX]{};
+vector<UserItemEntry> gstUserItems;
 HMENU ghMainUserItemMenu = nullptr;
-
-void UserItemClearEntry(UserItemEntry &stEntry)
-{
-    for (auto &stLine : stEntry.vcUnits)
-    {
-        stLine.vcLine.clear();
-    }
-
-    stEntry.vcUnits.clear();
-    ZeroMemory(stEntry.atItemName, sizeof(stEntry.atItemName));
-}
 
 void UserItemClearAll()
 {
-    for (auto &stEntry : gstUserItems)
-    {
-        UserItemClearEntry(stEntry);
-    }
-
-    gdUserItemCount = 0;
+    gstUserItems.clear();
 }
 
 void UserItemPathInitialise()
@@ -122,12 +105,8 @@ HRESULT UserItemSetLines(vector<ONELINE> &vcUnits, LPCTSTR ptText, UINT cchSize)
 
 UINT CALLBACK UserItemLoadCallback(LPTSTR ptName, LPCTSTR ptCont, INT cchSize)
 {
-    if (USER_ITEM_MAX <= gdUserItemCount)
-    {
-        return 0;
-    }
-
-    auto &stEntry = gstUserItems[gdUserItemCount];
+    gstUserItems.emplace_back();
+    auto &stEntry = gstUserItems.back();
 
     if (ptName)
     {
@@ -139,14 +118,12 @@ UINT CALLBACK UserItemLoadCallback(LPTSTR ptName, LPCTSTR ptCont, INT cchSize)
         UserItemSetLines(stEntry.vcUnits, ptCont, static_cast<UINT>(cchSize));
     }
 
-    gdUserItemCount++;
-
     return 1;
 }
 
 LPTSTR UserItemTextLineAlloc(UINT idNum, INT uLine)
 {
-    if (gdUserItemCount <= idNum)
+    if (gstUserItems.size() <= static_cast<size_t>(idNum))
     {
         return nullptr;
     }
@@ -183,7 +160,7 @@ LPTSTR UserItemTextLineAlloc(UINT idNum, INT uLine)
 
 UINT UserItemCountGet(VOID)
 {
-    return gdUserItemCount;
+    return static_cast<UINT>(gstUserItems.size());
 }
 //-------------------------------------------------------------------------------------------------
 
@@ -243,31 +220,9 @@ INT UserItemInitialise(HWND hWnd, UINT bFirst)
 }
 //-------------------------------------------------------------------------------------------------
 
-HRESULT UserItemMenuWrite(HMENU hMenu, UINT bMode)
-{
-    TCHAR atBuffer[MAX_PATH];
-
-    for (UINT i = 0; i < gdUserItemCount; i++)
-    {
-        if (bMode)
-        {
-            StringCchPrintf(atBuffer, MAX_PATH, TEXT("%s(&%c)"), gstUserItems[i].atItemName, i + 'A');
-        }
-        else
-        {
-            StringCchCopy(atBuffer, MAX_PATH, gstUserItems[i].atItemName);
-        }
-
-        AppendMenu(hMenu, MF_STRING, (IDM_USERINS_ITEM_FIRST + i), atBuffer);
-    }
-
-    return S_OK;
-}
-//-------------------------------------------------------------------------------------------------
-
 HRESULT UserItemNameGet(UINT dNumber, LPTSTR ptNamed, UINT_PTR cchSize)
 {
-    if (gdUserItemCount <= dNumber)
+    if (gstUserItems.size() <= static_cast<size_t>(dNumber))
     {
         return E_OUTOFMEMORY;
     }
@@ -282,7 +237,7 @@ HRESULT UserItemInsert(HWND hWnd, UINT idNum)
 {
     UNREFERENCED_PARAMETER(hWnd);
 
-    if (gdUserItemCount <= idNum)
+    if (gstUserItems.size() <= static_cast<size_t>(idNum))
     {
         return E_OUTOFMEMORY;
     }

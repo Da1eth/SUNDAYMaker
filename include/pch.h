@@ -144,7 +144,6 @@ inline constexpr int TMPL_DOCK  = 150;
 inline constexpr COLORREF BASIC_COLOUR = RGB(0xF0,0xF0,0xF0);
 
 #define USER_ITEM_FILE    TEXT("UserItem.ast")
-inline constexpr int USER_ITEM_MAX = 16;
 
 #define AA_PALETTE_FILE  TEXT("AAPalette.json")
 #define FLIP_FILE        TEXT("Flip.json")
@@ -154,17 +153,13 @@ inline constexpr int USER_ITEM_MAX = 16;
 #define LEGACY_AA_MIRROR_FILE   TEXT("hantenX.txt")
 #define LEGACY_AA_UPSET_FILE    TEXT("hantenY.txt")
 
-#define NAMELESS_DUMMY   TEXT("NoName0.txt")
 #define NAME_DUMMY_NAME  TEXT("NoName")
 #define NAME_DUMMY_EXT   TEXT("txt")
 
 #define TEMPLATE_DIR     TEXT("Templates")
 #define BACKUP_DIR       TEXT("BackUp")
-#define PROFILE_DIR      TEXT("Profile")
 
 #define DROP_OBJ_NAME    TEXT("[*DROP_OBJECT*]")
-
-inline constexpr int FRAME_MAX = 20;
 
 inline constexpr UINT INIT_LOAD = 1;
 inline constexpr UINT INIT_SAVE = 0;

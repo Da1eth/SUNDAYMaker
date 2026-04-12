@@ -77,26 +77,7 @@ LPCTSTR ContextItemTextGet(const APP_COMMAND_ITEM &stItem)
 
 void ContextCommandTextBuild(UINT dCommandId, LPTSTR ptText, size_t cchText)
 {
-    TCHAR atBuffer[SUB_STRING];
-    const INT iFrameIndex = AppCommandFrameIndex(dCommandId);
-    const INT iUserItemIndex = AppCommandUserItemIndex(dCommandId);
-
-    StringCchCopy(ptText, cchText, AppCommandLabelGet(dCommandId));
-
-    if (0 <= iFrameIndex)
-    {
-        ZeroMemory(atBuffer, sizeof(atBuffer));
-        FrameNameLoad((UINT)iFrameIndex, atBuffer, SUB_STRING);
-        StringCchPrintf(ptText, cchText, TEXT("말풍선：%s"), atBuffer);
-        return;
-    }
-
-    if (0 <= iUserItemIndex)
-    {
-        ZeroMemory(atBuffer, sizeof(atBuffer));
-        UserItemNameGet((UINT)iUserItemIndex, atBuffer, SUB_STRING);
-        StringCchPrintf(ptText, cchText, TEXT("템플릿：%s"), atBuffer);
-    }
+    AppCommandDisplayNameCopy(dCommandId, ptText, cchText);
 }
 
 void ContextSubmenuAppendCommands(HMENU hSubMenu, const UINT *pdCommands,
@@ -109,20 +90,6 @@ void ContextSubmenuAppendCommands(HMENU hSubMenu, const UINT *pdCommands,
         ContextCommandTextBuild(pdCommands[i], atText, MAX_STRING);
         AppendMenu(hSubMenu, MF_STRING, pdCommands[i], atText);
     }
-}
-
-void ContextFrameSubmenuBuild(HMENU hSubMenu)
-{
-    for (UINT i = 0; FRAME_MAX > i; i++)
-    {
-        const UINT dCommandId = IDM_INSFRAME_ALPHA + i;
-        TCHAR atText[MAX_STRING];
-
-        ContextCommandTextBuild(dCommandId, atText, MAX_STRING);
-        AppendMenu(hSubMenu, MF_STRING, dCommandId, atText);
-    }
-
-    FrameNameModifyPopUp(hSubMenu, 1);
 }
 
 void ContextPopupAppendItem(HMENU hPopupMenu, const APP_COMMAND_ITEM &stItem)
@@ -151,14 +118,24 @@ void ContextPopupAppendItem(HMENU hPopupMenu, const APP_COMMAND_ITEM &stItem)
     switch (stItem.dCommandId)
     {
     case IDM_MN_INSFRAME_SEL:
-        hSubMenu = CreatePopupMenu();
-        ContextFrameSubmenuBuild(hSubMenu);
+        if (FAILED(MenuPickerCreatePagedMenu(&hSubMenu, MENU_PICKER_FRAME,
+                                             MENU_PICKER_MENU_GROUP_MAX)))
+        {
+            AppendMenu(hPopupMenu, MF_GRAYED | MF_STRING, 0, atText);
+            return;
+        }
+
         AppendMenu(hPopupMenu, MF_POPUP, (UINT_PTR)hSubMenu, atText);
         return;
 
     case IDM_MN_USER_REFS:
-        hSubMenu = CreatePopupMenu();
-        UserItemMenuWrite(hSubMenu, 1);
+        if (FAILED(MenuPickerCreatePagedMenu(&hSubMenu, MENU_PICKER_USERITEM,
+                                             MENU_PICKER_MENU_GROUP_MAX)))
+        {
+            AppendMenu(hPopupMenu, MF_GRAYED | MF_STRING, 0, atText);
+            return;
+        }
+
         AppendMenu(hPopupMenu, MF_POPUP, (UINT_PTR)hSubMenu, atText);
         return;
 
@@ -433,7 +410,7 @@ VOID CntxDlgAllListUp(HWND hDlg)
         if (!(pstItem))
             continue;
 
-        StringCchCopy(atText, SUB_STRING, ContextItemTextGet(*pstItem));
+        AppCommandDisplayNameCopy(pstItem->dCommandId, atText, SUB_STRING);
         if (AppCommandHasChildMenu(pstItem->dCommandId))
             StringCchCat(atText, SUB_STRING, TEXT(" (하위 메뉴 포함)"));
 
@@ -465,7 +442,8 @@ VOID CntxDlgBuildListUp(HWND hDlg)
         }
         else
         {
-            StringCchCopy(atText, SUB_STRING, ContextItemTextGet(stContextItem));
+            AppCommandDisplayNameCopy(stContextItem.dCommandId, atText,
+                                      SUB_STRING);
             if (AppCommandHasChildMenu(stContextItem.dCommandId))
                 StringCchCat(atText, SUB_STRING, TEXT("　　[＞"));
         }

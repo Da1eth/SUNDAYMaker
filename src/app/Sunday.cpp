@@ -123,7 +123,9 @@ HACCEL AccelKeyTableCreate(LPACCEL pstAccel, INT iEntry)
 HRESULT AppTitleChange(LPTSTR ptText)
 {
     LPTSTR ptName;
+    LPTSTR ptCurrentName;
     TCHAR atBuff[MAX_PATH];
+    TCHAR atDummyName[MAX_PATH];
 
     if (ptText)
     {
@@ -133,7 +135,26 @@ HRESULT AppTitleChange(LPTSTR ptText)
         }
         else
         {
-            ptName = NAMELESS_DUMMY;
+            ptCurrentName = nullptr;
+            if (ghFileTabWnd)
+            {
+                const INT iCurrentTab = TabCtrl_GetCurSel(ghFileTabWnd);
+                if (0 <= iCurrentTab)
+                {
+                    ptCurrentName = DocMultiFileNameGet(iCurrentTab);
+                }
+            }
+
+            if (ptCurrentName && 0 != ptCurrentName[0])
+            {
+                ptName = PathFindFileName(ptCurrentName);
+            }
+            else
+            {
+                StringCchPrintf(atDummyName, MAX_PATH, TEXT("%s1.%s"),
+                                NAME_DUMMY_NAME, NAME_DUMMY_EXT);
+                ptName = atDummyName;
+            }
         }
         StringCchPrintf(atBuff, MAX_PATH, TEXT("%s - %s"), gatAppTitle, ptName);
     }

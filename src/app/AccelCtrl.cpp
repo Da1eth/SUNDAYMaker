@@ -614,7 +614,7 @@ static VOID AccelKeyListInit(HWND hDlg, vector<ACCEL> *pvcAccel)
             continue;
         }
 
-        StringCchCopy(atBuffer, SUB_STRING, AppCommandLabelGet(dCommandId));
+        AppCommandDisplayNameCopy(dCommandId, atBuffer, SUB_STRING);
         stItem.mask = LVIF_TEXT | LVIF_PARAM;
         stItem.pszText = atBuffer;
         stItem.lParam = dCommandId;

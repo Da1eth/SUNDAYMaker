@@ -3,7 +3,105 @@
 
 namespace
 {
-constexpr APP_COMMAND_ITEM gatCommandItems[] = {
+constexpr UINT APP_COMMAND_FRAME_LIMIT = 20;
+constexpr UINT APP_COMMAND_USER_ITEM_LIMIT = 16;
+
+template <size_t N>
+constexpr UINT AppCommandArrayCount(const APP_COMMAND_ITEM (&)[N])
+{
+    return static_cast<UINT>(N);
+}
+
+template <size_t N>
+const APP_COMMAND_ITEM *AppCommandFindInArray(const APP_COMMAND_ITEM (&stItems)[N],
+                                              UINT dCommandId)
+{
+    for (const APP_COMMAND_ITEM &stItem : stItems)
+    {
+        if (stItem.dCommandId == dCommandId)
+            return &stItem;
+    }
+
+    return nullptr;
+}
+
+UINT AppCommandFrameIdAt(UINT dIndex)
+{
+    return IDM_INSFRAME_ALPHA + dIndex;
+}
+
+UINT AppCommandUserItemIdAt(UINT dIndex)
+{
+    return IDM_USER_ITEM_ALPHA + dIndex;
+}
+
+const APP_COMMAND_ITEM *AppCommandDynamicItem(UINT dCommandId)
+{
+    static APP_COMMAND_ITEM stDynamicItem{};
+
+    stDynamicItem.dCommandId = dCommandId;
+    stDynamicItem.ptFallbackLabel = nullptr;
+
+    return &stDynamicItem;
+}
+
+HRESULT AppCommandDefaultNameCopy(UINT dCommandId, LPTSTR ptText, size_t cchText)
+{
+    LPCTSTR ptSource;
+
+    ptSource = AppCommandLabelGet(dCommandId);
+    if (0 != ptSource[0])
+    {
+        StringCchCopy(ptText, cchText, ptSource);
+        return S_OK;
+    }
+
+    StringCchCopy(ptText, cchText, TEXT("（이름 불명）"));
+    return E_FAIL;
+}
+
+HRESULT AppCommandDynamicNameCopy(UINT dCommandId, LPTSTR ptText, size_t cchText)
+{
+    TCHAR atName[SUB_STRING];
+    const INT iFrameIndex = AppCommandFrameIndex(dCommandId);
+    const INT iUserItemIndex = AppCommandUserItemIndex(dCommandId);
+
+    if (0 <= iFrameIndex)
+    {
+        ZeroMemory(atName, sizeof(atName));
+        if (SUCCEEDED(FrameNameLoad((UINT)iFrameIndex, atName, SUB_STRING)) &&
+            0 != atName[0])
+        {
+            StringCchPrintf(ptText, cchText, TEXT("말풍선 : %s"), atName);
+        }
+        else
+        {
+            StringCchCopy(ptText, cchText, TEXT("말풍선 : (미등록)"));
+        }
+
+        return S_OK;
+    }
+
+    if (0 <= iUserItemIndex)
+    {
+        ZeroMemory(atName, sizeof(atName));
+        if (SUCCEEDED(UserItemNameGet((UINT)iUserItemIndex, atName, SUB_STRING)) &&
+            0 != atName[0])
+        {
+            StringCchPrintf(ptText, cchText, TEXT("유저 아이템 : %s"), atName);
+        }
+        else
+        {
+            StringCchCopy(ptText, cchText, TEXT("유저 아이템 : (미등록)"));
+        }
+
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
+constexpr APP_COMMAND_ITEM gatCommandItemsBeforeFrame[] = {
     {0, TEXT("- 구분선 -")},
     {IDM_NEWFILE, nullptr},
     {IDM_OPEN, nullptr},
@@ -39,43 +137,13 @@ constexpr APP_COMMAND_ITEM gatCommandItems[] = {
     {IDM_MN_INSFRAME_SEL, nullptr},
     {IDM_INSFRAME_EDIT, nullptr},
     {IDM_FRMINSBOX_OPEN, nullptr},
-    {IDM_INSFRAME_ALPHA, TEXT("말풍선 1")},
-    {IDM_INSFRAME_BRAVO, TEXT("말풍선 2")},
-    {IDM_INSFRAME_CHARLIE, TEXT("말풍선 3")},
-    {IDM_INSFRAME_DELTA, TEXT("말풍선 4")},
-    {IDM_INSFRAME_ECHO, TEXT("말풍선 5")},
-    {IDM_INSFRAME_FOXTROT, TEXT("말풍선 6")},
-    {IDM_INSFRAME_GOLF, TEXT("말풍선 7")},
-    {IDM_INSFRAME_HOTEL, TEXT("말풍선 8")},
-    {IDM_INSFRAME_INDIA, TEXT("말풍선 9")},
-    {IDM_INSFRAME_JULIETTE, TEXT("말풍선 10")},
-    {IDM_INSFRAME_KILO, TEXT("말풍선 11")},
-    {IDM_INSFRAME_LIMA, TEXT("말풍선 12")},
-    {IDM_INSFRAME_MIKE, TEXT("말풍선 13")},
-    {IDM_INSFRAME_NOVEMBER, TEXT("말풍선 14")},
-    {IDM_INSFRAME_OSCAR, TEXT("말풍선 15")},
-    {IDM_INSFRAME_PAPA, TEXT("말풍선 16")},
-    {IDM_INSFRAME_QUEBEC, TEXT("말풍선 17")},
-    {IDM_INSFRAME_ROMEO, TEXT("말풍선 18")},
-    {IDM_INSFRAME_SIERRA, TEXT("말풍선 19")},
-    {IDM_INSFRAME_TANGO, TEXT("말풍선 20")},
+};
+
+constexpr APP_COMMAND_ITEM gatCommandItemsBetweenFrameAndUser[] = {
     {IDM_MN_USER_REFS, nullptr},
-    {IDM_USER_ITEM_ALPHA, TEXT("유저 제작 템플릿 1")},
-    {IDM_USER_ITEM_BRAVO, TEXT("유저 제작 템플릿 2")},
-    {IDM_USER_ITEM_CHARLIE, TEXT("유저 제작 템플릿 3")},
-    {IDM_USER_ITEM_DELTA, TEXT("유저 제작 템플릿 4")},
-    {IDM_USER_ITEM_ECHO, TEXT("유저 제작 템플릿 5")},
-    {IDM_USER_ITEM_FOXTROT, TEXT("유저 제작 템플릿 6")},
-    {IDM_USER_ITEM_GOLF, TEXT("유저 제작 템플릿 7")},
-    {IDM_USER_ITEM_HOTEL, TEXT("유저 제작 템플릿 8")},
-    {IDM_USER_ITEM_INDIA, TEXT("유저 제작 템플릿 9")},
-    {IDM_USER_ITEM_JULIETTE, TEXT("유저 제작 템플릿 10")},
-    {IDM_USER_ITEM_KILO, TEXT("유저 제작 템플릿 11")},
-    {IDM_USER_ITEM_LIMA, TEXT("유저 제작 템플릿 12")},
-    {IDM_USER_ITEM_MIKE, TEXT("유저 제작 템플릿 13")},
-    {IDM_USER_ITEM_NOVEMBER, TEXT("유저 제작 템플릿 14")},
-    {IDM_USER_ITEM_OSCAR, TEXT("유저 제작 템플릿 15")},
-    {IDM_USER_ITEM_PAPA, TEXT("유저 제작 템플릿 16")},
+};
+
+constexpr APP_COMMAND_ITEM gatCommandItemsAfterUser[] = {
     {IDM_RIGHT_GUIDE_SET, nullptr},
     {IDM_INS_TOPSPACE, nullptr},
     {IDM_DEL_TOPSPACE, nullptr},
@@ -145,9 +213,17 @@ constexpr UINT gadColourCommands[] = {
     IDM_INSTAG_GRADIENT,
 };
 
+constexpr UINT AppCommandFixedItemCountInternal()
+{
+    return AppCommandArrayCount(gatCommandItemsBeforeFrame) +
+           AppCommandArrayCount(gatCommandItemsBetweenFrameAndUser) +
+           AppCommandArrayCount(gatCommandItemsAfterUser);
+}
+
 constexpr UINT AppCommandItemCountInternal()
 {
-    return static_cast<UINT>(sizeof(gatCommandItems) / sizeof(gatCommandItems[0]));
+    return AppCommandFixedItemCountInternal() + APP_COMMAND_FRAME_LIMIT +
+           APP_COMMAND_USER_ITEM_LIMIT;
 }
 }
 
@@ -158,19 +234,49 @@ UINT AppCommandCount(VOID)
 
 const APP_COMMAND_ITEM *AppCommandAt(UINT dIndex)
 {
+    const UINT dBeforeFrameCount = AppCommandArrayCount(gatCommandItemsBeforeFrame);
+    const UINT dBetweenCount = AppCommandArrayCount(gatCommandItemsBetweenFrameAndUser);
+
     if (AppCommandItemCountInternal() <= dIndex)
         return nullptr;
 
-    return &(gatCommandItems[dIndex]);
+    if (dBeforeFrameCount > dIndex)
+        return &(gatCommandItemsBeforeFrame[dIndex]);
+
+    dIndex -= dBeforeFrameCount;
+    if (APP_COMMAND_FRAME_LIMIT > dIndex)
+        return AppCommandDynamicItem(AppCommandFrameIdAt(dIndex));
+
+    dIndex -= APP_COMMAND_FRAME_LIMIT;
+    if (dBetweenCount > dIndex)
+        return &(gatCommandItemsBetweenFrameAndUser[dIndex]);
+
+    dIndex -= dBetweenCount;
+    if (APP_COMMAND_USER_ITEM_LIMIT > dIndex)
+        return AppCommandDynamicItem(AppCommandUserItemIdAt(dIndex));
+
+    return &(gatCommandItemsAfterUser[dIndex - APP_COMMAND_USER_ITEM_LIMIT]);
 }
 
 const APP_COMMAND_ITEM *AppCommandFind(UINT dCommandId)
 {
-    for (const APP_COMMAND_ITEM &stItem : gatCommandItems)
-    {
-        if (stItem.dCommandId == dCommandId)
-            return &stItem;
-    }
+    if (IDM_INSFRAME_ALPHA <= dCommandId && dCommandId <= IDM_INSFRAME_TANGO)
+        return AppCommandDynamicItem(dCommandId);
+
+    if (IDM_USER_ITEM_ALPHA <= dCommandId && dCommandId <= IDM_USER_ITEM_PAPA)
+        return AppCommandDynamicItem(dCommandId);
+
+    if (const APP_COMMAND_ITEM *pstItem =
+            AppCommandFindInArray(gatCommandItemsBeforeFrame, dCommandId))
+        return pstItem;
+
+    if (const APP_COMMAND_ITEM *pstItem =
+            AppCommandFindInArray(gatCommandItemsBetweenFrameAndUser, dCommandId))
+        return pstItem;
+
+    if (const APP_COMMAND_ITEM *pstItem =
+            AppCommandFindInArray(gatCommandItemsAfterUser, dCommandId))
+        return pstItem;
 
     return nullptr;
 }
@@ -193,26 +299,27 @@ LPCTSTR AppCommandLabelGet(UINT dCommandId)
 
 HRESULT AppCommandNameCopy(UINT dCommandId, LPTSTR ptText, size_t cchText)
 {
-    LPCTSTR ptSource;
-
-    ptSource = AppCommandLabelGet(dCommandId);
-    if (0 != ptSource[0])
-    {
-        StringCchCopy(ptText, cchText, ptSource);
+    if (SUCCEEDED(AppCommandDynamicNameCopy(dCommandId, ptText, cchText)))
         return S_OK;
-    }
 
-    StringCchCopy(ptText, cchText, TEXT("（이름 불명）"));
-    return E_FAIL;
+    return AppCommandDefaultNameCopy(dCommandId, ptText, cchText);
+}
+
+HRESULT AppCommandDisplayNameCopy(UINT dCommandId, LPTSTR ptText, size_t cchText)
+{
+    if (SUCCEEDED(AppCommandDynamicNameCopy(dCommandId, ptText, cchText)))
+        return S_OK;
+
+    return AppCommandDefaultNameCopy(dCommandId, ptText, cchText);
 }
 
 BOOLEAN AppCommandAllowedInAccel(UINT dCommandId)
 {
     if (IDM_INSFRAME_ALPHA <= dCommandId && dCommandId <= IDM_INSFRAME_TANGO)
-        return (dCommandId - IDM_INSFRAME_ALPHA) < 10;
+        return (dCommandId - IDM_INSFRAME_ALPHA) < APP_COMMAND_FRAME_LIMIT;
 
     if (IDM_USER_ITEM_ALPHA <= dCommandId && dCommandId <= IDM_USER_ITEM_PAPA)
-        return (dCommandId - IDM_USER_ITEM_ALPHA) < 10;
+        return (dCommandId - IDM_USER_ITEM_ALPHA) < APP_COMMAND_USER_ITEM_LIMIT;
 
     return TRUE;
 }
