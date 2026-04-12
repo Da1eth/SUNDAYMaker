@@ -6,12 +6,109 @@ namespace
     template<typename TRecord>
     using LEGACY_VECTOR_PARSER = BOOLEAN (*)(const wstring &, vector<TRecord> *);
 
+    using PATH_BUFFER = array<TCHAR, MAX_PATH>;
+
+    struct LEGACY_WINDOW_SECTION
+    {
+        LPCTSTR ptLegacySection;
+        LPCTSTR ptTargetSection;
+    };
+
+    struct LEGACY_FILE_PAIR
+    {
+        LPCTSTR ptLegacyPath;
+        LPCTSTR ptTargetPath;
+    };
+
+    struct AUTO_FILE_HANDLE
+    {
+        HANDLE hValue{INVALID_HANDLE_VALUE};
+
+        AUTO_FILE_HANDLE() = default;
+        explicit AUTO_FILE_HANDLE(HANDLE hHandle) : hValue(hHandle) {}
+
+        AUTO_FILE_HANDLE(const AUTO_FILE_HANDLE &) = delete;
+        AUTO_FILE_HANDLE &operator=(const AUTO_FILE_HANDLE &) = delete;
+
+        AUTO_FILE_HANDLE(AUTO_FILE_HANDLE &&stOther) noexcept : hValue(stOther.hValue)
+        {
+            stOther.hValue = INVALID_HANDLE_VALUE;
+        }
+
+        AUTO_FILE_HANDLE &operator=(AUTO_FILE_HANDLE &&stOther) noexcept
+        {
+            if (this != &stOther)
+            {
+                Close();
+                hValue = stOther.hValue;
+                stOther.hValue = INVALID_HANDLE_VALUE;
+            }
+            return *this;
+        }
+
+        ~AUTO_FILE_HANDLE()
+        {
+            Close();
+        }
+
+        VOID Close()
+        {
+            if (INVALID_HANDLE_VALUE != hValue && nullptr != hValue)
+            {
+                CloseHandle(hValue);
+                hValue = INVALID_HANDLE_VALUE;
+            }
+        }
+
+        BOOLEAN IsValid() const
+        {
+            return INVALID_HANDLE_VALUE != hValue && nullptr != hValue;
+        }
+
+        HANDLE Get() const
+        {
+            return hValue;
+        }
+    };
+
+    struct LEGACY_FRAME_TEXT_FIELD
+    {
+        LPCTSTR ptKey;
+        wstring JSON_FRAME_RECORD::*pField;
+        BOOLEAN bDecode;
+    };
+
+    BOOLEAN PathExists(LPCTSTR ptFilePath)
+    {
+        return ptFilePath && PathFileExists(ptFilePath);
+    }
+
+    PATH_BUFFER BuildPath(LPCTSTR ptBasePath, LPCTSTR ptLeafName)
+    {
+        PATH_BUFFER atPath{};
+
+        if (!(ptBasePath) || !(ptLeafName))
+            return atPath;
+
+        StringCchCopy(atPath.data(), atPath.size(), ptBasePath);
+        PathAppend(atPath.data(), ptLeafName);
+        return atPath;
+    }
+
+    VOID CopyLegacyFileIfMissing(LPCTSTR ptLegacyPath, LPCTSTR ptTargetPath)
+    {
+        if (!(PathExists(ptLegacyPath)) || PathExists(ptTargetPath))
+            return;
+
+        CopyFile(ptLegacyPath, ptTargetPath, TRUE);
+    }
+
     VOID MigrateSettingIniKeyNames(LPCTSTR ptFilePath)
     {
         TCHAR atValue[MIN_STRING];
         TCHAR atExisting[MIN_STRING];
 
-        if (!(ptFilePath) || !(PathFileExists(ptFilePath)))
+        if (!(PathExists(ptFilePath)))
             return;
 
         GetPrivateProfileString(TEXT("Colour"), TEXT("UseEntity"), TEXT(""), atValue, MIN_STRING, ptFilePath);
@@ -34,7 +131,7 @@ namespace
 
         if (!(ptSourcePath) || !(ptSourceSection) || !(ptSourceKey) || !(ptTargetPath) || !(ptTargetSection) || !(ptTargetKey))
             return;
-        if (!(PathFileExists(ptSourcePath)))
+        if (!(PathExists(ptSourcePath)))
             return;
 
         GetPrivateProfileString(ptTargetSection, ptTargetKey, TEXT(""), atExisting, MIN_STRING, ptTargetPath);
@@ -50,60 +147,51 @@ namespace
 
     VOID MigratePaletteWindowSettingsFromLegacyIni(LPCTSTR ptLegacyPath, LPCTSTR ptTargetPath)
     {
-        struct LEGACY_WINDOW_SECTION
-        {
-            LPCTSTR ptLegacySection;
-            LPCTSTR ptTargetSection;
-        };
-
-        static const LEGACY_WINDOW_SECTION gastSections[] = {
+        static constexpr auto gastSections = to_array<LEGACY_WINDOW_SECTION>({
             {TEXT("LineTmple"), TEXT("PalInsert")},
-            {TEXT("BrushTmple"), TEXT("PalBucket")}};
-        static const LPCTSTR gaptKeys[] = {
+            {TEXT("BrushTmple"), TEXT("PalBucket")}});
+        static constexpr auto gaptKeys = to_array<LPCTSTR>({
             TEXT("LEFT"),
             TEXT("TOP"),
             TEXT("RIGHT"),
             TEXT("BOTTOM"),
-            TEXT("TopMost")};
-        UINT i, j;
+            TEXT("TopMost")});
 
-        if (!(ptLegacyPath) || !(ptTargetPath) || !(PathFileExists(ptLegacyPath)))
+        if (!(ptLegacyPath) || !(ptTargetPath) || !(PathExists(ptLegacyPath)))
             return;
 
-        for (i = 0; ARRAYSIZE(gastSections) > i; i++)
+        for (const auto &stSection : gastSections)
         {
-            for (j = 0; ARRAYSIZE(gaptKeys) > j; j++)
+            for (LPCTSTR ptKey : gaptKeys)
             {
-                MigrateIniValueIfMissing(ptLegacyPath, gastSections[i].ptLegacySection, gaptKeys[j], ptTargetPath, gastSections[i].ptTargetSection, gaptKeys[j]);
+                MigrateIniValueIfMissing(ptLegacyPath, stSection.ptLegacySection, ptKey, ptTargetPath, stSection.ptTargetSection, ptKey);
             }
         }
     }
 
     VOID CleanupSettingIni(LPCTSTR ptFilePath)
     {
-        static const LPCTSTR gaptGeneralKeys[] =
-            {
-                TEXT("MaaSplit"),
-                TEXT("HintPopup"),
-                TEXT("RightSlide"),
-                TEXT("PageByteMax"),
-                TEXT("GroupUndo"),
-                TEXT("FontName"),
-                TEXT("ThumbHoriz"),
-                TEXT("ThumbVerti"),
-                TEXT("CopyModeSwap"),
-                TEXT("ProfilePath"),
-                TEXT("RightGuideMozi"),
-                TEXT("ExtM2HPath"),
-                TEXT("WorkLogDebug")};
-        UINT i;
+        static constexpr auto gaptGeneralKeys = to_array<LPCTSTR>({
+            TEXT("MaaSplit"),
+            TEXT("HintPopup"),
+            TEXT("RightSlide"),
+            TEXT("PageByteMax"),
+            TEXT("GroupUndo"),
+            TEXT("FontName"),
+            TEXT("ThumbHoriz"),
+            TEXT("ThumbVerti"),
+            TEXT("CopyModeSwap"),
+            TEXT("ProfilePath"),
+            TEXT("RightGuideMozi"),
+            TEXT("ExtM2HPath"),
+            TEXT("WorkLogDebug")});
 
-        if (!(ptFilePath) || !(PathFileExists(ptFilePath)))
+        if (!(PathExists(ptFilePath)))
             return;
 
-        for (i = 0; ARRAYSIZE(gaptGeneralKeys) > i; i++)
+        for (LPCTSTR ptKey : gaptGeneralKeys)
         {
-            WritePrivateProfileString(TEXT("General"), gaptGeneralKeys[i], nullptr, ptFilePath);
+            WritePrivateProfileString(TEXT("General"), ptKey, nullptr, ptFilePath);
         }
 
         WritePrivateProfileString(TEXT("Colour"), TEXT("CantSjis"), nullptr, ptFilePath);
@@ -115,37 +203,92 @@ namespace
         WritePrivateProfileSection(TEXT("MaaTmple"), nullptr, ptFilePath);
     }
 
+    BOOLEAN DeleteFileIfExists(LPCTSTR ptFilePath)
+    {
+        if (!(PathExists(ptFilePath)))
+            return TRUE;
+
+        return DeleteFile(ptFilePath);
+    }
+
+    BOOLEAN DeleteLegacyFileIfTargetExists(LPCTSTR ptLegacyPath, LPCTSTR ptTargetPath)
+    {
+        if (!(PathExists(ptLegacyPath)))
+            return TRUE;
+        if (!(PathExists(ptTargetPath)))
+            return FALSE;
+
+        return DeleteFile(ptLegacyPath);
+    }
+
+    VOID CleanupLegacyMigrationFiles(
+        LPCTSTR ptLegacyIniPath,
+        LPCTSTR ptLegacySqliteDllPath,
+        LPCTSTR ptLegacySatoriPath,
+        LPCTSTR ptLegacyKoisiPath,
+        LPCTSTR ptLegacyImgctlDllPath,
+        LPCTSTR ptLegacyBrushPath,
+        LPCTSTR ptLegacyListPath,
+        LPCTSTR ptLegacyMirrorPath,
+        LPCTSTR ptLegacyUpsetPath,
+        LPCTSTR ptLegacyPreviewPath,
+        LPCTSTR ptSettingPath,
+        LPCTSTR ptAccelKeyPath,
+        LPCTSTR ptFramePath,
+        LPCTSTR ptFlipPath,
+        LPCTSTR ptPalettePath)
+    {
+        const array<LPCTSTR, 3> gaptStandaloneFiles = {
+            ptLegacySqliteDllPath,
+            ptLegacyImgctlDllPath,
+            ptLegacyPreviewPath};
+        const array<LEGACY_FILE_PAIR, 7> gaptMigratedTargets = {
+            LEGACY_FILE_PAIR{ptLegacyIniPath, ptSettingPath},
+            LEGACY_FILE_PAIR{ptLegacyKoisiPath, ptAccelKeyPath},
+            LEGACY_FILE_PAIR{ptLegacySatoriPath, ptFramePath},
+            LEGACY_FILE_PAIR{ptLegacyMirrorPath, ptFlipPath},
+            LEGACY_FILE_PAIR{ptLegacyUpsetPath, ptFlipPath},
+            LEGACY_FILE_PAIR{ptLegacyListPath, ptPalettePath},
+            LEGACY_FILE_PAIR{ptLegacyBrushPath, ptPalettePath}};
+
+        for (const auto &stTarget : gaptMigratedTargets)
+        {
+            DeleteLegacyFileIfTargetExists(stTarget.ptLegacyPath, stTarget.ptTargetPath);
+        }
+
+        for (LPCTSTR ptFilePath : gaptStandaloneFiles)
+        {
+            DeleteFileIfExists(ptFilePath);
+        }
+    }
+
     BOOLEAN ReadDecodedTextFile(LPCTSTR ptFilePath, wstring *pText)
     {
-        HANDLE hFile;
         DWORD dRead = 0;
         DWORD dFileSize;
-        LPVOID pBuffer;
+        vector<BYTE> vcBuffer;
         LPTSTR ptDecoded;
 
         if (!(ptFilePath) || !(pText))
             return FALSE;
 
         pText->clear();
+        ptDecoded = nullptr;
 
-        hFile = CreateFile(ptFilePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (INVALID_HANDLE_VALUE == hFile)
+        AUTO_FILE_HANDLE hFile(CreateFile(ptFilePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+        if (!(hFile.IsValid()))
             return FALSE;
 
-        dFileSize = GetFileSize(hFile, nullptr);
-        pBuffer = malloc(dFileSize + 4);
-        if (!(pBuffer))
-        {
-            CloseHandle(hFile);
+        dFileSize = GetFileSize(hFile.Get(), nullptr);
+        if (INVALID_FILE_SIZE == dFileSize && NO_ERROR != GetLastError())
             return FALSE;
-        }
-        ZeroMemory(pBuffer, dFileSize + 4);
 
-        ReadFile(hFile, pBuffer, dFileSize, &dRead, nullptr);
-        CloseHandle(hFile);
+        vcBuffer.resize(static_cast<size_t>(dFileSize) + 4, 0);
 
-        ptDecoded = TextDecodeAutoAlloc(pBuffer, (INT)dFileSize, nullptr);
-        FREE(pBuffer);
+        if (!ReadFile(hFile.Get(), vcBuffer.data(), dFileSize, &dRead, nullptr))
+            return FALSE;
+
+        ptDecoded = TextDecodeAutoAlloc(vcBuffer.data(), (INT)dFileSize, nullptr);
         if (!(ptDecoded))
             return FALSE;
 
@@ -156,35 +299,30 @@ namespace
 
     BOOLEAN WriteUtf8TextFileInternal(LPCTSTR ptFilePath, const wstring &wsText)
     {
-        HANDLE hFile;
         DWORD dWritten = 0;
-        INT cbUtf8;
-        LPSTR pcUtf8;
+        const INT cchWide = static_cast<INT>(wsText.size());
+        const INT cbUtf8 = WideCharToMultiByte(CP_UTF8, 0, wsText.c_str(), cchWide, nullptr, 0, nullptr, nullptr);
+        string scUtf8;
 
         if (!(ptFilePath))
             return FALSE;
 
-        cbUtf8 = WideCharToMultiByte(CP_UTF8, 0, wsText.c_str(), -1, nullptr, 0, nullptr, nullptr);
-        if (0 >= cbUtf8)
+        if (0 > cbUtf8 || (0 == cbUtf8 && !(wsText.empty())))
             return FALSE;
 
-        pcUtf8 = (LPSTR)malloc(cbUtf8);
-        if (!(pcUtf8))
-            return FALSE;
-        ZeroMemory(pcUtf8, cbUtf8);
-
-        WideCharToMultiByte(CP_UTF8, 0, wsText.c_str(), -1, pcUtf8, cbUtf8, nullptr, nullptr);
-
-        hFile = CreateFile(ptFilePath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (INVALID_HANDLE_VALUE == hFile)
+        scUtf8.resize(cbUtf8);
+        if (!(wsText.empty()))
         {
-            FREE(pcUtf8);
-            return FALSE;
+            WideCharToMultiByte(CP_UTF8, 0, wsText.c_str(), cchWide, scUtf8.data(), cbUtf8, nullptr, nullptr);
         }
 
-        WriteFile(hFile, pcUtf8, cbUtf8 - 1, &dWritten, nullptr);
-        CloseHandle(hFile);
-        FREE(pcUtf8);
+        AUTO_FILE_HANDLE hFile(CreateFile(ptFilePath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr));
+        if (!(hFile.IsValid()))
+            return FALSE;
+
+        if (!(scUtf8.empty()) && !WriteFile(hFile.Get(), scUtf8.data(), static_cast<DWORD>(scUtf8.size()), &dWritten, nullptr))
+            return FALSE;
+
         return TRUE;
     }
 
@@ -236,6 +374,34 @@ namespace
         }
 
         return wsOut;
+    }
+
+    BOOLEAN ApplyLegacyFrameTextField(JSON_FRAME_RECORD *pstRecord, const wstring &wsKey, const wstring &wsValue)
+    {
+        static constexpr auto gastTextFields = to_array<LEGACY_FRAME_TEXT_FIELD>({
+            {TEXT("Name"), &JSON_FRAME_RECORD::wsName, FALSE},
+            {TEXT("Daybreak"), &JSON_FRAME_RECORD::wsDaybreak, TRUE},
+            {TEXT("Morning"), &JSON_FRAME_RECORD::wsMorning, TRUE},
+            {TEXT("Noon"), &JSON_FRAME_RECORD::wsNoon, TRUE},
+            {TEXT("Afternoon"), &JSON_FRAME_RECORD::wsAfternoon, TRUE},
+            {TEXT("Nightfall"), &JSON_FRAME_RECORD::wsNightfall, TRUE},
+            {TEXT("Twilight"), &JSON_FRAME_RECORD::wsTwilight, TRUE},
+            {TEXT("Midnight"), &JSON_FRAME_RECORD::wsMidnight, TRUE},
+            {TEXT("Dawn"), &JSON_FRAME_RECORD::wsDawn, TRUE}});
+
+        if (!(pstRecord))
+            return FALSE;
+
+        for (const auto &stField : gastTextFields)
+        {
+            if (0 != StrCmpI(wsKey.c_str(), stField.ptKey))
+                continue;
+
+            pstRecord->*(stField.pField) = stField.bDecode ? LegacyFrameTextDecode(wsValue) : wsValue;
+            return TRUE;
+        }
+
+        return FALSE;
     }
 
     template<typename TRecord>
@@ -379,43 +545,12 @@ namespace
                 wsKey.assign(wsLine.substr(0, ixEq));
                 wsValue.assign(wsLine.substr(ixEq + 1));
 
-                if (0 == StrCmpI(wsKey.c_str(), TEXT("Name")))
+                if (ApplyLegacyFrameTextField(&(pRecords->at(iFrame)), wsKey, wsValue))
                 {
-                    pRecords->at(iFrame).wsName = wsValue;
+                    continue;
                 }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Daybreak")))
-                {
-                    pRecords->at(iFrame).wsDaybreak = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Morning")))
-                {
-                    pRecords->at(iFrame).wsMorning = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Noon")))
-                {
-                    pRecords->at(iFrame).wsNoon = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Afternoon")))
-                {
-                    pRecords->at(iFrame).wsAfternoon = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Nightfall")))
-                {
-                    pRecords->at(iFrame).wsNightfall = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Twilight")))
-                {
-                    pRecords->at(iFrame).wsTwilight = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Midnight")))
-                {
-                    pRecords->at(iFrame).wsMidnight = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("Dawn")))
-                {
-                    pRecords->at(iFrame).wsDawn = LegacyFrameTextDecode(wsValue);
-                }
-                else if (0 == StrCmpI(wsKey.c_str(), TEXT("LEFTOFFSET")))
+
+                if (0 == StrCmpI(wsKey.c_str(), TEXT("LEFTOFFSET")))
                 {
                     pRecords->at(iFrame).dLeftOffset = StrToInt(wsValue.c_str());
                 }
@@ -437,7 +572,7 @@ namespace
     {
         vector<JSON_FRAME_RECORD> vcFrames;
 
-        if (!(ptLegacyPath) || !(ptTargetPath) || PathFileExists(ptTargetPath))
+        if (!(ptLegacyPath) || !(ptTargetPath) || PathExists(ptTargetPath))
             return;
 
         if (LoadLegacyVectorFile(ptLegacyPath, &vcFrames, ParseLegacyFrameIniText))
@@ -452,7 +587,7 @@ namespace
         vector<JSON_FLIP_ENTRY> vcUpset;
         BOOLEAN bLoaded = FALSE;
 
-        if (!(ptLegacyMirrorPath) || !(ptLegacyUpsetPath) || !(ptTargetPath) || PathFileExists(ptTargetPath))
+        if (!(ptLegacyMirrorPath) || !(ptLegacyUpsetPath) || !(ptTargetPath) || PathExists(ptTargetPath))
             return;
 
         if (LoadLegacyVectorFile(ptLegacyMirrorPath, &vcMirror, ParseLegacyFlipText))
@@ -472,7 +607,7 @@ namespace
         vector<JSON_TEMPLATE_GROUP> vcBrush;
         BOOLEAN bLoaded = FALSE;
 
-        if (!(ptLegacyLinePath) || !(ptLegacyBrushPath) || !(ptTargetPath) || PathFileExists(ptTargetPath))
+        if (!(ptLegacyLinePath) || !(ptLegacyBrushPath) || !(ptTargetPath) || PathExists(ptTargetPath))
             return;
 
         if (LoadLegacyVectorFile(ptLegacyLinePath, &vcLine, ParseLegacyPaletteText))
@@ -500,70 +635,54 @@ BOOLEAN AppWriteUtf8TextFile(LPCTSTR ptFilePath, const wstring &wsText)
 
 HRESULT AppMigrateLegacySettings(LPCTSTR ptExePath)
 {
-    TCHAR atLegacyPath[MAX_PATH];
-    TCHAR atNewPath[MAX_PATH];
-    TCHAR atSettingPath[MAX_PATH];
-    TCHAR atTemplateDir[MAX_PATH];
-    TCHAR atLegacySatori[MAX_PATH];
-    TCHAR atLegacyMirror[MAX_PATH];
-    TCHAR atLegacyUpset[MAX_PATH];
-    TCHAR atLegacyLine[MAX_PATH];
-    TCHAR atLegacyBrush[MAX_PATH];
-    TCHAR atNewFrame[MAX_PATH];
-    TCHAR atNewFlip[MAX_PATH];
-    TCHAR atNewPalette[MAX_PATH];
-
     if (!(ptExePath))
         return E_INVALIDARG;
 
-    StringCchCopy(atLegacyPath, MAX_PATH, ptExePath);
-    PathAppend(atLegacyPath, LEGACY_SETTINGS_INI_FILE);
-    StringCchCopy(atNewPath, MAX_PATH, ptExePath);
-    PathAppend(atNewPath, SETTINGS_INI_FILE);
-    if (!(PathFileExists(atNewPath)) && PathFileExists(atLegacyPath))
-    {
-        CopyFile(atLegacyPath, atNewPath, TRUE);
-    }
-    MigratePaletteWindowSettingsFromLegacyIni(atLegacyPath, atNewPath);
+    const PATH_BUFFER atLegacyIni = BuildPath(ptExePath, LEGACY_SETTINGS_INI_FILE);
+    const PATH_BUFFER atSettingPath = BuildPath(ptExePath, SETTINGS_INI_FILE);
+    const PATH_BUFFER atLegacyKoisi = BuildPath(ptExePath, LEGACY_SETTINGS_CONTEXT_MENU_INI_FILE);
+    const PATH_BUFFER atAccelKeyPath = BuildPath(ptExePath, SETTINGS_CONTEXT_MENU_INI_FILE);
+    const PATH_BUFFER atTemplateDir = BuildPath(ptExePath, TEMPLATE_DIR);
+    const PATH_BUFFER atLegacySatori = BuildPath(ptExePath, LEGACY_SETTINGS_FRAME_JSON_FILE);
+    const PATH_BUFFER atNewFrame = BuildPath(atTemplateDir.data(), SETTINGS_FRAME_JSON_FILE);
+    const PATH_BUFFER atLegacyMirror = BuildPath(atTemplateDir.data(), LEGACY_AA_MIRROR_FILE);
+    const PATH_BUFFER atLegacyUpset = BuildPath(atTemplateDir.data(), LEGACY_AA_UPSET_FILE);
+    const PATH_BUFFER atNewFlip = BuildPath(atTemplateDir.data(), FLIP_FILE);
+    const PATH_BUFFER atLegacyLine = BuildPath(atTemplateDir.data(), LEGACY_AA_LIST_FILE);
+    const PATH_BUFFER atLegacyBrush = BuildPath(atTemplateDir.data(), LEGACY_AA_BRUSH_FILE);
+    const PATH_BUFFER atNewPalette = BuildPath(atTemplateDir.data(), AA_PALETTE_FILE);
+    const PATH_BUFFER atLegacyPreview = BuildPath(atTemplateDir.data(), TEXT("Preview.htm"));
+    const PATH_BUFFER atLegacySqliteDll = BuildPath(ptExePath, TEXT("sqlite3.dll"));
+    const PATH_BUFFER atLegacyImgctlDll = BuildPath(ptExePath, TEXT("Imgctl.dll"));
 
-    StringCchCopy(atLegacyPath, MAX_PATH, ptExePath);
-    PathAppend(atLegacyPath, LEGACY_SETTINGS_CONTEXT_MENU_INI_FILE);
-    StringCchCopy(atNewPath, MAX_PATH, ptExePath);
-    PathAppend(atNewPath, SETTINGS_CONTEXT_MENU_INI_FILE);
-    if (!(PathFileExists(atNewPath)) && PathFileExists(atLegacyPath))
-    {
-        CopyFile(atLegacyPath, atNewPath, TRUE);
-    }
+    CopyLegacyFileIfMissing(atLegacyIni.data(), atSettingPath.data());
+    MigratePaletteWindowSettingsFromLegacyIni(atLegacyIni.data(), atSettingPath.data());
 
-    StringCchCopy(atTemplateDir, MAX_PATH, ptExePath);
-    PathAppend(atTemplateDir, TEMPLATE_DIR);
+    CopyLegacyFileIfMissing(atLegacyKoisi.data(), atAccelKeyPath.data());
 
-    StringCchCopy(atLegacySatori, MAX_PATH, ptExePath);
-    PathAppend(atLegacySatori, LEGACY_SETTINGS_FRAME_JSON_FILE);
-    StringCchCopy(atNewFrame, MAX_PATH, atTemplateDir);
-    PathAppend(atNewFrame, SETTINGS_FRAME_JSON_FILE);
-    MigrateLegacyFrameSettingsIfMissing(atLegacySatori, atNewFrame);
+    MigrateLegacyFrameSettingsIfMissing(atLegacySatori.data(), atNewFrame.data());
+    MigrateLegacyFlipSettingsIfMissing(atLegacyMirror.data(), atLegacyUpset.data(), atNewFlip.data());
+    MigrateLegacyPaletteSettingsIfMissing(atLegacyLine.data(), atLegacyBrush.data(), atNewPalette.data());
 
-    StringCchCopy(atLegacyMirror, MAX_PATH, atTemplateDir);
-    PathAppend(atLegacyMirror, LEGACY_AA_MIRROR_FILE);
-    StringCchCopy(atLegacyUpset, MAX_PATH, atTemplateDir);
-    PathAppend(atLegacyUpset, LEGACY_AA_UPSET_FILE);
-    StringCchCopy(atNewFlip, MAX_PATH, atTemplateDir);
-    PathAppend(atNewFlip, FLIP_FILE);
-    MigrateLegacyFlipSettingsIfMissing(atLegacyMirror, atLegacyUpset, atNewFlip);
+    MigrateSettingIniKeyNames(atSettingPath.data());
+    CleanupSettingIni(atSettingPath.data());
 
-    StringCchCopy(atLegacyLine, MAX_PATH, atTemplateDir);
-    PathAppend(atLegacyLine, LEGACY_AA_LIST_FILE);
-    StringCchCopy(atLegacyBrush, MAX_PATH, atTemplateDir);
-    PathAppend(atLegacyBrush, LEGACY_AA_BRUSH_FILE);
-    StringCchCopy(atNewPalette, MAX_PATH, atTemplateDir);
-    PathAppend(atNewPalette, AA_PALETTE_FILE);
-    MigrateLegacyPaletteSettingsIfMissing(atLegacyLine, atLegacyBrush, atNewPalette);
-
-    StringCchCopy(atSettingPath, MAX_PATH, ptExePath);
-    PathAppend(atSettingPath, SETTINGS_INI_FILE);
-    MigrateSettingIniKeyNames(atSettingPath);
-    CleanupSettingIni(atSettingPath);
+    CleanupLegacyMigrationFiles(
+        atLegacyIni.data(),
+        atLegacySqliteDll.data(),
+        atLegacySatori.data(),
+        atLegacyKoisi.data(),
+        atLegacyImgctlDll.data(),
+        atLegacyBrush.data(),
+        atLegacyLine.data(),
+        atLegacyMirror.data(),
+        atLegacyUpset.data(),
+        atLegacyPreview.data(),
+        atSettingPath.data(),
+        atAccelKeyPath.data(),
+        atNewFrame.data(),
+        atNewFlip.data(),
+        atNewPalette.data());
 
     return S_OK;
 }
