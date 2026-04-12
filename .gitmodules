@@ -1,0 +1,5 @@
+[submodule "resource/font"]
+	path = resource/font
+	url = https://github.com/Da1eth/AA
+	shallow = true
+	branch = main
