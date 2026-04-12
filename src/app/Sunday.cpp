@@ -947,17 +947,6 @@ UINT UnicodeUseToggle(LPVOID pVoid)
 }
 //-------------------------------------------------------------------------------------------------
 
-// タスクトレイアイコンにばりゅ～んめせーじを載せる
-HRESULT NotifyBalloonExist(LPCTSTR ptInfo, LPCTSTR ptTitle, DWORD dIconTy)
-{
-    UNREFERENCED_PARAMETER(ptInfo);
-    UNREFERENCED_PARAMETER(ptTitle);
-    UNREFERENCED_PARAMETER(dIconTy);
-
-    return S_OK;
-}
-//-------------------------------------------------------------------------------------------------
-
 // ドッキングしてる壱行ブラシテンプレを表示/非表示
 HRESULT DockingTmplViewToggle(UINT bMode)
 {

@@ -139,6 +139,7 @@ inline constexpr int TMPL_DOCK  = 150;
 
 #define WMP_BRUSH_TOGGLE    (WM_APP+2)
 #define WMP_PREVIEW_CLOSE   (WM_APP+3)
+#define WMP_TRAYICON        (WM_APP+4)
 
 inline constexpr COLORREF BASIC_COLOUR = RGB(0xF0,0xF0,0xF0);
 

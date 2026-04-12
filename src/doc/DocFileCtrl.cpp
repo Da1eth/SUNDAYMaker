@@ -575,7 +575,7 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
 
         if (gbSaveMsgOn)
         {
-            NotifyBalloonExist(TEXT("파일을 UTF-8로 저장했습니다."), TEXT("일했꼬꼬"),
+            NotifyBalloonExist(TEXT("파일을 저장했습니다."), TEXT("일했꼬꼬"),
                                NIIF_INFO);
         }
     }

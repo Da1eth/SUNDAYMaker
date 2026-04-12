@@ -44,6 +44,7 @@ set(APP_SOURCES
     ${ORR_SRC_APP_DIR}/AppMainWindowLifecycle.cpp
     ${ORR_SRC_APP_DIR}/AppModelessDialogs.cpp
     ${ORR_SRC_APP_DIR}/AppPagePreload.cpp
+    ${ORR_SRC_APP_DIR}/AppTrayIcon.cpp
     ${ORR_SRC_APP_DIR}/CommonUtil.cpp
     ${ORR_SRC_APP_DIR}/ContextCtrl.cpp
     ${ORR_SRC_APP_DIR}/ImageExport.cpp

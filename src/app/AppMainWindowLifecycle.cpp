@@ -144,6 +144,8 @@ BOOLEAN Cls_OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 
     StatusBar_SetText(ghMainStatusBarWnd, 1, TEXT(""));
 
+    AppTrayIconInitialise(hWnd);
+
     return TRUE;
 }
 
@@ -259,6 +261,8 @@ VOID Cls_OnMove(HWND hWnd, INT x, INT y)
 
 VOID Cls_OnDestroy(HWND hWnd)
 {
+    AppTrayIconFinalise();
+
     AppBackgroundPageLoadStop(hWnd);
     AppModelessDialogsDestroy();
 
