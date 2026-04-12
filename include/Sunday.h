@@ -608,7 +608,6 @@ HRESULT        TemplateItemLoad( LPCTSTR, PAGELOAD );
 
 INT            UserItemInitialise( HWND, UINT );
 HRESULT        UserItemInsert( HWND, UINT );
-HRESULT        UserItemMenuWrite( HMENU, UINT );
 HRESULT        UserItemNameGet( UINT, LPTSTR, UINT_PTR );
 UINT        UserItemCountGet( VOID );
 
