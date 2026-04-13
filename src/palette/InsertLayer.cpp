@@ -426,12 +426,15 @@ LRESULT CALLBACK gpfLayerTBProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 // エディットボックスサブクラス
 static VOID LayerHandleInsertCommand(HWND hWnd, UINT id)
 {
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
     INT iXpos;
     INT iYln;
 
     LayerContentsImportable(hWnd, id, &iXpos, &iYln, 0);
     DocViewResetCaret(iXpos, iYln);
     DocPageInfoRenew(-1, 1);
+    EditChangeSetApply(stChangeSet);
     if (gstLayerState.bQuickClose)
     {
         DestroyWindow(hWnd);
