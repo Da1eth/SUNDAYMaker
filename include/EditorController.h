@@ -52,9 +52,12 @@ VOID ViewEditDeleteBackward(VOID);
 HRESULT ViewEditInsertLineBreak(BOOLEAN bScripted);
 INT ViewEditInputCharacter(TCHAR ch);
 INT ViewEditPasteFromClipboard(UINT bSquareMode);
+HRESULT ViewEditCopyPageAll(VOID);
 
 // ────── 삽입 보조 ──────
 
+HRESULT ViewFrameInsert(INT dMode);
+HRESULT ViewInsertSpoTag(VOID);
 INT ViewInsertUniSpace(UINT dCommando);
 INT ViewInsertTmpleString(LPCTSTR ptText);
 

@@ -388,6 +388,23 @@ INT ViewEditPasteFromClipboard(UINT bSquareMode)
     return DocInputFromClipboard(&caret.dXdot, &caret.dLine, &caret.dMozi, bSquareMode);
 }
 
+HRESULT ViewEditCopyPageAll(VOID)
+{
+    return DocPageAllCopy(D_UNI | D_ENTITY);
+}
+
+// ────── 삽입 명령 ──────
+
+HRESULT ViewFrameInsert(INT dMode)
+{
+    return DocFrameInsert(dMode, ViewSquareSelectModeGet());
+}
+
+HRESULT ViewInsertSpoTag(VOID)
+{
+    return DocFrameInsert(-1, ViewSquareSelectModeGet());
+}
+
 // ────── 삽입 보조 ──────
 
 INT ViewInsertUniSpace(UINT dCommando)

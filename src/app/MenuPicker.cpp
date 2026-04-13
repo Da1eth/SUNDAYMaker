@@ -1,5 +1,6 @@
 
 #include "Sunday.h"
+#include "EditorController.h"
 
 #define MENU_PICKER_DYNAMIC_FIRST 50000
 #define MENU_PICKER_PAGE_UP 49998
