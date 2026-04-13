@@ -108,6 +108,7 @@ set(HEADERS
     ${ORR_INCLUDE_DIR}/AppLayoutInternal.h
     ${ORR_INCLUDE_DIR}/AppCommandRegistry.h
     ${ORR_INCLUDE_DIR}/AppModuleInternal.h
+    ${ORR_INCLUDE_DIR}/ChangeSet.h
     ${ORR_INCLUDE_DIR}/EditorController.h
     ${ORR_INCLUDE_DIR}/InsertUi.h
     ${ORR_INCLUDE_DIR}/SettingsIniStore.h
