@@ -1,5 +1,6 @@
 // 합성용 레이어 박스 뷰 관리
 #include "InsertUi.h"
+#include "DocViewBridgeInternal.h"
 #include "ViewCentralInternal.h"
 #include "UiText.h"
 //-------------------------------------------------------------------------------------------------
@@ -429,7 +430,7 @@ static VOID LayerHandleInsertCommand(HWND hWnd, UINT id)
     INT iYln;
 
     LayerContentsImportable(hWnd, id, &iXpos, &iYln, 0);
-    ViewPosResetCaret(iXpos, iYln);
+    DocViewResetCaret(iXpos, iYln);
     DocPageInfoRenew(-1, 1);
     if (gstLayerState.bQuickClose)
     {

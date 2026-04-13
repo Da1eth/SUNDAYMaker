@@ -1,5 +1,6 @@
 #include "Sunday.h"
 #include "AppModuleInternal.h"
+#include "DocViewBridgeInternal.h"
 
 extern HINSTANCE ghInst;
 extern HWND ghViewWnd;
@@ -559,8 +560,8 @@ static HRESULT GradientTagInsertFromDialog(HWND hDlg)
         bFirst = FALSE;
     }
 
-    ViewPosResetCaret(iCaretDot, iCaretLine);
-    ViewRedrawSetLine(-1);
+    DocViewResetCaret(iCaretDot, iCaretLine);
+    DocViewRefreshAll();
     DocPageInfoRenew(-1, 1);
     return S_OK;
 }
@@ -602,8 +603,8 @@ static HRESULT InsertTagPairAtSelection(LPCTSTR ptOpenTag, LPCTSTR ptCloseTag)
         iLine = gdDocLine;
         DocInsertString(&iDot, &iLine, nullptr, ptOpenTag, 0, FALSE);
 
-        ViewPosResetCaret(iCaretDot + (INT)cchOpen, iCaretLine);
-        ViewRedrawSetLine(-1);
+        DocViewResetCaret(iCaretDot + (INT)cchOpen, iCaretLine);
+        DocViewRefreshAll();
         DocPageInfoRenew(-1, 1);
         return S_OK;
     }
@@ -629,8 +630,8 @@ static HRESULT InsertTagPairAtSelection(LPCTSTR ptOpenTag, LPCTSTR ptCloseTag)
     }
 
     ViewSelPageAll(-1);
-    ViewPosResetCaret(iCaretDot, iCaretLine);
-    ViewRedrawSetLine(-1);
+    DocViewResetCaret(iCaretDot, iCaretLine);
+    DocViewRefreshAll();
     DocPageInfoRenew(-1, 1);
 
     return S_OK;

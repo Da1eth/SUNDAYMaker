@@ -1,5 +1,6 @@
 #include "Sunday.h"
 #include "InsertUi.h"
+#include "DocViewBridgeInternal.h"
 #include "UiText.h"
 
 #define FRAMEINSERTBOX_CLASS TEXT("FRAMEINSBOX_CLASS")
@@ -1931,17 +1932,16 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
 #endif
 
         //    最終的なキャレットの位置をリセット
-        ViewPosResetCaret(iInX, iLns);
+        DocViewResetCaret(iInX, iLns);
 
-        ViewRedrawSetLine(iTop);
-        DocBadSpaceCheck(iTop); //    バッド空白チェキ
+        DocViewRefreshLine(iTop);
+        DocBadSpaceCheck(iTop);
 
-        //    改行してるから、これ以降全部再描画必要
-        iLns = DocNowFilePageLineCount(); //    現在行数再認識
+        iLns = DocNowFilePageLineCount();
         for (i = iTop; iLns > i; i++)
         {
-            DocBadSpaceCheck(i); //    バッド空白チェキ
-            ViewRedrawSetLine(i);
+            DocBadSpaceCheck(i);
+            DocViewRefreshLine(i);
         }
 
         DocPageInfoRenew(-1, 1);
@@ -2174,7 +2174,7 @@ HRESULT FrameInsBoxDoInsert(HWND hWnd)
     LayerTransparentToggle(hLyrWnd, 1);
     //    上書きする
     LayerContentsImportable(hLyrWnd, IDM_LYB_OVERRIDE, &iX, &iY, D_INVISI);
-    ViewPosResetCaret(iX, iY);
+    DocViewResetCaret(iX, iY);
     //    終わったら閉じる
     DestroyWindow(hLyrWnd);
 
