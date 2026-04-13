@@ -1,4 +1,5 @@
 #include "Sunday.h"
+#include "DocViewBridgeInternal.h"
 #include "UiText.h"
 
 extern INT gdDocLine; // キャレットのＹ行数・ドキュメント位置
@@ -242,6 +243,9 @@ HRESULT UserItemInsert(HWND hWnd, UINT idNum)
         return E_OUTOFMEMORY;
     }
 
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
+
     INT yLine = gdDocLine;
     const INT_PTR dNeedLine = static_cast<INT_PTR>(gstUserItems[idNum].vcUnits.size());
 
@@ -270,6 +274,8 @@ HRESULT UserItemInsert(HWND hWnd, UINT idNum)
         FREE(ptText);
     }
 
+    DocPageInfoRenew(-1, 1);
+    EditChangeSetApply(stChangeSet);
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------

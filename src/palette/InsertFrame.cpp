@@ -1836,7 +1836,7 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
 
         //    矩形選択無しとみなす
 
-        ViewSelPageAll(-1); //    範囲とったので解除しておｋ
+        DocViewClearSelection();
 
         //    選択範囲内でもっとも長いドット数を確認
         baseDot = DocPageMaxDotGet(iTop, iBtm);
@@ -2173,8 +2173,12 @@ HRESULT FrameInsBoxDoInsert(HWND hWnd)
     //    空白を全部透過指定にする
     LayerTransparentToggle(hLyrWnd, 1);
     //    上書きする
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
     LayerContentsImportable(hLyrWnd, IDM_LYB_OVERRIDE, &iX, &iY, D_INVISI);
     DocViewResetCaret(iX, iY);
+    DocPageInfoRenew(-1, 1);
+    EditChangeSetApply(stChangeSet);
     //    終わったら閉じる
     DestroyWindow(hLyrWnd);
 
