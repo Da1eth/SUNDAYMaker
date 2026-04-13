@@ -565,13 +565,11 @@ INT            ViewSelPageAll( INT );
 UINT        ViewSqSelModeToggle( UINT, LPVOID );
 HRESULT        ViewSelAreaSelect( LPVOID );
 
-INT            ViewInsertUniSpace( UINT );
+// ViewInsertUniSpace, ViewInsertTmpleString, ViewBrushStyleSetting,
+// ViewLayoutCommandForward 는 EditorController.h 로 이동함.
 INT            ViewInsertColourTag( UINT );
 HRESULT        DocInsertSpoTag( UINT );
 HRESULT        ColourTagDialogueOpen( HINSTANCE, HWND );
-INT            ViewInsertTmpleString( LPCTSTR );
-
-HRESULT        ViewBrushStyleSetting( UINT, LPCTSTR );
 
 VOID        Evw_OnMouseMove( HWND, INT, INT, UINT );
 VOID        Evw_OnLButtonDown( HWND, BOOL, INT, INT, UINT );

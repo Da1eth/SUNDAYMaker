@@ -86,6 +86,7 @@ set(PALETTE_SOURCES
 )
 
 set(VIEW_SOURCES
+    ${ORR_SRC_VIEW_DIR}/EditorController.cpp
     ${ORR_SRC_VIEW_DIR}/ViewCaret.cpp
     ${ORR_SRC_VIEW_DIR}/ViewCentral.cpp
     ${ORR_SRC_VIEW_DIR}/ViewCentralColour.cpp
@@ -107,6 +108,7 @@ set(HEADERS
     ${ORR_INCLUDE_DIR}/AppLayoutInternal.h
     ${ORR_INCLUDE_DIR}/AppCommandRegistry.h
     ${ORR_INCLUDE_DIR}/AppModuleInternal.h
+    ${ORR_INCLUDE_DIR}/EditorController.h
     ${ORR_INCLUDE_DIR}/InsertUi.h
     ${ORR_INCLUDE_DIR}/SettingsIniStore.h
     ${ORR_INCLUDE_DIR}/Sunday.h
