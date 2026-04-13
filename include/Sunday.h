@@ -534,8 +534,6 @@ BOOL        ViewShowCaret( VOID );
 VOID        ViewHideCaret( VOID );
 INT            ViewCaretPosGet( PINT, PINT );
 
-HRESULT        ViewFrameInsert( INT  );
-
 HRESULT        ViewNowPosStatus( VOID );
 
 HRESULT        ViewRedrawSetLine( INT );

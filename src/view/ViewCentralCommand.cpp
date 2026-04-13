@@ -1,5 +1,6 @@
 #include "AppUiContextInternal.h"
 #include "DocContextInternal.h"
+#include "EditorController.h"
 #include "ViewCentralInternal.h"
 #include "Palette.h"
 
@@ -36,11 +37,6 @@ static const VIEW_COMMAND_DISPATCH gapfViewCommandDispatchers[] = {
     OperationHandlePageCommands,
     OperationHandleMiscCommands,
 };
-
-HRESULT ViewFrameInsert(INT dMode)
-{
-    return DocFrameInsert(dMode, ViewSquareSelectModeGet());
-}
 
 HRESULT OperationOnStatusBar(VOID)
 {
@@ -322,7 +318,7 @@ static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand
         return TRUE;
 
     case IDM_SJISCOPY_ALL:
-        DocPageAllCopy(D_UNI | D_ENTITY);
+        ViewEditCopyPageAll();
         return TRUE;
 
     case IDM_PASTE:
@@ -431,7 +427,7 @@ static BOOLEAN OperationHandleInsertCommands(const VIEW_COMMAND_REQUEST &stComma
         return TRUE;
 
     case IDM_INSTAG_SPO:
-        DocFrameInsert(-1, dSquareSelect);
+        ViewInsertSpoTag();
         return TRUE;
 
     case IDM_INSTAG_COLOUR:
