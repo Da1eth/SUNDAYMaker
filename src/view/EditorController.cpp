@@ -1,18 +1,13 @@
-// 편집 컨트롤러 — Doc 쓰기 함수 조합과 View 갱신을 한곳으로 모은다.
-// ViewKeyButton.cpp 에서 추출하여, View ↔ Doc 의 직접 결합을 제거한다.
+// 편집 컨트롤러
 
 #include "EditorController.h"
 #include "ViewCentralInternal.h"
 #include "Palette.h"
 
-// ────── 내부 상태 ──────
+EDIT_CHANGESET *g_pActiveChangeSet = nullptr;
 
-EDIT_CHANGESET *g_pActiveChangeSet = nullptr; // ChangeSet 스코프 활성 포인터
-
-UINT gbPalBucketMode; // 브러시 모드 플래그 (비영이면 브러시 활성)
-static TCHAR gatBrushPtn[SUB_STRING]; // 브러시 패턴 문자열
-
-// ────── 내부 도우미 선언 ──────
+UINT gbPalBucketMode;
+static TCHAR gatBrushPtn[SUB_STRING];
 
 static VOID CtrlRedrawChangedLines(EDIT_CHANGESET *pstChangeSet, INT dLine, INT iLines, INT bCrLf);
 static INT CtrlInsertLiteralCharacter(EDIT_CHANGESET *pstChangeSet, TCHAR ch);
@@ -21,7 +16,7 @@ static HRESULT CtrlBrushFillAtCaret(EDIT_CHANGESET *pstChangeSet);
 static HRESULT CtrlScriptedLineFeed(VOID);
 static HRESULT CtrlScriptedLineFeedAtDot(INT dTargetDot, EDIT_CHANGESET *pstChangeSet);
 
-// ────── ChangeSet 인프라 ──────
+// ChangeSet 적용
 
 VOID EditChangeSetApply(const EDIT_CHANGESET &stChangeSet)
 {
@@ -161,7 +156,7 @@ VOID EditChangeSetRequestCaretMove(EDIT_CHANGESET *pstChangeSet, INT dXdot, INT 
     pstChangeSet->dCaretLine = dLine;
 }
 
-// ────── 내부 도우미 ──────
+// 내부 도우미
 
 static VOID CtrlRedrawChangedLines(EDIT_CHANGESET *pstChangeSet, INT dLine, INT iLines, INT bCrLf)
 {
@@ -197,7 +192,7 @@ static INT CtrlInsertStringWithStyle(EDIT_CHANGESET *pstChangeSet, LPCTSTR ptTex
     return dCrLf;
 }
 
-// ────── 편집 명령 ──────
+// 편집 명령
 
 VOID ViewEditUndoForward(VOID)
 {
@@ -414,19 +409,31 @@ HRESULT ViewEditCopyPageAll(VOID)
     return DocPageAllCopy(D_UNI | D_ENTITY);
 }
 
-// ────── 삽입 명령 ──────
+// 삽입 명령
 
 HRESULT ViewFrameInsert(INT dMode)
 {
-    return DocFrameInsert(dMode, ViewSquareSelectModeGet());
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
+
+    const HRESULT hr = DocFrameInsert(dMode, ViewSquareSelectModeGet());
+
+    EditChangeSetApply(stChangeSet);
+    return hr;
 }
 
 HRESULT ViewInsertSpoTag(VOID)
 {
-    return DocFrameInsert(-1, ViewSquareSelectModeGet());
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
+
+    const HRESULT hr = DocFrameInsert(-1, ViewSquareSelectModeGet());
+
+    EditChangeSetApply(stChangeSet);
+    return hr;
 }
 
-// ────── 삽입 보조 ──────
+// 삽입 보조
 
 INT ViewInsertUniSpace(UINT dCommando)
 {
@@ -492,7 +499,7 @@ INT ViewInsertTmpleString(LPCTSTR ptText)
     return dDot;
 }
 
-// ────── 대사용 개행 ──────
+// 대사용 개행
 
 static HRESULT CtrlScriptedLineFeed(VOID)
 {
@@ -586,7 +593,7 @@ static HRESULT CtrlScriptedLineFeedAtDot(INT dTargetDot, EDIT_CHANGESET *pstChan
     return S_OK;
 }
 
-// ────── 브러시 ──────
+// 브러시
 
 HRESULT ViewBrushStyleSetting(UINT bBrushOn, LPCTSTR ptPattern)
 {
@@ -659,7 +666,7 @@ static HRESULT CtrlBrushFillAtCaret(EDIT_CHANGESET *pstChangeSet)
     return S_OK;
 }
 
-// ────── 레이아웃 조작 명령 ──────
+// 레이아웃 조작 명령
 
 BOOLEAN ViewLayoutCommandForward(INT id, HWND hMainWindow)
 {
@@ -758,7 +765,7 @@ BOOLEAN ViewLayoutCommandForward(INT id, HWND hMainWindow)
     return TRUE;
 }
 
-// ────── 브러시 문자열 생성 ──────
+// 브러시 문자열 생성
 
 LPTSTR BrushStringMake(INT dDotLen, LPTSTR ptPattern)
 {
