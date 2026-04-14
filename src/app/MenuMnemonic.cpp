@@ -17,7 +17,7 @@ struct SubmenuMnemonicEntry
     TCHAR cMnemonic;
 };
 
-// 옛날 코드(OrinrinEditor.rc) 기준 니모닉 테이블
+// 니모닉 테이블
 constexpr MnemonicEntry gstMnemonicTable[] = {
     // 파일
     {IDM_NEWFILE, TEXT('N')},
@@ -75,16 +75,16 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
     {IDM_DEL_TOPSPACE, TEXT('U')},
     {IDM_DEL_LASTSPACE, TEXT('G')},
     {IDM_DEL_LASTLETTER, TEXT('E')},
-    {IDM_FILL_SPACE, TEXT('F')},
+    {IDM_FILL_SPACE, TEXT('Q')},
     {IDM_FILL_ZENSP, TEXT('B')},
     {IDM_HEADHALF_EXCHANGE, TEXT('L')},
     {IDM_MIRROR_INVERSE, TEXT('M')},
     {IDM_UPSET_INVERSE, TEXT('N')},
     {IDM_INCREMENT_DOT, TEXT('D')},
     {IDM_DECREMENT_DOT, TEXT('O')},
-    {IDM_INCR_DOT_LINES, TEXT('J')},
-    {IDM_DECR_DOT_LINES, TEXT('K')},
-    {IDM_DOT_SPLIT_LEFT, TEXT('Q')},
+    {IDM_INCR_DOT_LINES, TEXT('K')},
+    {IDM_DECR_DOT_LINES, TEXT('J')},
+    {IDM_DOT_SPLIT_LEFT, TEXT('O')},
     {IDM_DOT_SPLIT_RIGHT, TEXT('P')},
     {IDM_DOTDIFF_LOCK, TEXT('R')},
     {IDM_DOTDIFF_ADJT, TEXT('D')},
@@ -116,7 +116,6 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
     {IDM_LYB_TRANCE_RELEASE, TEXT('R')},
     {IDM_LYB_TRANCE_ALL, TEXT('T')},
 
-    // 멀티파일 팝업 (IDM_OVERWRITESAVE 등은 파일 섹션에서 이미 등록)
     // IDM_FILE_CLOSE는 'C'가 이미 등록, 팝업에서는 'Q' 사용 → 팝업별 오버라이드 불가하므로 별도 처리 불필요
 };
 
