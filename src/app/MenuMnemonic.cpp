@@ -48,7 +48,6 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
     {IDM_LAYERBOX, TEXT('L')},
     {IDM_EXTRACTION_MODE, TEXT('E')},
     {IDM_FIND_DLG_OPEN, TEXT('F')},
-    {IDM_FIND_HIGHLIGHT_OFF, TEXT('H')},
 
     // 삽입 - 유니코드 공백
     {IDM_IN_01SPACE, TEXT('1')},

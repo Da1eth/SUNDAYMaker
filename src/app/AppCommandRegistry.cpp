@@ -190,7 +190,6 @@ constexpr APP_COMMAND_ITEM gatCommandItemsAfterUser[] = {
     {IDM_PAGE_NEXT, nullptr},
     {IDM_NOW_PAGE_REFRESH, nullptr},
     {IDM_FIND_DLG_OPEN, nullptr},
-    {IDM_FIND_HIGHLIGHT_OFF, nullptr},
     {IDM_FIND_JUMP_NEXT, nullptr},
     {IDM_FIND_JUMP_PREV, nullptr},
     {IDM_FIND_TARGET_SET, nullptr},
