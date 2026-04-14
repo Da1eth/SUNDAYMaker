@@ -1,5 +1,6 @@
 #include "Sunday.h"
 #include "MenuMnemonic.h"
+#include "UiText.h"
 
 namespace
 {
@@ -7,6 +8,12 @@ namespace
 struct MnemonicEntry
 {
     UINT dCommandId;
+    TCHAR cMnemonic;
+};
+
+struct SubmenuMnemonicEntry
+{
+    LPCTSTR ptLabel;
     TCHAR cMnemonic;
 };
 
@@ -50,8 +57,8 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
     {IDM_IN_04SPACE, TEXT('4')},
     {IDM_IN_05SPACE, TEXT('5')},
     {IDM_IN_08SPACE, TEXT('8')},
-    {IDM_IN_10SPACE, TEXT('1')},
-    {IDM_IN_16SPACE, TEXT('1')},
+    {IDM_IN_10SPACE, TEXT('A')},
+    {IDM_IN_16SPACE, TEXT('F')},
 
     // 삽입 - 컬러 태그
     {IDM_INSTAG_SPO, TEXT('W')},
@@ -113,8 +120,20 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
     // IDM_FILE_CLOSE는 'C'가 이미 등록, 팝업에서는 'Q' 사용 → 팝업별 오버라이드 불가하므로 별도 처리 불필요
 };
 
+constexpr SubmenuMnemonicEntry gstSubmenuMnemonicTable[] = {
+    {ORR_UI_LABEL_OPEN_HISTORY, TEXT('H')},
+    {ORR_UI_LABEL_MN_UNISPACE, TEXT('S')},
+    {ORR_UI_LABEL_MN_COLOUR_SEL, TEXT('C')},
+    {ORR_UI_LABEL_MN_INSFRAME_SEL, TEXT('F')},
+    {ORR_UI_LABEL_MN_USER_REFS, TEXT('U')},
+};
+
 constexpr INT giMnemonicCount =
     static_cast<INT>(sizeof(gstMnemonicTable) / sizeof(gstMnemonicTable[0]));
+
+constexpr INT giSubmenuMnemonicCount =
+    static_cast<INT>(sizeof(gstSubmenuMnemonicTable) /
+                     sizeof(gstSubmenuMnemonicTable[0]));
 
 TCHAR MnemonicCharGet(UINT dCommandId)
 {
@@ -123,6 +142,20 @@ TCHAR MnemonicCharGet(UINT dCommandId)
         if (gstMnemonicTable[i].dCommandId == dCommandId)
             return gstMnemonicTable[i].cMnemonic;
     }
+    return 0;
+}
+
+TCHAR SubmenuMnemonicCharGet(LPCTSTR ptText)
+{
+    if (!ptText)
+        return 0;
+
+    for (INT i = 0; giSubmenuMnemonicCount > i; i++)
+    {
+        if (0 == lstrcmp(ptText, gstSubmenuMnemonicTable[i].ptLabel))
+            return gstSubmenuMnemonicTable[i].cMnemonic;
+    }
+
     return 0;
 }
 
@@ -169,6 +202,8 @@ void MenuMnemonicApplyRecursive(HMENU hMenu)
             continue;
 
         TCHAR cMnemonic = MnemonicCharGet(stMii.wID);
+        if (0 == cMnemonic && stMii.hSubMenu)
+            cMnemonic = SubmenuMnemonicCharGet(atText);
         if (0 == cMnemonic)
             continue;
 
