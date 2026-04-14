@@ -66,6 +66,29 @@ static VOID MenuPickerCommitSelection(HWND hWnd, UINT dMode, UINT dIndex)
     }
 }
 
+// 그룹 내 인덱스 → 니모닉 문자 (1~9, 0, A~Z)
+static TCHAR MenuPickerMnemonicChar(UINT dLocalIndex)
+{
+    if (9 > dLocalIndex)
+        return TEXT('1') + (TCHAR)dLocalIndex;
+    if (9 == dLocalIndex)
+        return TEXT('0');
+    if (dLocalIndex < 10 + 26)
+        return TEXT('A') + (TCHAR)(dLocalIndex - 10);
+    return 0;
+}
+
+static void MenuPickerAppendMnemonic(LPTSTR ptText, UINT cchText, UINT dLocalIndex)
+{
+    TCHAR cMn = MenuPickerMnemonicChar(dLocalIndex);
+    if (0 == cMn)
+        return;
+
+    TCHAR atSuffix[8];
+    StringCchPrintf(atSuffix, 8, TEXT("(&%c)"), cMn);
+    StringCchCat(ptText, cchText, atSuffix);
+}
+
 static UINT MenuPickerPopupBuild(HMENU hPopupMenu, UINT dMode, UINT dStartIndex)
 {
     UINT dCount, dEndIndex, i;
@@ -95,6 +118,7 @@ static UINT MenuPickerPopupBuild(HMENU hPopupMenu, UINT dMode, UINT dStartIndex)
         {
             continue;
         }
+        MenuPickerAppendMnemonic(atText, MAX_STRING, i - dStartIndex);
         AppendMenu(hPopupMenu, MF_STRING, MENU_PICKER_DYNAMIC_FIRST + i, atText);
     }
 
@@ -122,7 +146,7 @@ static HRESULT MenuPickerAppendItems(HMENU hMenu, UINT dMode, UINT dStartIndex, 
         {
             continue;
         }
-
+        MenuPickerAppendMnemonic(atText, MAX_STRING, i - dStartIndex);
         AppendMenu(hMenu, MF_STRING, MenuPickerMenuCommandIdGet(dMode, i), atText);
     }
 
