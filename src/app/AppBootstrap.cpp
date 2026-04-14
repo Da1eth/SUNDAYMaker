@@ -246,7 +246,6 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
 #endif
 
     hSubMenu = GetSubMenu(ghMainMenu, 1);
-    DeleteMenu(hSubMenu, IDM_FIND_HIGHLIGHT_OFF, MF_BYCOMMAND);
 #ifndef FIND_STRINGS
     DeleteMenu(hSubMenu, IDM_FIND_DLG_OPEN, MF_BYCOMMAND);
 #endif

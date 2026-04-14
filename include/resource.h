@@ -388,7 +388,6 @@
 #define IDM_SQUARE_PASTE                32827
 #define IDM_REBER_DORESET               32851
 #define IDM_FIND_DLG_OPEN               32861
-#define IDM_FIND_HIGHLIGHT_OFF          32862
 #define IDM_FIND_JUMP_NEXT              32863
 #define IDM_FIND_JUMP_PREV              32864
 #define IDM_FIND_TARGET_SET             32865
