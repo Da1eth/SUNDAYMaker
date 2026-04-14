@@ -1,7 +1,9 @@
 // 합성용 레이어 박스 뷰 관리
 #include "InsertUi.h"
+#include "DocViewBridgeInternal.h"
 #include "ViewCentralInternal.h"
 #include "UiText.h"
+#include "MenuMnemonic.h"
 //-------------------------------------------------------------------------------------------------
 struct LAYERBOXSTRUCT
 {
@@ -425,12 +427,15 @@ LRESULT CALLBACK gpfLayerTBProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 // エディットボックスサブクラス
 static VOID LayerHandleInsertCommand(HWND hWnd, UINT id)
 {
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
     INT iXpos;
     INT iYln;
 
     LayerContentsImportable(hWnd, id, &iXpos, &iYln, 0);
-    ViewPosResetCaret(iXpos, iYln);
+    DocViewResetCaret(iXpos, iYln);
     DocPageInfoRenew(-1, 1);
+    EditChangeSetApply(stChangeSet);
     if (gstLayerState.bQuickClose)
     {
         DestroyWindow(hWnd);
@@ -974,6 +979,7 @@ VOID Lyb_OnContextMenu(HWND hWnd, HWND hWndContext, UINT xPos, UINT yPos)
 
     hMenu = LoadMenu(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDM_LAYERBOX_POPUP));
     hSubMenu = GetSubMenu(hMenu, 0);
+    MenuMnemonicApply(hSubMenu);
 
     dRslt = TrackPopupMenu(hSubMenu, 0, posX, posY, 0, hWnd, nullptr); //    TPM_CENTERALIGN | TPM_VCENTERALIGN |
     DestroyMenu(hMenu);

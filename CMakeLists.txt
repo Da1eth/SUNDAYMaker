@@ -48,6 +48,7 @@ set(APP_SOURCES
     ${ORR_SRC_APP_DIR}/CommonUtil.cpp
     ${ORR_SRC_APP_DIR}/ContextCtrl.cpp
     ${ORR_SRC_APP_DIR}/ImageExport.cpp
+    ${ORR_SRC_APP_DIR}/MenuMnemonic.cpp
     ${ORR_SRC_APP_DIR}/MenuPicker.cpp
     ${ORR_SRC_APP_DIR}/Sunday.cpp
     ${ORR_SRC_APP_DIR}/PageCtrl.cpp
@@ -86,6 +87,7 @@ set(PALETTE_SOURCES
 )
 
 set(VIEW_SOURCES
+    ${ORR_SRC_VIEW_DIR}/EditorController.cpp
     ${ORR_SRC_VIEW_DIR}/ViewCaret.cpp
     ${ORR_SRC_VIEW_DIR}/ViewCentral.cpp
     ${ORR_SRC_VIEW_DIR}/ViewCentralColour.cpp
@@ -107,6 +109,8 @@ set(HEADERS
     ${ORR_INCLUDE_DIR}/AppLayoutInternal.h
     ${ORR_INCLUDE_DIR}/AppCommandRegistry.h
     ${ORR_INCLUDE_DIR}/AppModuleInternal.h
+    ${ORR_INCLUDE_DIR}/ChangeSet.h
+    ${ORR_INCLUDE_DIR}/EditorController.h
     ${ORR_INCLUDE_DIR}/InsertUi.h
     ${ORR_INCLUDE_DIR}/SettingsIniStore.h
     ${ORR_INCLUDE_DIR}/Sunday.h

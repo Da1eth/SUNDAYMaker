@@ -1,5 +1,6 @@
 #include "Sunday.h"
 #include "AppModuleInternal.h"
+#include "DocViewBridgeInternal.h"
 
 extern HINSTANCE ghInst;
 extern HWND ghViewWnd;
@@ -185,7 +186,11 @@ static HRESULT ColourTagInsertFromDialog(HWND hDlg)
     if (FAILED(hr))
         return E_FAIL;
 
-    return InsertTagPairAtSelection(atString, COLOUR_TAG_CLOCLR);
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
+    hr = InsertTagPairAtSelection(atString, COLOUR_TAG_CLOCLR);
+    EditChangeSetApply(stChangeSet);
+    return hr;
 }
 //-------------------------------------------------------------------------------------------------
 
@@ -543,6 +548,9 @@ static HRESULT GradientTagInsertFromDialog(HWND hDlg)
     iLineCount = iEndLine - iStartLine;
     bFirst = TRUE;
 
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
+
     for (iLine = iStartLine; iEndLine >= iLine; iLine++)
     {
         HEXCOLOUR stMainColour;
@@ -553,15 +561,19 @@ static HRESULT GradientTagInsertFromDialog(HWND hDlg)
             stShadowColour = HexColourInterpolate(stStartShadow, stEndShadow, iLine - iStartLine, iLineCount);
 
         if (!(ColourTagBuildOpenTag(&stMainColour, bHasShadow ? &stShadowColour : nullptr, bHasShadow, atOpenTag, _countof(atOpenTag))))
+        {
+            EditChangeSetApply(stChangeSet);
             return E_FAIL;
+        }
 
         InsertLineTagPair(iLine, atOpenTag, COLOUR_TAG_CLOCLR, bFirst);
         bFirst = FALSE;
     }
 
-    ViewPosResetCaret(iCaretDot, iCaretLine);
-    ViewRedrawSetLine(-1);
+    DocViewResetCaret(iCaretDot, iCaretLine);
+    DocViewRefreshAll();
     DocPageInfoRenew(-1, 1);
+    EditChangeSetApply(stChangeSet);
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
@@ -602,8 +614,8 @@ static HRESULT InsertTagPairAtSelection(LPCTSTR ptOpenTag, LPCTSTR ptCloseTag)
         iLine = gdDocLine;
         DocInsertString(&iDot, &iLine, nullptr, ptOpenTag, 0, FALSE);
 
-        ViewPosResetCaret(iCaretDot + (INT)cchOpen, iCaretLine);
-        ViewRedrawSetLine(-1);
+        DocViewResetCaret(iCaretDot + (INT)cchOpen, iCaretLine);
+        DocViewRefreshAll();
         DocPageInfoRenew(-1, 1);
         return S_OK;
     }
@@ -628,9 +640,9 @@ static HRESULT InsertTagPairAtSelection(LPCTSTR ptOpenTag, LPCTSTR ptCloseTag)
         }
     }
 
-    ViewSelPageAll(-1);
-    ViewPosResetCaret(iCaretDot, iCaretLine);
-    ViewRedrawSetLine(-1);
+    DocViewClearSelection();
+    DocViewResetCaret(iCaretDot, iCaretLine);
+    DocViewRefreshAll();
     DocPageInfoRenew(-1, 1);
 
     return S_OK;

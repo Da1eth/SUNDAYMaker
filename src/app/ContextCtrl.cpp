@@ -1,4 +1,5 @@
 #include "Sunday.h"
+#include "MenuMnemonic.h"
 
 VOID CntxEditBuild(VOID);
 INT_PTR CALLBACK CntxEditDlgProc(HWND, UINT, WPARAM, LPARAM);
@@ -313,6 +314,8 @@ VOID CntxEditBuild(VOID)
     {
         ContextPopupAppendItem(gstContextMenuState.hPopupMenu, stItem);
     }
+
+    MenuMnemonicApply(gstContextMenuState.hPopupMenu);
 }
 
 HRESULT CntxEditDlgOpen(HWND hWnd)
