@@ -1,4 +1,5 @@
 #include "AppModuleInternal.h"
+#include "MenuMnemonic.h"
 
 namespace
 {
@@ -287,6 +288,7 @@ BOOLEAN AppFileTabHandleContextMenu(HWND hWnd, HWND hWndContext,
 
     hMenu = LoadMenu(stUiContext.hInstance, MAKEINTRESOURCE(IDM_MULTIFILE_POPUP));
     hSubMenu = GetSubMenu(hMenu, 0);
+    MenuMnemonicApply(hSubMenu);
 
     stTcHitInfo.pt = stPos;
     ScreenToClient(AppFileTabHandleGet(), &(stTcHitInfo.pt));

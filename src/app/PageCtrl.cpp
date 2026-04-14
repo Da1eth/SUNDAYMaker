@@ -4,6 +4,7 @@
 #include "Palette.h"
 #include "PageListInternal.h"
 #include "UiText.h"
+#include "MenuMnemonic.h"
 //-------------------------------------------------------------------------------------------------
 
 namespace
@@ -788,6 +789,7 @@ static VOID Plt_OnContextMenu(HWND hWnd, HWND, UINT xPos, UINT yPos)
 
     hMenu = LoadMenu(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_PGLVPOPUPMENU));
     hSubMenu = GetSubMenu(hMenu, 0);
+    MenuMnemonicApply(hSubMenu);
 
     //    頁が１しかないなら、削除を無効に
     if (1 >= iCount)

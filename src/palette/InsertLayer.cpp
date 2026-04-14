@@ -3,6 +3,7 @@
 #include "DocViewBridgeInternal.h"
 #include "ViewCentralInternal.h"
 #include "UiText.h"
+#include "MenuMnemonic.h"
 //-------------------------------------------------------------------------------------------------
 struct LAYERBOXSTRUCT
 {
@@ -978,6 +979,7 @@ VOID Lyb_OnContextMenu(HWND hWnd, HWND hWndContext, UINT xPos, UINT yPos)
 
     hMenu = LoadMenu(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDM_LAYERBOX_POPUP));
     hSubMenu = GetSubMenu(hMenu, 0);
+    MenuMnemonicApply(hSubMenu);
 
     dRslt = TrackPopupMenu(hSubMenu, 0, posX, posY, 0, hWnd, nullptr); //    TPM_CENTERALIGN | TPM_VCENTERALIGN |
     DestroyMenu(hMenu);
