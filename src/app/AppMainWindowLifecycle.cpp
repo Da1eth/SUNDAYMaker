@@ -1,6 +1,7 @@
 #include "Sunday.h"
 #include "Palette.h"
 #include "AppModuleInternal.h"
+#include "MenuMnemonic.h"
 
 namespace
 {
@@ -148,6 +149,8 @@ BOOLEAN Cls_OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     StatusBar_SetText(ghMainStatusBarWnd, 1, TEXT(""));
 
     AppTrayIconInitialise(hWnd);
+
+    MenuMnemonicApply(GetMenu(hWnd));
 
     return TRUE;
 }

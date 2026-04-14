@@ -1,5 +1,6 @@
 #include "Sunday.h"
 #include "InsertUi.h"
+#include "DocViewBridgeInternal.h"
 #include "UiText.h"
 
 #define FRAMEINSERTBOX_CLASS TEXT("FRAMEINSBOX_CLASS")
@@ -1835,7 +1836,7 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
 
         //    矩形選択無しとみなす
 
-        ViewSelPageAll(-1); //    範囲とったので解除しておｋ
+        DocViewClearSelection();
 
         //    選択範囲内でもっとも長いドット数を確認
         baseDot = DocPageMaxDotGet(iTop, iBtm);
@@ -1931,17 +1932,16 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
 #endif
 
         //    最終的なキャレットの位置をリセット
-        ViewPosResetCaret(iInX, iLns);
+        DocViewResetCaret(iInX, iLns);
 
-        ViewRedrawSetLine(iTop);
-        DocBadSpaceCheck(iTop); //    バッド空白チェキ
+        DocViewRefreshLine(iTop);
+        DocBadSpaceCheck(iTop);
 
-        //    改行してるから、これ以降全部再描画必要
-        iLns = DocNowFilePageLineCount(); //    現在行数再認識
+        iLns = DocNowFilePageLineCount();
         for (i = iTop; iLns > i; i++)
         {
-            DocBadSpaceCheck(i); //    バッド空白チェキ
-            ViewRedrawSetLine(i);
+            DocBadSpaceCheck(i);
+            DocViewRefreshLine(i);
         }
 
         DocPageInfoRenew(-1, 1);
@@ -2173,8 +2173,12 @@ HRESULT FrameInsBoxDoInsert(HWND hWnd)
     //    空白を全部透過指定にする
     LayerTransparentToggle(hLyrWnd, 1);
     //    上書きする
+    EDIT_CHANGESET stChangeSet{};
+    EditChangeSetScope scope(&stChangeSet);
     LayerContentsImportable(hLyrWnd, IDM_LYB_OVERRIDE, &iX, &iY, D_INVISI);
-    ViewPosResetCaret(iX, iY);
+    DocViewResetCaret(iX, iY);
+    DocPageInfoRenew(-1, 1);
+    EditChangeSetApply(stChangeSet);
     //    終わったら閉じる
     DestroyWindow(hLyrWnd);
 

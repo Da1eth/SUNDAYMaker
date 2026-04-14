@@ -205,15 +205,6 @@ inline VOID ViewExtractionModeSet(BOOLEAN bExtractMode)
 HRESULT ViewScrollBarAdjust(LPVOID);
 HRESULT ViewRedrawDo(HWND, HDC);
 HRESULT ViewColourEditDlg(HWND);
-VOID ViewEditUndoForward(VOID);
-VOID ViewEditRedoForward(VOID);
-VOID ViewEditCopySelection(UINT dSquareMode);
-VOID ViewEditCutSelection(UINT dSquareMode);
-VOID ViewEditExecuteExtraction(HINSTANCE hInstance);
-INT ViewEditFillSelection(LPTSTR ptPattern);
-VOID ViewEditDeleteForward(VOID);
-VOID ViewEditDeleteBackward(VOID);
-HRESULT ViewEditInsertLineBreak(BOOLEAN bScripted);
-INT ViewEditInputCharacter(TCHAR ch);
-INT ViewEditPasteFromClipboard(UINT bSquareMode);
-BOOLEAN ViewLayoutCommandForward(INT id, HWND hMainWindow);
+
+// 편집 명령은 EditorController.h 에서 선언한다.
+#include "EditorController.h"

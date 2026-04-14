@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Sunday.h"
+#include "EditorController.h"
 
 struct PALETTE_LIST_HIT
 {

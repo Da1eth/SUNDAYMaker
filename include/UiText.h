@@ -38,7 +38,6 @@
 #define ORR_UI_LABEL_LAYERBOX              ORR_UI_TEXT("레이어 박스")
 #define ORR_UI_LABEL_EXTRACTION_MODE       ORR_UI_TEXT("분할 선택 모드")
 #define ORR_UI_LABEL_FIND_DLG_OPEN         ORR_UI_TEXT("찾기")
-#define ORR_UI_LABEL_FIND_HIGHLIGHT_OFF    ORR_UI_TEXT("검색 설정 초기화")
 
 #define ORR_UI_LABEL_FIND_JUMP_NEXT        ORR_UI_TEXT("다음 찾기")
 #define ORR_UI_LABEL_FIND_JUMP_PREV        ORR_UI_TEXT("이전 찾기")

@@ -3,6 +3,7 @@
 #include "Sunday.h"
 #include "Palette.h"
 #include "AppModuleInternal.h"
+#include "MenuMnemonic.h"
 #include "UiText.h"
 
 HINSTANCE ghAppInst;
@@ -852,7 +853,9 @@ HRESULT OpenHistoryInitialise(HWND hWnd)
         }
         //    メニュー情報の書換
         hSubMenu = GetSubMenu(ghMainMenu, 0);
-        ModifyMenu(hSubMenu, 2, MF_BYPOSITION | MF_POPUP, (UINT_PTR)ghHistyMenu, TEXT("열어본 파일 기록"));
+        ModifyMenu(hSubMenu, 2, MF_BYPOSITION | MF_POPUP, (UINT_PTR)ghHistyMenu,
+               UiTextGetLabel(IDM_OPEN_HISTORY));
+        MenuMnemonicApply(ghMainMenu);
         // 文字列固定はあまりイクナイ
 
         DrawMenuBar(hWnd); //    要らないかも？
