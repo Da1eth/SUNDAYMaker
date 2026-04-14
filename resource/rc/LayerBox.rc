@@ -2,9 +2,9 @@ IDM_LAYERBOX_POPUP MENU
 BEGIN
     POPUP "레이어 박스"
     BEGIN
-        MENUITEM "복사(&C)",                      IDM_LYB_COPY
+        MENUITEM "복사",                          IDM_LYB_COPY
         MENUITEM SEPARATOR
-        MENUITEM "공백 투과 설정 리셋(&R)",       IDM_LYB_TRANCE_RELEASE
-        MENUITEM "모든 공백을 투과하기(&T)",       IDM_LYB_TRANCE_ALL
+        MENUITEM "공백 투과 설정 리셋",           IDM_LYB_TRANCE_RELEASE
+        MENUITEM "모든 공백을 투과하기",           IDM_LYB_TRANCE_ALL
     END
 END
