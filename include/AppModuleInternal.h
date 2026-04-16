@@ -21,7 +21,7 @@ extern HWND        ghMainStatusBarWnd;
 extern HBRUSH      ghMainStatusRedBrush;
 extern UINT        gdBackupInterval;
 extern UINT        gbUniPad;
-extern UINT        gbUniRadixHex;
+extern UINT        gbNoSjisSkipHangul;
 extern UINT        gbAutoBUmsg;
 extern UINT        gbCrLfCode;
 extern UINT        gbSaveMsgOn;

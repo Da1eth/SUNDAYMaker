@@ -59,15 +59,15 @@ BOOLEAN AppHandleMainCommand(HWND hWnd, INT id)
 
 HRESULT OptionDialogueOpen(VOID)
 {
-    UINT bURHbuff, bABUIbuff;
+    UINT bSkipHangulBuff, bABUIbuff;
 
-    bURHbuff = gbUniRadixHex;
+    bSkipHangulBuff = gbNoSjisSkipHangul;
     bABUIbuff = gdBackupInterval;
     DialogBoxParam(ghAppInst, MAKEINTRESOURCE(IDD_GENERAL_OPTION_DLG), ghMainWnd, OptionDlgProc, 0);
 
-    if (bURHbuff != gbUniRadixHex)
+    if (bSkipHangulBuff != gbNoSjisSkipHangul)
     {
-        UnicodeRadixExchange();
+        HangulNoSjisToggle();
     }
     if (bABUIbuff != gdBackupInterval)
     {
@@ -127,7 +127,7 @@ static INT_PTR CALLBACK OptionDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
         CheckDlgButton(hDlg, IDCB_SAVE_MSG_ON, gbSaveMsgOn ? BST_CHECKED : BST_UNCHECKED);
         CheckRadioButton(hDlg, IDRB_CRLF_STRB, IDRB_CRLF_2CH_YY, gbCrLfCode ? IDRB_CRLF_2CH_YY : IDRB_CRLF_STRB);
         CheckDlgButton(hDlg, IDCB_USE_UNISPACE_SET, gbUniPad ? BST_CHECKED : BST_UNCHECKED);
-        CheckDlgButton(hDlg, IDCB_UNIRADIX_HEX, gbUniRadixHex ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(hDlg, IDCB_NOSJIS_SKIP_HANGUL, gbNoSjisSkipHangul ? BST_CHECKED : BST_UNCHECKED);
 
         dValue = InitParamValue(INIT_LOAD, VL_MULTI_ACT_E, 0);
         CheckDlgButton(hDlg, IDCB_MULTIACT_ENA, dValue ? BST_CHECKED : BST_UNCHECKED);
@@ -202,9 +202,9 @@ static INT_PTR CALLBACK OptionDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
             gbUniPad = dValue ? 1 : 0;
             InitParamValue(INIT_SAVE, VL_USE_UNICODE, gbUniPad);
 
-            dValue = IsDlgButtonChecked(hDlg, IDCB_UNIRADIX_HEX);
-            gbUniRadixHex = dValue ? 1 : 0;
-            InitParamValue(INIT_SAVE, VL_UNIRADIX_HEX, gbUniRadixHex);
+            dValue = IsDlgButtonChecked(hDlg, IDCB_NOSJIS_SKIP_HANGUL);
+            gbNoSjisSkipHangul = dValue ? 1 : 0;
+            InitParamValue(INIT_SAVE, VL_NOSJIS_SKIP_HANGUL, gbNoSjisSkipHangul);
 
             dValue = IsDlgButtonChecked(hDlg, IDCB_MULTIACT_ENA);
             InitParamValue(INIT_SAVE, VL_MULTI_ACT_E, dValue ? 1 : 0);

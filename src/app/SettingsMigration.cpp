@@ -223,6 +223,8 @@ namespace
 
     VOID CleanupLegacyMigrationFiles(
         LPCTSTR ptLegacyIniPath,
+        LPCTSTR ptLegacyExePath,
+        LPCTSTR ptLegacyLocaleConfigPath,
         LPCTSTR ptLegacySqliteDllPath,
         LPCTSTR ptLegacySatoriPath,
         LPCTSTR ptLegacyKoisiPath,
@@ -238,7 +240,9 @@ namespace
         LPCTSTR ptFlipPath,
         LPCTSTR ptPalettePath)
     {
-        const array<LPCTSTR, 3> gaptStandaloneFiles = {
+        const array<LPCTSTR, 5> gaptStandaloneFiles = {
+            ptLegacyExePath,
+            ptLegacyLocaleConfigPath,
             ptLegacySqliteDllPath,
             ptLegacyImgctlDllPath,
             ptLegacyPreviewPath};
@@ -639,6 +643,8 @@ HRESULT AppMigrateLegacySettings(LPCTSTR ptExePath)
         return E_INVALIDARG;
 
     const PATH_BUFFER atLegacyIni = BuildPath(ptExePath, LEGACY_SETTINGS_INI_FILE);
+    const PATH_BUFFER atLegacyExe = BuildPath(ptExePath, TEXT("OrinrinEditor.exe"));
+    const PATH_BUFFER atLegacyLocaleConfig = BuildPath(ptExePath, TEXT("OrinrinEditor.exe.le.config"));
     const PATH_BUFFER atSettingPath = BuildPath(ptExePath, SETTINGS_INI_FILE);
     const PATH_BUFFER atLegacyKoisi = BuildPath(ptExePath, LEGACY_SETTINGS_CONTEXT_MENU_INI_FILE);
     const PATH_BUFFER atAccelKeyPath = BuildPath(ptExePath, SETTINGS_CONTEXT_MENU_INI_FILE);
@@ -669,6 +675,8 @@ HRESULT AppMigrateLegacySettings(LPCTSTR ptExePath)
 
     CleanupLegacyMigrationFiles(
         atLegacyIni.data(),
+        atLegacyExe.data(),
+        atLegacyLocaleConfig.data(),
         atLegacySqliteDll.data(),
         atLegacySatori.data(),
         atLegacyKoisi.data(),
