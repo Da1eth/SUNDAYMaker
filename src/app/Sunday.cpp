@@ -28,7 +28,7 @@ EXTERNED HWND ghMainSplitWnd; // メインのスプリットバーハンドル
 EXTERNED LONG grdSplitPos;    // スプリットバーの、左側の、画面右からのオフセット
 
 EXTERNED UINT gbUniPad;      // パディングにユニコードをつかって、ドットを見せないようにする
-EXTERNED UINT gbUniRadixHex; // ユニコード数値参照が１６進数であるか
+EXTERNED UINT gbNoSjisSkipHangul; // 한글을 NOSJIS 색칠에서 제외할지 여부
 
 UINT gdBackupInterval;     // バックアップ間隔
 EXTERNED UINT gbAutoBUmsg; // 自動バックアップメッセージ出すか？
@@ -456,8 +456,8 @@ INT InitParamValue(UINT dMode, UINT dStyle, INT nValue)
     case VL_BRUSHTMP_CLM:
         StringCchCopy(atKeyName, SUB_STRING, TEXT("BrushTmplClm"));
         break;
-    case VL_UNIRADIX_HEX:
-        StringCchCopy(atKeyName, SUB_STRING, TEXT("UniRadixHex"));
+    case VL_NOSJIS_SKIP_HANGUL:
+        StringCchCopy(atKeyName, SUB_STRING, TEXT("NoSjisSkipHangul"));
         break;
     case VL_BACKUP_INTVL:
         StringCchCopy(atKeyName, SUB_STRING, TEXT("BackUpIntvl"));

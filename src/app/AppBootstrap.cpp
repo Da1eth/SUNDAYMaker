@@ -217,7 +217,7 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
     }
 
     gbUniPad = InitParamValue(INIT_LOAD, VL_USE_UNICODE, 1);
-    gbUniRadixHex = InitParamValue(INIT_LOAD, VL_UNIRADIX_HEX, 0);
+    gbNoSjisSkipHangul = InitParamValue(INIT_LOAD, VL_NOSJIS_SKIP_HANGUL, 0);
 
     gdBackupInterval = InitParamValue(INIT_LOAD, VL_BACKUP_INTVL, 3);
     gbAutoBUmsg = InitParamValue(INIT_LOAD, VL_BACKUP_MSGON, 1);
