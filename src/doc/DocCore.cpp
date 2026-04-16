@@ -60,8 +60,8 @@ static INT DocConfirmSaveModified(HWND hWnd, const ONEFILE &stFile,
 
     StringCchPrintf(
         atMessage, ARRAYSIZE(atMessage),
-        bClosing ? TEXT("\r\n[%s] 파일이 저장되지 않았습니다. \r\n지금 저장하고 종료할까요?")
-                 : TEXT("\r\n%s 파일이 저장되지 않았습니다. 지금 저장할까요?"),
+        bClosing ? TEXT("\r\n%s 파일이 저장되지 않았습니다. 지금 저장할까요?")
+                 : TEXT("\r\n%s 파일이 저장되지 않았습니다. \r\n지금 저장하고 종료할까요?"),
         DocFileDisplayNameGet(stFile));
 
     return MessageBox(hWnd, atMessage, TEXT("꺄아아아아아악"),
