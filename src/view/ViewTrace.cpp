@@ -142,6 +142,7 @@ namespace
     static SIZE gstImgSize{};
     static HBRUSH gMoziClrBrush = nullptr;
     static HWND ghTraceDlg = nullptr;
+    static HWND ghTraceImageOpenDlg = nullptr;
     static BOOLEAN gbThumbUse = TRUE;
     static TRACEPARAM gstTrcPrm{};
     static BOOLEAN gbOnView = TRUE;
@@ -497,9 +498,9 @@ namespace
         return TRUE;
     }
 
-    static HDIB LoadImageDIB(LPCSTR lpFileName)
+    static HDIB LoadImageDIB(LPCTSTR ptFileName)
     {
-        if (!lpFileName)
+        if (!ptFileName)
             return nullptr;
 
         HDIB hDib = nullptr;
@@ -512,9 +513,6 @@ namespace
         UINT width = 0, height = 0;
         UINT cbStride = 0, cbImage = 0;
         BYTE *pBits = nullptr;
-        WCHAR atWideName[MAX_PATH]{};
-
-        MultiByteToWideChar(CP_ACP, 0, lpFileName, -1, atWideName, MAX_PATH);
 
         hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         if (SUCCEEDED(hr))
@@ -527,7 +525,7 @@ namespace
         if (FAILED(hr))
             goto cleanup;
 
-        hr = pFactory->CreateDecoderFromFilename(atWideName, nullptr, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder);
+        hr = pFactory->CreateDecoderFromFilename(ptFileName, nullptr, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder);
         if (FAILED(hr))
             goto cleanup;
 
@@ -908,14 +906,18 @@ HRESULT TraceImageFileOpen(HWND hDlg)
     BITMAPINFOHEADER stBIH{};
     OPENFILENAME stOpenFile{};
     BOOLEAN bOpened;
-    UINT_PTR cchSize;
     TCHAR atFilePath[MAX_PATH]{};
     TCHAR atFileName[MAX_STRING]{};
-    CHAR acName[MAX_PATH]{};
+
+    if (ghTraceImageOpenDlg && IsWindow(ghTraceImageOpenDlg))
+    {
+        SetForegroundWindow(ghTraceImageOpenDlg);
+        return S_FALSE;
+    }
 
     stOpenFile.lStructSize = sizeof(OPENFILENAME);
     stOpenFile.hInstance = GetModuleHandle(nullptr);
-    stOpenFile.hwndOwner = GetDesktopWindow();
+    stOpenFile.hwndOwner = hDlg;
     stOpenFile.lpstrFilter = TEXT("이미지 파일 ( bmp, png, jpg, gif, webp )\0*.bmp;*.png;*.jpg;*.jpeg;*.jpe;*.gif;*.webp\0\0");
     stOpenFile.lpstrFile = atFilePath;
     stOpenFile.nMaxFile = MAX_PATH;
@@ -930,9 +932,6 @@ HRESULT TraceImageFileOpen(HWND hDlg)
     if (!bOpened)
         return E_ABORT;
 
-    StringCchLength(atFilePath, MAX_PATH, &cchSize);
-    WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, atFilePath, cchSize, acName, MAX_PATH, nullptr, nullptr);
-
     if (ghImgDib)
     {
         DeleteDIB(ghImgDib);
@@ -944,7 +943,7 @@ HRESULT TraceImageFileOpen(HWND hDlg)
         ghOrigDib = nullptr;
     }
 
-    ghOrigDib = LoadImageDIB(acName);
+    ghOrigDib = LoadImageDIB(atFilePath);
     if (!ghOrigDib)
         return E_HANDLE;
 
@@ -1145,7 +1144,6 @@ static UINT_PTR CALLBACK ImageOpenDlgHookProc(HWND hDlg, UINT message, WPARAM wP
     INT idCtrl, id, cx, cy;
     UINT codeNotify, state;
     TCHAR atFile[MAX_PATH], atSpec[MAX_PATH];
-    CHAR acName[MAX_PATH];
     LPOFNOTIFY pstOfNty;
     RECT rect, dlgRect;
     POINT stPoint;
@@ -1154,6 +1152,7 @@ static UINT_PTR CALLBACK ImageOpenDlgHookProc(HWND hDlg, UINT message, WPARAM wP
     switch (message)
     {
     case WM_INITDIALOG:
+        ghTraceImageOpenDlg = GetParent(hDlg);
         chThumbDib = nullptr;
         chUseCbxWnd = GetDlgItem(hDlg, IDCB_TRC_DLG_USETHUMB);
         Button_SetCheck(chUseCbxWnd, gbThumbUse ? BST_CHECKED : BST_UNCHECKED);
@@ -1216,20 +1215,24 @@ static UINT_PTR CALLBACK ImageOpenDlgHookProc(HWND hDlg, UINT message, WPARAM wP
         {
             CommDlg_OpenSave_GetSpec(pstOfNty->hdr.hwndFrom, atSpec, MAX_PATH);
             CommDlg_OpenSave_GetFilePath(pstOfNty->hdr.hwndFrom, atFile, MAX_PATH);
-            WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, atFile, MAX_PATH, acName, MAX_PATH, nullptr, nullptr);
             if (chThumbDib)
             {
                 DeleteDIB(chThumbDib);
                 chThumbDib = nullptr;
             }
-            chThumbDib = LoadImageDIB(acName);
+            chThumbDib = LoadImageDIB(atFile);
             InvalidateRect(chPanelWnd, nullptr, TRUE);
         }
         return static_cast<INT_PTR>(TRUE);
 
     case WM_DESTROY:
+        if (ghTraceImageOpenDlg == GetParent(hDlg))
+            ghTraceImageOpenDlg = nullptr;
         if (chThumbDib)
+        {
             DeleteDIB(chThumbDib);
+            chThumbDib = nullptr;
+        }
         return static_cast<INT_PTR>(TRUE);
     }
 
