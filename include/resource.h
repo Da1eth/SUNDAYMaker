@@ -192,7 +192,7 @@
 #define IDTB_FRMINSBOX_TOOLBAR          1059
 #define IDE_PAGENAME                    1060
 #define IDCB_LAYER_EDGE_BLANK           1061
-#define IDCB_UNIRADIX_HEX               1063
+#define IDCB_NOSJIS_SKIP_HANGUL          1063
 #define IDCB_USE_UNISPACE_SET           1065
 #define IDSL_LAYERBOX_TRANCED           1067
 #define IDRB_SEL_INS_EDIT               1068

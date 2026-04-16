@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "TextEncoding.h"
 
-extern UINT gbUniRadixHex;
-
 namespace
 {
     inline BOOL AsciiIsDigit(unsigned char ch)
@@ -495,27 +493,13 @@ LPSTR LegacyEncodedTextEncodeAlloc(LPCTSTR ptTexts)
         (void)iRslt;
         if (bCant)
         {
-            if (gbUniRadixHex)
-            {
-                StringCchPrintfA(acNoSjisText, 10, ("&#x%X;"), ptTexts[d]);
-            }
-            else
-            {
-                StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), ptTexts[d]);
-            }
+            StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), ptTexts[d]);
         }
 
 #ifdef SPMOZI_ENCODE
         if (IsSpMozi(ptTexts[d]))
         {
-            if (gbUniRadixHex)
-            {
-                StringCchPrintfA(acNoSjisText, 10, ("&#x%X;"), ptTexts[d]);
-            }
-            else
-            {
-                StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), ptTexts[d]);
-            }
+            StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), ptTexts[d]);
         }
 #endif
 

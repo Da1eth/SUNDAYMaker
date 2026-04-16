@@ -112,6 +112,16 @@ inline constexpr UINT CT_LYR_TRNC  = 0x0010;    // 레이어 투과 범위
 inline constexpr UINT CT_FINDED    = 0x0020;    // 검색 히트
 inline constexpr UINT CT_NOSJIS    = 0x0040;    // CP932 불가 문자
 
+// 한글 유니코드 범위 판별
+inline BOOL IsHangulChar(TCHAR ch)
+{
+    return (ch >= 0xAC00 && ch <= 0xD7A3)  // 한글 음절
+        || (ch >= 0x1100 && ch <= 0x11FF)  // 한글 자모
+        || (ch >= 0x3130 && ch <= 0x318F)  // 호환용 한글 자모
+        || (ch >= 0xA960 && ch <= 0xA97F)  // 한글 자모 확장-A
+        || (ch >= 0xD7B0 && ch <= 0xD7FF); // 한글 자모 확장-B
+}
+
 inline constexpr UINT CT_SELRTN    = 0x0100;    // 행말 개행도 선택
 inline constexpr UINT CT_LASTSP    = 0x0200;    // 행말 공백
 inline constexpr UINT CT_RETURN    = 0x0400;    // 개행 필요
@@ -814,7 +824,7 @@ UINT        SqnAppendLetter( LPUNDOBUFF, UINT, TCHAR, INT, INT, UINT );
 UINT        SqnAppendString( LPUNDOBUFF, UINT, LPCTSTR, INT, INT, UINT );
 UINT        SqnAppendSquare( LPUNDOBUFF, UINT, LPCTSTR, LPPOINT, INT, UINT );
 
-HRESULT        UnicodeRadixExchange( VOID );
+HRESULT        HangulNoSjisToggle( VOID );
 
 #ifdef FIND_STRINGS
 HRESULT        FindDialogueOpen( HINSTANCE, HWND );

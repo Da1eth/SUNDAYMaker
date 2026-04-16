@@ -9,7 +9,7 @@ BEGIN
     PUSHBUTTON      "적용",IDB_APPLY,297,188,40,14
     GROUPBOX        "일반 설정",IDC_STATIC,6,6,208,96
     CONTROL         "도트 조정할 때 유니코드 공백 사용하기",IDCB_USE_UNISPACE_SET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,20,188,12
-    CONTROL         "유니코드 문자 저장 시 16진수 표기 사용하기",IDCB_UNIRADIX_HEX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,36,188,12
+    CONTROL         "한글을 유니코드 문자로 색칠하지 않기",IDCB_NOSJIS_SKIP_HANGUL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,36,188,12
     CONTROL         "파일 저장 시 알림 표시하기",IDCB_SAVE_MSG_ON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,52,188,12
     CONTROL         "프로그램을 동시에 여러 개 실행할 수 있게 하기 (비추천)",IDCB_MULTIACT_ENA,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,68,188,12

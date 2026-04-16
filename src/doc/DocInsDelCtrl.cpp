@@ -8,7 +8,7 @@ extern FILES_ITR gitFileIt; //    今見てるファイルの本体
 extern INT gixFocusPage; //    注目中のページ・とりあえず０・０インデックス
 
 extern UINT gbUniPad;      //    パディングにユニコードをつかって、ドットを見せないようにする
-extern UINT gbUniRadixHex; //    ユニコード数値参照が１６進数であるか
+extern UINT gbNoSjisSkipHangul; // 한글을 NOSJIS 색칠에서 제외할지 여부
 
 extern UINT gdRightRuler; //    右線の位置
 //-------------------------------------------------------------------------------------------------
@@ -40,28 +40,13 @@ BOOLEAN DocBuildNoSjisText(TCHAR cchMozi, LPSTR pcNoSjisText)
 
     if (bCant)
     {
-        //    CP932로 표현할 수 없으면 숫자 문자 참조를 사용한다.
-        if (gbUniRadixHex)
-        {
-            StringCchPrintfA(acNoSjisText, 10, ("&#x%X;"), cchMozi);
-        }
-        else
-        {
-            StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
-        }
+        StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
     }
 
 #ifdef SPMOZI_ENCODE
     if (IsSpMozi(cchMozi)) //    機種依存文字変換
     {
-        if (gbUniRadixHex)
-        {
-            StringCchPrintfA(acNoSjisText, 10, ("&#x%X;"), cchMozi);
-        }
-        else
-        {
-            StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
-        }
+        StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
 
         bCant = TRUE; //    ユニコードのみ文字として扱う
     }
@@ -97,14 +82,7 @@ BOOLEAN DocBuildCopyEntityText(TCHAR cchMozi, LPTSTR ptEntity, UINT_PTR cchSize)
     if (!bCant)
         return FALSE;
 
-    if (gbUniRadixHex)
-    {
-        StringCchPrintf(ptEntity, cchSize, TEXT("&#x%X;"), (UINT)cchMozi);
-    }
-    else
-    {
-        StringCchPrintf(ptEntity, cchSize, TEXT("&#%u;"), (UINT)cchMozi);
-    }
+    StringCchPrintf(ptEntity, cchSize, TEXT("&#%u;"), (UINT)cchMozi);
 
     return TRUE;
 }
@@ -187,7 +165,10 @@ INT_PTR DocLetterDataCheck(LPLETTER pstLttr, TCHAR ch)
         WideCharToMultiByte(932, WC_NO_BEST_FIT_CHARS, atCheck, 1, acDummy, 10, "?", &bCantCp932);
         if (bCantCp932)
         {
-            pstLttr->mzStyle |= CT_NOSJIS;
+            if (!(gbNoSjisSkipHangul && IsHangulChar(ch)))
+            {
+                pstLttr->mzStyle |= CT_NOSJIS;
+            }
         }
     }
     iByte = DocLetterByteCheck(pstLttr); //    バイト数確認
