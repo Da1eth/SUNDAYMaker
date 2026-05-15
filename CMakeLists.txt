@@ -82,6 +82,7 @@ set(PALETTE_SOURCES
     ${ORR_SRC_PALETTE_DIR}/InsertUi.cpp
     ${ORR_SRC_PALETTE_DIR}/PaletteBucket.cpp
     ${ORR_SRC_PALETTE_DIR}/PaletteCommon.cpp
+    ${ORR_SRC_PALETTE_DIR}/PaletteEditor.cpp
     ${ORR_SRC_PALETTE_DIR}/PaletteListUi.cpp
     ${ORR_SRC_PALETTE_DIR}/UserItem.cpp
 )

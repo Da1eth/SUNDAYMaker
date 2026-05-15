@@ -59,8 +59,8 @@ HRESULT UserItemAppendMenu(HWND hWnd)
                                          MENU_PICKER_MENU_GROUP_MAX)))
         return E_FAIL;
 
-    ModifyMenu(hInsertMenu, 6,
-               MF_BYPOSITION | MF_POPUP,
+    ModifyMenu(hInsertMenu, IDM_MN_USER_REFS,
+               MF_BYCOMMAND | MF_POPUP,
                (UINT_PTR)ghMainUserItemMenu,
                UiTextGetMenuText(IDM_MN_USER_REFS));
 
