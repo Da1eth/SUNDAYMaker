@@ -950,7 +950,6 @@ HRESULT TraceImageFileOpen(HWND hDlg)
     ghImgDib = CopyDIB(ghOrigDib);
     stBIH.biSize = sizeof(BITMAPINFOHEADER);
     HeadDIB(ghImgDib, &stBIH);
-    TRACE(TEXT("IMAGE [%dx%d]"), stBIH.biWidth, stBIH.biHeight);
     gstImgSize.cx = stBIH.biWidth;
     gstImgSize.cy = stBIH.biHeight;
     TraceRedrawIamge();

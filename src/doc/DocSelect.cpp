@@ -19,8 +19,6 @@ HRESULT DocSelRangeSet(INT dTop, INT dBottom)
 {
     const auto stRange = DocSelectionRangeNormalize(dTop, dBottom);
 
-    TRACE(TEXT(" 선택 범위 세팅 [%d - %d]"), dTop, dBottom);
-
     DocCurrentPage().dSelLineTop = stRange.dTop;
     DocCurrentPage().dSelLineBottom = stRange.dBottom;
 
@@ -154,8 +152,6 @@ INT DocLetterSelStateToggle(INT nowDot, INT rdLine, INT dForce)
         dStyle &= ~CT_SELECT;
     }
     itLine->vcLine.at(iLetter).mzStyle = dStyle;
-
-    TRACE(TEXT("L[%d] D[%d] B[%d] f[0x%X]"), rdLine, dLtrDot, dByte, dStyle);
 
     if (maeSty != dStyle) //    フラグ操作されてたら
     {
@@ -416,7 +412,6 @@ INT DocSelectedDelete(PINT pdDot, PINT pdLine, UINT bSqSel, BOOLEAN bFirst)
 
         i = (*gitFileIt).vcCont.at(gixFocusPage).dSelLineTop;
         j = (*gitFileIt).vcCont.at(gixFocusPage).dSelLineBottom;
-        TRACE(TEXT("선택 범위 삭제 [T%d - B%d]"), i, j);
         if (0 > i)
         {
             return 0;
@@ -564,7 +559,6 @@ INT DocSelectedBrushFilling(LPTSTR ptBrush, PINT pdDot, PINT pdLine)
 
     i = (*gitFileIt).vcCont.at(gixFocusPage).dSelLineTop;
     j = (*gitFileIt).vcCont.at(gixFocusPage).dSelLineBottom;
-    TRACE(TEXT("선택 범위 채우기 [T%d - B%d]"), i, j);
     if (0 > i)
     {
         return 0;
@@ -695,7 +689,6 @@ INT DocSelectTextGetAlloc(UINT bStyle, LPVOID *pText, LPPOINT *pstPt)
     //    開始地点から開始
     d = (*gitFileIt).vcCont.at(gixFocusPage).dSelLineTop;
     k = (*gitFileIt).vcCont.at(gixFocusPage).dSelLineBottom;
-    TRACE(TEXT("선택 범위 복사 [%d - %d]"), d, k);
     if (0 > d)
     {
         d = 0;

@@ -69,7 +69,6 @@ BOOL ViewShowCaret(VOID)
     if (!(bRslt))
     {
         bRslt = CreateCaret(ghViewWnd, ghbmpCaret, CARET_WIDTH, LINE_HEIGHT);
-        TRACE(TEXT("CARET reset %u"), bRslt);
         gbCaretShow = FALSE;
         ViewDrawCaret(caret.dXdot, caret.dLine, 1); //    位置を決める
     }

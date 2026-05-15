@@ -302,8 +302,6 @@ UINT ViewSqSelModeToggle(UINT bMode, LPVOID pVoid)
 {
     POINT point;
 
-    TRACE(TEXT("矩形選択ON/OFF"));
-
     //    マウスドラッグ中だけモード変更を止める
     if (ghViewWnd == GetCapture())
         return gbSqSelect; //    なぜかRETURNが抜けてた？
@@ -355,7 +353,6 @@ UINT ViewSelRangeCheck(UINT dMode)
     //    始点終点が同じ位置＝何も選択していない
     if (gstSelBgnOrig.x == gstSelEndOrig.x && gstSelBgnOrig.y == gstSelEndOrig.y)
     {
-        TRACE(TEXT("範囲消滅による選択解除"));
         if (bKeepSelection)
         {
             ViewSelRefreshSelectingState();
@@ -364,7 +361,6 @@ UINT ViewSelRangeCheck(UINT dMode)
 
         if (IsSelecting(nullptr))
         {
-            TRACE(TEXT("選択中であったら範囲解除"));
             ViewSelPageAll(-1); //    中の中でDocSelRangeSet
         }
 
@@ -398,7 +394,6 @@ HRESULT ViewSelMoveCheck(UINT dMode)
         }
         else
         {
-            TRACE(TEXT("他操作による選択解除"));
             ViewSelPageAll(-1);
             ViewSelTrackedBoundsReset();
         }
@@ -412,15 +407,12 @@ HRESULT ViewSelMoveCheck(UINT dMode)
             //    ALT押しながら選択開始したら、矩形選択をToggleする
             ViewSqSelModeToggle(0, nullptr);
 
-            TRACE(TEXT("STATE[%d %d %d]"), gbShiftOn, gbAltOn, dMode);
-
             ViewSelTrackedBoundsPrime(gstPrePos.x, gstPrePos.y);
             gstSqSelEnd.x = caret.dXdot;
             gstSqSelEnd.y = caret.dLine;
             gstSelEndOrig = gstSqSelEnd;
 
             gbSelecting = TRUE; //    選択処理開始
-            TRACE(TEXT("選択処理開始[%d:%d]"), gstSqSelBegin.x, gstSqSelBegin.y);
 
             ViewSelStateChange(TRUE);
         }
@@ -433,8 +425,6 @@ HRESULT ViewSelMoveCheck(UINT dMode)
 // ページ全体の選択状態をON/OFFする
 INT ViewSelPageAll(INT dForce)
 {
-    TRACE(TEXT("全選択[%d]"), dForce);
-
     if (0 < dForce)
         gbSelecting = TRUE; //    選択処理開始
     else if (0 > dForce)
@@ -462,8 +452,6 @@ HRESULT ViewSelStateChange(UINT dFirst)
     if (gstPrePos.y != caret.dLine)
     {
         dStep = caret.dLine - gstPrePos.y; //    マイナス方向に注意セヨ
-
-        TRACE(TEXT("選択で行またぎ発生：D[%d] L[%d] St[%d]"), caret.dXdot, caret.dLine, dStep);
 
         //    元々キャレットのあった行の処理
         //    逆方向への選択処理はここでやっていけるはず
@@ -505,8 +493,6 @@ HRESULT ViewSelStateChange(UINT dFirst)
     //    開始位置を挟むとき、それを失わないように修正
     //    上端、下端も失わないように注意セヨ
 
-    TRACE(TEXT("[%d:%d][%d:%d]"), gstSqSelBegin.x, gstSqSelBegin.y, gstSqSelEnd.x, gstSqSelEnd.y);
-
     if (gbExtract)
     {
         return ViewSelStateChangeExtract();
@@ -531,8 +517,6 @@ HRESULT ViewSelStateChange(UINT dFirst)
 UINT ViewSelBackCheck(INT line)
 {
     //    選択範囲、左上右下調整・Orig位置は絶対的な内容のはず・Orig値を元にすればいいか？
-
-    TRACE(TEXT("LINE[%d] ST[%d]"), line, gstSelBgnOrig.y);
 
     //    開始から上の行イッたら
     if (gstSelBgnOrig.y >= line)

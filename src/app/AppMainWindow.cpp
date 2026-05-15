@@ -10,7 +10,6 @@ static BOOLEAN WndProcHandleMiscMessage(HWND hWnd, UINT message, WPARAM wParam, 
     switch (message)
     {
     case WM_MBUTTONUP:
-        TRACE(TEXT("MIDDLE  UP"));
         *plResult = 0;
         return TRUE;
 

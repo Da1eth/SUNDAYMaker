@@ -69,8 +69,6 @@ BOOLEAN AppHandleMainNotifyRoute(HWND hWnd, INT idFrom, LPNMHDR pstNmhdr)
     {
         curSel = TabCtrl_GetCurSel(pstNmhdr->hwndFrom);
 
-        TRACE(TEXT("TMPL TAB sel [%d]"), curSel);
-
         AppHandleDockTabSelection(curSel);
         return TRUE;
     }
@@ -119,8 +117,6 @@ VOID Cls_OnContextMenu(HWND hWnd, HWND hWndContext, UINT xPos, UINT yPos)
     stPost.x = (SHORT)xPos;
     stPost.y = (SHORT)yPos;
 
-    TRACE(TEXT("MAIN CONTEXT[%d x %d]"), stPost.x, stPost.y);
-
     AppHandleMainContextMenuRoute(hWnd, hWndContext, &stPost);
 }
 
@@ -150,8 +146,6 @@ void Cls_OnCopyData(HWND hWnd, HWND hWndFrom, PCOPYDATASTRUCT pstCopyData)
 
     StringCchCopy(atBuff, MAX_PATH, (LPTSTR)(pstCopyData->lpData));
 
-    TRACE(TEXT("COPYDATA[%s]"), atBuff);
-
     AppHandleDocumentOpenPath(hWnd, atBuff);
 }
 #endif
@@ -165,8 +159,6 @@ VOID Cls_OnDropFiles(HWND hWnd, HDROP hDrop)
     DragQueryFile(hDrop, 0, atFileName, MAX_PATH);
     DragFinish(hDrop);
 
-    TRACE(TEXT("DROP[%s]"), atFileName);
-
     AppHandleDocumentOpenPath(hWnd, atFileName);
 }
 
@@ -178,7 +170,6 @@ VOID Cls_OnHotKey(HWND hWnd, INT idHotKey, UINT fuModifiers, UINT vk)
 
     if (VK_D == vk)
     {
-        TRACE(TEXT("Hotkey Incoming!!"));
         DocThreadDropCopy();
     }
 }

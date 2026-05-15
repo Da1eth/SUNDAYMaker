@@ -910,7 +910,6 @@ static LRESULT PageListNotify(HWND, LPNMLISTVIEW pstLv)
     {
         if (0 <= iItem) //    該当ページへの移動
         {
-            TRACE(TEXT("페이지 선택[%d]"), iItem);
             PageListSelectAndSync(iItem, stState.bReturnFocus, FALSE);
         }
     }
@@ -932,8 +931,6 @@ static LRESULT PageListNotify(HWND, LPNMLISTVIEW pstLv)
         iSel = ListView_GetNextItem(hLvWnd, -1, LVNI_ALL | LVNI_SELECTED);
         if (0 > iSel)
             return 0; //    選択してなかったら終わり
-
-        TRACE(TEXT("NM_RETURN[%d]"), iSel);
     }
     //    NM_KEYDOWN    NM_CHAR    関知できず
 
@@ -963,10 +960,6 @@ static LRESULT PageListNotify(HWND, LPNMLISTVIEW pstLv)
             if (DocCurrentPageIndex() == lvLine) //    今の行・とりあえず青
             {
                 pstDraw->clrTextBk = 0x00FF8080;
-            }
-            else if (stState.ixPreviousSelection == lvLine) //    前の行・とりやえず灰
-            {
-                pstDraw->clrTextBk = 0x00CCCCDD;
             }
             else
             {
@@ -1020,11 +1013,7 @@ HRESULT PageListViewChange(INT iPage, INT iPrePage)
 
     LONG iItem;
 
-    // 현재 선택과 직전 선택 행만 다시 그려 전체 깜빡임을 줄인다.
     SendMessage(PageListViewWindowGet(), LVM_REDRAWITEMS, iPrePage, iPrePage);
-    SendMessage(PageListViewWindowGet(), LVM_REDRAWITEMS, stState.ixPreviousSelection, stState.ixPreviousSelection);
-
-    stState.ixPreviousSelection = iPrePage; //    直前の選択頁を記録しておく
 
     iItem = ListView_GetItemCount(PageListViewWindowGet());
     if (iItem <= iPage || 0 > iPage)
@@ -1161,8 +1150,6 @@ static HRESULT PageListSpinning(INT iPage, INT bDir)
     {
         return E_ABORT;
     }
-
-    TRACE(TEXT("페이지 이동 처리[%d]"), iPage);
 
     iSwapPage = iPage - ((0 < bDir) ? 1 : -1);
     std::swap(DocCurrentFile().vcCont.at(iPage), DocCurrentFile().vcCont.at(iSwapPage));
@@ -1373,8 +1360,6 @@ static HRESULT PageListDuplicate(INT iNowPage)
 {
     INT iNewPage;
 
-    TRACE(TEXT("페이지 복제"));
-
     iNewPage = DocPageCreate(iNowPage); //    新頁
     PageListInsert(iNewPage);           //    ページリストビューに追加
 
@@ -1454,7 +1439,6 @@ static LPTSTR CALLBACK PageListHoverTipInfo(LPVOID)
     }
 
     PageListPreviewTextGetAlloc(stState.ixMouseSelection, &ptBuffer);
-    TRACE(TEXT("HOVER CALL %d"), stState.ixMouseSelection);
 
     return ptBuffer;
 }

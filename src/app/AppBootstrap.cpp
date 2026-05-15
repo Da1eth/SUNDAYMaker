@@ -105,7 +105,6 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     iCode = InitParamValue(INIT_LOAD, VL_CLASHCOVER, 0);
     if (iCode)
     {
-        TRACE(TEXT("비정상 종료 가능성 있음"));
         iCode = MessageBox(nullptr, TEXT("프로그램이 비정상적으로 종료된 흔적이 있습니다.\r\n프로그램 기동 전에 백업 파일을 먼저 확인해주세요.\r\n「아니오」를 누르면 파일을 확인할 수 있도록 프로그램을 종료합니다."), TEXT("미안합니다"), MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
         if (IDNO == iCode)
         {
@@ -154,8 +153,6 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         ReleaseMutex(ghAppMutex);
         CloseHandle(ghAppMutex);
     }
-
-    TRACE(TEXT("Program Terminate"));
 
     return (int)msg.wParam;
 }

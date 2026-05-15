@@ -498,8 +498,6 @@ LRESULT InsertPaletteOnNotify(HWND hWnd, INT idFrom, LPNMHDR pstNmhdr)
             {
                 items = gvcPalInsertTmpls.at(gNowGroup).vcItems.size();
 
-                TRACE(TEXT("LINE TMPL[%d x %d]"), iItem, iSubItem);
-
                 if (0 <= iPos && iPos < items) //    なんか選択した
                 {
                     StringCchCopy(atItem, SUB_STRING, gvcPalInsertTmpls.at(gNowGroup).vcItems.at(iPos).c_str());
@@ -529,8 +527,6 @@ HRESULT PaletteCommonItemListOn(UINT listNum)
     }
 
     const vector<wstring> &vcItems = gvcPalInsertTmpls.at(listNum).vcItems;
-
-    TRACE(TEXT("LINE open NUM[%u] ITEM[%u] GRID[%d]"), listNum, (UINT)vcItems.size(), gLnClmCnt);
 
     return PaletteListPopulate(ghLvItemWnd, vcItems, gLnClmCnt);
 }
@@ -593,7 +589,6 @@ LRESULT CALLBACK gpfInsertPaletteItemProc(HWND hWnd, UINT msg, WPARAM wParam, LP
 #ifdef PI_CLICK_NEW
     case WM_LBUTTONDOWN: //    この部分がないとクルックに反応しない
     case WM_MBUTTONDOWN:
-        TRACE(TEXT("LTL_MOUSenAN"));
         return 0;
 
     case WM_LBUTTONUP:
@@ -628,15 +623,11 @@ VOID PaletteCommonListOnMouseButtonUp(HWND hWnd, UINT msg, INT x, INT y, UINT ke
     PALETTE_LIST_HIT stHit;
     LPCTSTR ptItem;
 
-    TRACE(TEXT("LTL_MOUSEB %d x %d"), x, y);
-
     if (!(PaletteListHitTest(hWnd, gLnClmCnt, POINT{x, y}, &stHit)))
     {
         ViewFocusSet();
         return;
     }
-
-    TRACE(TEXT("LINE TMPL[%d x %d][%d]"), stHit.iItem, stHit.iSubItem, stHit.iIndex);
 
     ptItem = PaletteListGroupItemGet(gvcPalInsertTmpls, gNowGroup, stHit.iIndex);
     if (!(ptItem))
@@ -676,7 +667,6 @@ LRESULT InsertPaletteListOnNotify(HWND hWnd, INT idFrom, LPNMHDR pstNmhdr)
 
     if (TTN_GETDISPINFO == nmCode)
     {
-        TRACE(TEXT("LT_TOOL %u"), idFrom);
         if (IDLV_LT_ITEMVIEW == idFrom)
         {
             pstDispInfo = (LPNMTTDISPINFO)pstNmhdr;

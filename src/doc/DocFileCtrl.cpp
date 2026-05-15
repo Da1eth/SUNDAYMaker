@@ -623,12 +623,10 @@ INT DocUnicode2UTF8(LPVOID *pText)
     // 필요한 버퍼 크기를 먼저 구한다.
     cbSize = WideCharToMultiByte(CP_UTF8, 0, (LPTSTR)(*pText), -1, nullptr, 0,
                                  nullptr, nullptr);
-    TRACE(TEXT("cbSize[%d]"), cbSize);
     pUtf8 = (LPSTR)malloc(cbSize);
     ZeroMemory(pUtf8, cbSize);
     rslt = WideCharToMultiByte(CP_UTF8, 0, (LPTSTR)(*pText), -1, (LPSTR)(pUtf8),
                                cbSize, nullptr, nullptr);
-    TRACE(TEXT("rslt[%d]"), rslt);
 
     FREE(*pText);
 
@@ -765,8 +763,6 @@ HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
 
     SetRect(&rect, 4, 4, iDotX - 4, iDotY - 4);
 
-    TRACE(TEXT("해상도 %d x %d"), iDotX, iDotY);
-
     iByteSize =
         DocPageTextGetAlloc(gitFileIt, gixFocusPage, D_UNI, &pBuffer, TRUE);
     ptText = (LPTSTR)pBuffer;
@@ -811,11 +807,9 @@ HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
 
     if (SUCCEEDED(ImageFileSaveDC(hMemDC, atOutName, bType)))
     {
-        TRACE(TEXT("%s 를 저장했어요."), atOutName);
     }
     else
     {
-        TRACE(TEXT("%s 저장에 실패했어요."), atOutName);
     }
 
     SelectBitmap(hMemDC, hOldBmp);

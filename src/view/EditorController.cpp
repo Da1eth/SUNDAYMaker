@@ -10,6 +10,8 @@ UINT gbPalBucketMode;
 static TCHAR gatBrushPtn[SUB_STRING];
 
 static VOID CtrlRedrawChangedLines(EDIT_CHANGESET *pstChangeSet, INT dLine, INT iLines, INT bCrLf);
+static VOID CtrlReplayUndoRedo(EDIT_CHANGESET *pstChangeSet, BOOLEAN bRedo);
+static VOID CtrlDeleteAtCaret(EDIT_CHANGESET *pstChangeSet, BOOLEAN bBackward);
 static INT CtrlInsertLiteralCharacter(EDIT_CHANGESET *pstChangeSet, TCHAR ch);
 static INT CtrlInsertStringWithStyle(EDIT_CHANGESET *pstChangeSet, LPCTSTR ptText, UINT dStyle, PINT pdMozi);
 static HRESULT CtrlBrushFillAtCaret(EDIT_CHANGESET *pstChangeSet);
@@ -169,6 +171,42 @@ static VOID CtrlRedrawChangedLines(EDIT_CHANGESET *pstChangeSet, INT dLine, INT 
     EditChangeSetRequestRedrawLine(pstChangeSet, dLine);
 }
 
+static VOID CtrlReplayUndoRedo(EDIT_CHANGESET *pstChangeSet, BOOLEAN bRedo)
+{
+    auto caret = ViewCurrentCaret();
+
+    DocPageSelStateToggle(-1);
+
+    const INT dCrLf = bRedo ? DocRedoExecute(&caret.dXdot, &caret.dLine)
+                            : DocUndoExecute(&caret.dXdot, &caret.dLine);
+    if (dCrLf)
+    {
+        EditChangeSetRequestRedrawAll(pstChangeSet);
+    }
+    else
+    {
+        EditChangeSetRequestRedrawLine(pstChangeSet, caret.dLine);
+    }
+
+    EditChangeSetRequestCaretMove(pstChangeSet, caret.dXdot, caret.dLine);
+}
+
+static VOID CtrlDeleteAtCaret(EDIT_CHANGESET *pstChangeSet, BOOLEAN bBackward)
+{
+    UINT bSqSel = 0;
+    const BOOLEAN bSelect = IsSelecting(&bSqSel);
+    const INT iLines = DocNowFilePageLineCount();
+    auto caret = ViewCurrentCaret();
+
+    const INT bCrLf = bSelect ? DocSelectedDelete(&caret.dXdot, &caret.dLine, bSqSel, TRUE)
+                              : (bBackward ? DocInputBkSpace(&caret.dXdot, &caret.dLine)
+                                           : DocInputDelete(caret.dXdot, caret.dLine));
+
+    CtrlRedrawChangedLines(pstChangeSet, caret.dLine, iLines, bCrLf);
+    EditChangeSetRequestCaretMove(pstChangeSet, caret.dXdot, caret.dLine);
+    pstChangeSet->bRenewPageInfo = TRUE;
+}
+
 static INT CtrlInsertLiteralCharacter(EDIT_CHANGESET *pstChangeSet, TCHAR ch)
 {
     auto caret = ViewCurrentCaret();
@@ -198,21 +236,7 @@ VOID ViewEditUndoForward(VOID)
 {
     EDIT_CHANGESET stChangeSet{};
     EditChangeSetScope scope(&stChangeSet);
-    auto caret = ViewCurrentCaret();
-
-    DocPageSelStateToggle(-1);
-
-    const INT dCrLf = DocUndoExecute(&caret.dXdot, &caret.dLine);
-    if (dCrLf)
-    {
-        EditChangeSetRequestRedrawAll(&stChangeSet);
-    }
-    else
-    {
-        EditChangeSetRequestRedrawLine(&stChangeSet, caret.dLine);
-    }
-
-    EditChangeSetRequestCaretMove(&stChangeSet, caret.dXdot, caret.dLine);
+    CtrlReplayUndoRedo(&stChangeSet, FALSE);
     EditChangeSetApply(stChangeSet);
 }
 
@@ -220,21 +244,7 @@ VOID ViewEditRedoForward(VOID)
 {
     EDIT_CHANGESET stChangeSet{};
     EditChangeSetScope scope(&stChangeSet);
-    auto caret = ViewCurrentCaret();
-
-    DocPageSelStateToggle(-1);
-
-    const INT dCrLf = DocRedoExecute(&caret.dXdot, &caret.dLine);
-    if (dCrLf)
-    {
-        EditChangeSetRequestRedrawAll(&stChangeSet);
-    }
-    else
-    {
-        EditChangeSetRequestRedrawLine(&stChangeSet, caret.dLine);
-    }
-
-    EditChangeSetRequestCaretMove(&stChangeSet, caret.dXdot, caret.dLine);
+    CtrlReplayUndoRedo(&stChangeSet, TRUE);
     EditChangeSetApply(stChangeSet);
 }
 
@@ -279,17 +289,7 @@ VOID ViewEditDeleteForward(VOID)
 {
     EDIT_CHANGESET stChangeSet{};
     EditChangeSetScope scope(&stChangeSet);
-    UINT bSqSel = 0;
-    const BOOLEAN bSelect = IsSelecting(&bSqSel);
-    const INT iLines = DocNowFilePageLineCount();
-    auto caret = ViewCurrentCaret();
-
-    const INT bCrLf = bSelect ? DocSelectedDelete(&caret.dXdot, &caret.dLine, bSqSel, TRUE)
-                              : DocInputDelete(caret.dXdot, caret.dLine);
-
-    CtrlRedrawChangedLines(&stChangeSet, caret.dLine, iLines, bCrLf);
-    EditChangeSetRequestCaretMove(&stChangeSet, caret.dXdot, caret.dLine);
-    stChangeSet.bRenewPageInfo = TRUE;
+    CtrlDeleteAtCaret(&stChangeSet, FALSE);
     EditChangeSetApply(stChangeSet);
 }
 
@@ -297,19 +297,9 @@ VOID ViewEditDeleteBackward(VOID)
 {
     EDIT_CHANGESET stChangeSet{};
     EditChangeSetScope scope(&stChangeSet);
-    UINT bSqSel = 0;
-    const BOOLEAN bSelect = IsSelecting(&bSqSel);
-    const INT iLines = DocNowFilePageLineCount();
-    auto caret = ViewCurrentCaret();
-
-    const INT bCrLf = bSelect ? DocSelectedDelete(&caret.dXdot, &caret.dLine, bSqSel, TRUE)
-                              : DocInputBkSpace(&caret.dXdot, &caret.dLine);
-
-    CtrlRedrawChangedLines(&stChangeSet, caret.dLine, iLines, bCrLf);
-    EditChangeSetRequestCaretMove(&stChangeSet, caret.dXdot, caret.dLine);
-    stChangeSet.bRenewPageInfo = TRUE;
+    CtrlDeleteAtCaret(&stChangeSet, TRUE);
     EditChangeSetApply(stChangeSet);
-    gdXmemory = caret.dXdot;
+    gdXmemory = ViewCurrentCaret().dXdot;
 }
 
 HRESULT ViewEditInsertLineBreak(BOOLEAN bScripted)
@@ -371,9 +361,7 @@ INT ViewEditInputCharacter(TCHAR ch)
         bCrLf = DocSelectedDelete(&caret.dXdot, &caret.dLine, 0, TRUE);
     }
 
-    const INT width = DocInsertLetter(&caret.dXdot, caret.dLine, ch);
-    caret.dMozi = DocLetterPosGetAdjust(&caret.dXdot, caret.dLine, 0);
-    EditChangeSetRequestCaretMove(&stChangeSet, caret.dXdot, caret.dLine);
+    const INT width = CtrlInsertLiteralCharacter(&stChangeSet, ch);
     gdXmemory = caret.dXdot;
 
     if (bCrLf)
@@ -441,8 +429,6 @@ INT ViewInsertUniSpace(UINT dCommando)
     EditChangeSetScope scope(&stChangeSet);
     INT width;
     TCHAR ch;
-
-    TRACE(TEXT("挿入：ユニコード空白"));
 
     switch (dCommando)
     {
@@ -537,8 +523,6 @@ static HRESULT CtrlScriptedLineFeed(VOID)
 
         iChkDot = iPrvDot;
     }
-
-    TRACE(TEXT("TEXT START D[%d] L[%d]"), iTgtDot, caret.dLine);
 
     const HRESULT hr = CtrlScriptedLineFeedAtDot(iTgtDot, &stChangeSet);
     if (SUCCEEDED(hr))
@@ -640,6 +624,12 @@ static HRESULT CtrlBrushFillAtCaret(EDIT_CHANGESET *pstChangeSet)
     LPTSTR ptBuff;
     auto caret = ViewCurrentCaret();
 
+    if (!(gatBrushPtn[0]))
+    {
+        NotifyBalloonExist(TEXT("브러시를 먼저 선택해 주세요"), TEXT("입력 확인"), NIIF_INFO);
+        return S_FALSE;
+    }
+
     dTgDot = DocLineStateCheckWithDot(caret.dXdot, caret.dLine, &dLeft, &dRight, &iBgnMozi, &iCntMozi, &bSpace);
     if (!(bSpace))
         return S_FALSE;
@@ -647,7 +637,6 @@ static HRESULT CtrlBrushFillAtCaret(EDIT_CHANGESET *pstChangeSet)
     ptBuff = BrushStringMake(dTgDot, gatBrushPtn);
     if (!(ptBuff))
     {
-        NotifyBalloonExist(TEXT("ブラシを選んでおいてね"), TEXT("操作ミス"), NIIF_INFO);
         return E_OUTOFMEMORY;
     }
 
@@ -774,8 +763,6 @@ LPTSTR BrushStringMake(INT dDotLen, LPTSTR ptPattern)
     LPTSTR ptBuff, ptPadd = nullptr;
     wstring wsBuff;
 
-    wsBuff.clear();
-
     dPtnDot = ViewStringWidthGet(ptPattern);
     if (0 >= dPtnDot || 0 >= dDotLen)
     {
@@ -814,9 +801,12 @@ LPTSTR BrushStringMake(INT dDotLen, LPTSTR ptPattern)
         }
     }
 
-    cchSize = wsBuff.size() + 8;
+    cchSize = wsBuff.size() + 1;
     ptBuff = (LPTSTR)malloc(cchSize * sizeof(TCHAR));
-    ZeroMemory(ptBuff, cchSize * sizeof(TCHAR));
+    if (!(ptBuff))
+    {
+        return nullptr;
+    }
     StringCchCopy(ptBuff, cchSize, wsBuff.c_str());
 
     return ptBuff;

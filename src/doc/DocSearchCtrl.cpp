@@ -360,8 +360,6 @@ INT_PTR FindPageSearch(LPTSTR ptPattern, INT iTgtPage, FILES_ITR itFile)
 
     //    TCHAR    ttBuf;
 
-    TRACE(TEXT("PAGE[%d] SEARCH"), iTgtPage);
-
     if (!(ptPattern))
     {
         return -1;
