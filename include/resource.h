@@ -147,7 +147,6 @@
 #define IDI_TREE_FILE_MLT               604
 #define IDI_TREE_FILE_ETC               605
 #define IDR_HEADKASEN_TTF               607
-#define IDM_TESTCODE                    999
 #define IDSB_VIEW_STATUS_BAR            1000
 #define IDLV_PAGELISTVIEW               1001
 #define IDTB_MAIN_TOOLBAR               1002

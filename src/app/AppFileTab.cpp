@@ -60,8 +60,6 @@ VOID Ftb_OnMButtonUp(HWND hWnd, INT x, INT y, UINT flags)
     stTcHitInfo.pt.y = y;
     curSel = TabCtrl_HitTest(AppFileTabHandleGet(), &stTcHitInfo);
 
-    TRACE(TEXT("FTAB start TAB [%d] [%d x %d]"), curSel, x, y);
-
     MultiFileTabClose(curSel);
 }
 
@@ -254,12 +252,8 @@ HRESULT AppFileTabHandleSelectionChange(VOID)
 
     curSel = TabCtrl_GetCurSel(AppFileTabHandleGet());
 
-    TRACE(TEXT("FILE TAB sel [%d]"), curSel);
-
     if (FAILED(AppFileTabNumberFromSelection(curSel, &dNumber, atText, MAX_PATH)))
         return E_OUTOFMEMORY;
-
-    TRACE(TEXT("FILE [%s] param[%d]"), atText, dNumber);
 
     return MultiFileTabSelectDocument(dNumber);
 }
@@ -341,7 +335,6 @@ LPCTSTR AppFileTabTooltipTextGet(const POINT *pstScreenPos, LPTSTR ptFallback,
     ScreenToClient(AppFileTabHandleGet(), &(stTcHitTest.pt));
 
     curSel = TabCtrl_HitTest(AppFileTabHandleGet(), &stTcHitTest);
-    TRACE(TEXT("FILE TAB under [%d]"), curSel);
 
     ptText = DocMultiFileNameGet(curSel);
     if (ptText)

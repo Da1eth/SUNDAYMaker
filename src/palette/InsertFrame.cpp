@@ -1028,8 +1028,6 @@ INT_PTR Frm_OnInitDialog(HWND hDlg, HWND hWndFocus, LPARAM lParam)
     gstFrameEdit.stOrigRect.top = 0;
     gstFrameEdit.stOrigRect.left = 0;
 
-    TRACE(TEXT("FRM DLG SIZE [%d x %d]"), gstFrameEdit.stOrigRect.right, gstFrameEdit.stOrigRect.bottom);
-
     //    コンボックスに名前いれとく
     hWorkWnd = GetDlgItem(hDlg, IDCB_BOX_NAME_SEL);
 
@@ -1124,7 +1122,6 @@ INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
     case IDS_FRAME_IMAGE:
         if (STN_DBLCLK == codeNotify) //    ダボークルックされた
         {
-            TRACE(TEXT("だぼーくるっく"));
             InvalidateRect(hWndCtl, nullptr, TRUE);
         }
         return (INT_PTR)TRUE;
@@ -1201,9 +1198,6 @@ INT_PTR Frm_OnWindowPosChanging(HWND hDlg, LPWINDOWPOS pstWpos)
     if (SWP_NOSIZE & pstWpos->flags)
         return FALSE;
 
-    //    x,y：ウインドウ左上座標　cx,cy：ウインドウの幅高さ
-    TRACE(TEXT("FRM CHANGING [%d x %d][%d x %d]"), pstWpos->x, pstWpos->y, pstWpos->cx, pstWpos->cy);
-
     if (gstFrameEdit.stOrigRect.right > pstWpos->cx)
         pstWpos->cx = gstFrameEdit.stOrigRect.right;
     if (gstFrameEdit.stOrigRect.bottom > pstWpos->cy)
@@ -1218,8 +1212,6 @@ INT_PTR Frm_OnSize(HWND hDlg, UINT state, INT cx, INT cy)
 {
     HWND hSmpWnd;
     INT xx, yy;
-
-    TRACE(TEXT("FRM SIZE [%d x %d]"), cx, cy);
 
     hSmpWnd = GetDlgItem(hDlg, IDS_FRAME_IMAGE);
 
@@ -1424,7 +1416,6 @@ LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO
 #endif
 
         iLines = iHeight / LINE_HEIGHT; //    切り捨てでおｋ
-        TRACE(TEXT("MF LINE %d"), iLines);
 
         bMultiPadd = pstInfo->dRestPadd; //    パディングするかどうか
 
@@ -1432,7 +1423,6 @@ LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO
         FrameMultiSizeGet(pstInfo, &iUpLine, &iDnLine);
 
         iMdLine = iLines - (iUpLine + iDnLine); //    柱
-        TRACE(TEXT("MF R[%d] P[%d] F[%d]"), iUpLine, iMdLine, iDnLine);
         //    もし iMdLine がマイナスになったら？　中が作られなくなるだけ
         if (0 > iMdLine)
         {
@@ -1501,8 +1491,6 @@ LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO
         }
 
         //    枠合わせ拡大モードのときはオフセットは考慮しない
-
-        TRACE(TEXT("MF RD[%d]C[%d][%d] FD[%d]C[%d][%d]"), iRoofDot, iRoofCnt, iRfRstDot, iFloorDot, iFloorCnt, iFlRstDot);
 
         //    作業に向けてクルヤー
         FramePartsResetLoopState(apstResetItems, (UINT)std::size(apstResetItems));
@@ -1693,7 +1681,6 @@ INT_PTR Frm_OnNotify(HWND hDlg, INT idFrom, LPNMHDR pstNmhdr)
         {
             if (!(pstInfo))
                 return (INT_PTR)TRUE;
-            TRACE(TEXT("%d %d"), pstUpDown->iPos, pstUpDown->iDelta);
             if (0 < pstUpDown->iDelta)
             {
                 pstInfo->dLeftOffset += 1;
@@ -1719,7 +1706,6 @@ INT_PTR Frm_OnNotify(HWND hDlg, INT idFrom, LPNMHDR pstNmhdr)
         {
             if (!(pstInfo))
                 return (INT_PTR)TRUE;
-            TRACE(TEXT("%d %d"), pstUpDown->iPos, pstUpDown->iDelta);
             if (0 < pstUpDown->iDelta)
             {
                 pstInfo->dRightOffset -= 1;
@@ -2108,7 +2094,6 @@ HWND FrameInsBoxCreate(HINSTANCE hInst, HWND hPrWnd)
     GetWindowRect(ghViewWnd, &vwRect);
     x = LINENUM_WID;
     y = RULER_AREA;
-    TRACE(TEXT("Frame %d x %d"), x, y);
 
     InsertUiPlaceContentAtViewPoint(ghViewWnd, gstFrameInsert.hWnd, &(gstFrameInsert.stGeometry), gstFrameInsert.dToolBarHeight, x, y);
 
@@ -2276,19 +2261,15 @@ VOID Fib_OnKey(HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
         switch (vk)
         {
         case VK_RIGHT:
-            TRACE(TEXT("→"));
             rect.left++;
             break;
         case VK_LEFT:
-            TRACE(TEXT("←"));
             rect.left--;
             break;
         case VK_DOWN:
-            TRACE(TEXT("↓"));
             rect.top += LINE_HEIGHT;
             break;
         case VK_UP:
-            TRACE(TEXT("↑"));
             rect.top -= LINE_HEIGHT;
             break;
         default:

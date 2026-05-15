@@ -768,8 +768,6 @@ HRESULT WindowPositionReset(HWND hWnd)
     HWND hWorkWnd;
     RECT rect;
 
-    TRACE(TEXT("★창 표시 위치 리셋"));
-
     //    メイン窓
     hWorkWnd = GetDesktopWindow();
     GetWindowRect(hWorkWnd, &rect);
@@ -887,8 +885,6 @@ HRESULT OpenHistoryLoad(HWND hWnd, INT id)
     OPHIS_ITR itHist;
 
     dNumber = id - IDM_OPEN_HIS_FIRST;
-
-    TRACE(TEXT("열어본 파일 기록 -> %d"), dNumber);
     if (OPENHIST_MAX <= dNumber)
     {
         return E_OUTOFMEMORY;

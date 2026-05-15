@@ -265,7 +265,6 @@ static BOOLEAN ViewDrawTextOut(HDC hdc, INT dDot, UINT rdLine, LPLETTER pstTexts
     ptText = (LPTSTR)malloc(cbSize);
     if (!(ptText))
     {
-        TRACE(TEXT("malloc error"));
         return FALSE;
     }
     ZeroMemory(ptText, cbSize);
@@ -320,7 +319,6 @@ static BOOLEAN ViewDrawTextOut(HDC hdc, INT dDot, UINT rdLine, LPLETTER pstTexts
                 bRslt = ExtTextOut(hdc, rdStart, dY, 0, nullptr, ptText, static_cast<UINT>(cchMr), nullptr);
                 if (!(bRslt))
                 {
-                    TRACE(TEXT("ExtTextOut error"));
                     FREE(ptText);
                     return FALSE;
                 }

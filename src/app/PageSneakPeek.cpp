@@ -111,8 +111,6 @@ HRESULT HoverTipResist(HWND hTgtWnd)
 
     TRACKMOUSEEVENT stTrackMsEv;
 
-    TRACE(TEXT("MOUSE HOVER RESIST"));
-
     ZeroMemory(&stTrackMsEv, sizeof(TRACKMOUSEEVENT));
     stTrackMsEv.cbSize = sizeof(TRACKMOUSEEVENT);
     stTrackMsEv.dwFlags = TME_HOVER | TME_LEAVE;
@@ -137,8 +135,6 @@ LRESULT HoverTipOnMouseHover(HWND hEvWnd, WPARAM wParam, LPARAM lParam, HOVERTIP
     RECT deskRect;
     POINT point;
     INT xSub, ySub;
-
-    TRACE(TEXT("MOUSE HOVER RISING"));
 
     keyFlags = (UINT)wParam;
 
@@ -167,7 +163,6 @@ LRESULT HoverTipOnMouseHover(HWND hEvWnd, WPARAM wParam, LPARAM lParam, HOVERTIP
 
     //    必要な領域を確認
     DrawText(hdc, gptContent, -1, &gstContSizeRaw, DT_LEFT | DT_CALCRECT | DT_NOPREFIX);
-    TRACE(TEXT("HOVER Size[ %d x %d, %d : %d"), gstContSizeRaw.left, gstContSizeRaw.top, gstContSizeRaw.right, gstContSizeRaw.bottom);
 
     SelectFont(hdc, hOldFnt);
 
@@ -216,8 +211,6 @@ LRESULT HoverTipOnMouseHover(HWND hEvWnd, WPARAM wParam, LPARAM lParam, HOVERTIP
 // WM_MOUSELEAVEを受け取る
 LRESULT HoverTipOnMouseLeave(HWND hEvWnd)
 {
-    TRACE(TEXT("MOUSE LEAVE RISING"));
-
     //    ここで、マウスカーソルがチップの上にくるとヤバイ
 
     return 0; //    If an application processes this message, it should return zero.
@@ -320,8 +313,6 @@ VOID Htp_OnKillFocus(HWND hWnd, HWND hwndNewFocus)
 // マウスの左ボタンがうっｐされたとき
 VOID Htp_OnLButtonUp(HWND hWnd, INT x, INT y, UINT keyFlags)
 {
-    TRACE(TEXT("HTP LUP %d x %d"), x, y); //    クライヤント座標
-
     HoverTipClose(hWnd);
 
     return;
@@ -331,8 +322,6 @@ VOID Htp_OnLButtonUp(HWND hWnd, INT x, INT y, UINT keyFlags)
 // マウスの中ボタンがうっｐされたとき
 VOID Htp_OnMButtonUp(HWND hWnd, INT x, INT y, UINT keyFlags)
 {
-    TRACE(TEXT("HTP MUP %d x %d"), x, y); //    クライヤント座標
-
     HoverTipClose(hWnd);
 
     return;
@@ -342,8 +331,6 @@ VOID Htp_OnMButtonUp(HWND hWnd, INT x, INT y, UINT keyFlags)
 // マウスの右ボタンがうっｐされたとき
 VOID Htp_OnRButtonUp(HWND hWnd, INT x, INT y, UINT keyFlags)
 {
-    TRACE(TEXT("HTP RUP %d x %d"), x, y); //    クライヤント座標
-
     HoverTipClose(hWnd);
 
     return;

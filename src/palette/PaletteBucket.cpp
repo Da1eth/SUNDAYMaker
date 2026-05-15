@@ -602,8 +602,6 @@ UINT InsertBucketItemListOn(UINT listNum)
 
     const vector<wstring> &vcItems = gvcPalBucketTmpls.at(listNum).vcItems;
 
-    TRACE(TEXT("BRUSH open NUM[%u] ITEM[%u] GRID[%d]"), listNum, (UINT)vcItems.size(), gBrhClmCnt);
-
     PaletteListPopulate(ghLvItemWnd, vcItems, gBrhClmCnt);
 
     InsertBucketInvalidateSelection();

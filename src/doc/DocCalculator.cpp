@@ -63,7 +63,6 @@ UINT DocBadSpaceCheck(INT rdLine)
     //    状態確認
     if (DocRangeIsError(gitFileIt, gixFocusPage, rdLine))
     {
-        TRACE(TEXT("범위 외 오류 발생 PAGE[%d], LINE[%d]"), gixFocusPage, rdLine);
         return 0;
     }
 

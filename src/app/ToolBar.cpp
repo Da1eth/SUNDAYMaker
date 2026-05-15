@@ -120,10 +120,6 @@ LRESULT CALLBACK gpfToolbarProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 {
     switch (msg)
     {
-    case WM_CONTEXTMENU:
-        TRACE(TEXT("TOOLBAR CONTEXT[%X]"), hWnd);
-        break;
-
     case WM_RBUTTONDOWN:
     case WM_RBUTTONUP:
         if (SendMessage(hWnd, TB_GETHOTITEM, 0, 0) >= 0)
@@ -521,8 +517,6 @@ LRESULT ToolBarOnContextMenu(HWND hWnd, HWND hWndContext, LONG xPos, LONG yPos)
         return 0;
     }
 
-    TRACE(TEXT("REBAR CONTEXT[%d x %d]"), xPos, yPos);
-
     hPopupMenu = CreatePopupMenu();
     AppendMenu(hPopupMenu, MF_STRING, IDM_REBER_DORESET, UiTextGetLabel(IDM_REBER_DORESET));
     TrackPopupMenu(hPopupMenu, 0, xPos, yPos, 0, hWnd, nullptr);
@@ -554,7 +548,6 @@ LRESULT ToolBarOnNotify(HWND hWnd, INT idFrom, LPNMHDR pstNmhdr)
 
     if (TBN_DROPDOWN == pstNmhdr->code)
     {
-        TRACE(TEXT("드롭다운 발생"));
         pstNmToolBar = (LPNMTOOLBAR)pstNmhdr;
 
         iItem = pstNmToolBar->iItem;
@@ -607,8 +600,6 @@ HRESULT ToolBarBandReset(HWND hWnd)
     UINT d;
     REBARBANDINFO stRbandInfo;
 
-    TRACE(TEXT("REBAR RESET"));
-
     ZeroMemory(&stRbandInfo, sizeof(REBARBANDINFO));
     stRbandInfo.cbSize = sizeof(REBARBANDINFO);
     stRbandInfo.fMask = RBBIM_STYLE | RBBIM_SIZE;
@@ -648,8 +639,6 @@ UINT ToolBarBandInfoGet(LPVOID pVoid)
     for (d = 0; TB_BAND_COUNT > d; d++)
     {
         SendMessage(ghRebarWnd, RB_GETBANDINFO, (WPARAM)d, (LPARAM)(&stBandInfo));
-        TRACE(TEXT("ID[%u]  CX[%d]  STYLE[%u]"), stBandInfo.wID, stBandInfo.cx, stBandInfo.fStyle);
-
         stInfo[d].wID = stBandInfo.wID;
         stInfo[d].cx = stBandInfo.cx;
         stInfo[d].fStyle = stBandInfo.fStyle;

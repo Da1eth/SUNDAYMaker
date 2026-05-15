@@ -474,17 +474,14 @@ static LRESULT CALLBACK ViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         HANDLE_MSG(hWnd, WM_CONTEXTMENU, Evw_OnContextMenu);
 
     case WM_SETFOCUS:
-        TRACE(TEXT("VIEW_WM_SETFOCUS[0x%X][0x%X]"), wParam, lParam);
         ViewShowCaret();
         break;
 
     case WM_KILLFOCUS:
-        TRACE(TEXT("VIEW_WM_KILLFOCUS[0x%X][0x%X]"), wParam, lParam);
         ViewHideCaret();
         break;
 
     case WM_ACTIVATE:
-        TRACE(TEXT("VIEW_WM_ACTIVATE[0x%X][0x%X]"), wParam, lParam);
         if (WA_INACTIVE == LOWORD(wParam))
         {
             ViewHideCaret();
@@ -492,15 +489,12 @@ static LRESULT CALLBACK ViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         break;
 
     case WM_IME_NOTIFY:
-        TRACE(TEXT("WM_IME_NOTIFY[0x%X][0x%X]"), wParam, lParam);
         break;
 
     case WM_IME_REQUEST:
-        TRACE(TEXT("WM_IME_REQUEST[0x%X][0x%X]"), wParam, lParam);
         break;
 
     case WM_IME_STARTCOMPOSITION:
-        TRACE(TEXT("WM_IME_STARTCOMPOSITION[0x%X][0x%X]"), wParam, lParam);
         hImc = ImmGetContext(ghViewWnd);
         if (hImc)
         {
@@ -511,7 +505,6 @@ static LRESULT CALLBACK ViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         break;
 
     case WM_IME_ENDCOMPOSITION:
-        TRACE(TEXT("WM_IME_ENDCOMPOSITION[0x%X][0x%X]"), wParam, lParam);
         break;
 
     case WM_IME_COMPOSITION:
@@ -642,8 +635,6 @@ static VOID Evw_OnVScroll(HWND hWnd, HWND hWndCtl, UINT code, INT pos)
     stScrollInfo.fMask = SIF_ALL;
     GetScrollInfo(hWnd, SB_VERT, &stScrollInfo);
 
-    TRACE(TEXT("code[%d] pos[%d] dPos[%d] InfoMax[%d]"), code, pos, dPos, stScrollInfo.nMax);
-
     dPrev = dPos;
 
     switch (code)
@@ -707,8 +698,6 @@ static VOID Evw_OnContextMenu(HWND hWnd, HWND hWndContext, UINT xPos, UINT yPos)
     HMENU hSubMenu;
     UINT dRslt;
 
-    TRACE(TEXT("VIEW_WM_CONTEXTMENU %d x %d"), posX, posY);
-
     const VIEWDISPLAYSTATE stDisplayState = ViewDisplayStateGet();
     const VIEWCOMMANDSTATE stCommandState = ViewCommandStateGet();
 
@@ -729,8 +718,6 @@ HRESULT ViewFocusSet(VOID)
 {
     SetFocus(ghViewWnd);
     SetWindowPos(ghPrntWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-
-    TRACE(TEXT("포커스 전환"));
 
     return S_OK;
 }

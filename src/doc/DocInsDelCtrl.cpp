@@ -300,8 +300,6 @@ INT DocInputBkSpace(PINT pdDot, PINT pdLine)
     iLetter = DocLetterPosGetAdjust(pdDot, dLine, 0); //    今の文字位置を確認
     neDot = *pdDot;
 
-    //    TRACE( TEXT("後空白[D%d C%d]"), neDot, iLetter );
-
     if (0 == iLetter && 0 == dLine)
         return 0; //    先頭かつ最初の行なら、なにもしない
 
@@ -354,8 +352,6 @@ INT DocInputDelete(INT xDot, INT yLine)
         return 0; //    はみ出してたらアウツ！
 
     iLetter = DocLetterPosGetAdjust(&xDot, yLine, 0); //    今の文字位置を確認
-
-    //    TRACE( TEXT("削除[D%d C%d]"), xDot, iLetter );
 
     DocLineParamGet(yLine, &iCount, nullptr); //    この行の文字数を斗留
 
@@ -571,7 +567,6 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
 
         if (0 == ch)
         {
-            TRACE(TEXT("nullptr 문자가 삽입되었습니다."));
             return 0;
         }
 
@@ -579,7 +574,6 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
 
         if (iLines <= rdLine)
         {
-            TRACE(TEXT("OutOfRange [%d]Dot [%d]Line"), rdLine, iLines);
             return 0;
         }
 
@@ -770,7 +764,6 @@ INT DocSquareAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize, LPPOINT 
     }
     else
     {
-        TRACE(TEXT("fatal mem error"));
         return 0;
     }
 
@@ -1047,8 +1040,6 @@ INT DocExClipSelect(UINT bStyle)
 
     cbSize = DocSelectTextGetAlloc(bStyle, &pString, nullptr);
 
-    TRACE(TEXT("BYTE:%d"), cbSize);
-
     //    もし選択範囲なかったら、Focus行の内容をコピるとか
 
     DocClipboardDataSet(pString, cbSize, bStyle);
@@ -1197,8 +1188,6 @@ HRESULT DocClipboardDataSet(LPVOID pDatum, INT cbSize, UINT dStyle)
     //    クリップボード閉じる・閉じたら即CHAINが発生する・函数内で発生させてる？
     CloseClipboard();
 
-    TRACE(TEXT("COPY DONE"));
-
     return hRslt;
 }
 //-------------------------------------------------------------------------------------------------
@@ -1226,8 +1215,6 @@ HRESULT DocPageAllCopy(UINT bStyle)
     //    SJISの場合は、ユニコード文字は&#dddd;で確保される
 
     cbSize = DocPageGetAlloc(bStyle, &pString);
-
-    TRACE(TEXT("BYTE:%d"), cbSize);
 
     DocClipboardDataSet(pString, cbSize, bStyle);
 

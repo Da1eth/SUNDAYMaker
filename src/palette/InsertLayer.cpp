@@ -197,17 +197,14 @@ static VOID LayerLoadInitialContent(LAYER_ITR itLyr, LPCTSTR ptStr, BOOLEAN bSel
 {
     if (ptStr)
     {
-        TRACE(TEXT("LAYER from STRING"));
         LayerFromString(itLyr, ptStr);
     }
     else if (bSelect)
     {
-        TRACE(TEXT("LAYER from Select"));
         LayerFromSelectArea(itLyr, bSqSel);
     }
     else
     {
-        TRACE(TEXT("LAYER from ClipBoard"));
         LayerFromClipboard(itLyr);
     }
 }
@@ -339,7 +336,6 @@ HWND LayerBoxVisibalise(HINSTANCE hInst, LPCTSTR ptStr, UINT bNormal)
     x = caret.dXdot;
     y = caret.dLine * LINE_HEIGHT;
     ViewPositionTransform(&x, &y, TRUE);
-    TRACE(TEXT("%d x %d"), x, y);
 
     InsertUiPlaceContentAtViewPoint(ghViewWnd, stLayer.hBoxWnd, &(stLayer.stGeometry), gstLayerState.dToolBarHeight, x, y);
 
@@ -523,7 +519,6 @@ LRESULT CALLBACK gpfLyrEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         id = LOWORD(wParam);         //    発生したコマンドの識別子
         hWndCtl = (HWND)lParam;      //    コマンドを発生させた子ウインドウのハンドル
         codeNotify = HIWORD(wParam); //    追加の通知メッセージ
-        TRACE(TEXT("[%X]LyrEdit COMMAND %d"), hWnd, id);
 
         if (LayerEditHandleCommandShortcut(hWnd, id))
         {
@@ -583,15 +578,6 @@ VOID Lyb_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
     switch (id)
     {
     case IDE_LYB_TEXTEDIT: //    レイヤ非表示にしてもKILLFOCUS出る
-        if (EN_SETFOCUS == codeNotify)
-        {
-            TRACE(TEXT("LYREDIT_SETFOCUS"));
-        }
-
-        if (EN_KILLFOCUS == codeNotify)
-        {
-            TRACE(TEXT("LYREDIT_KILLFOCUS"));
-        }
         break;
 
     case IDM_LYB_INSERT: //    貼り付ける
@@ -632,7 +618,6 @@ VOID Lyb_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
         break;
 
     default:
-        TRACE(TEXT("Layer未知のコマンド %d"), id);
         break;
     }
 
@@ -653,29 +638,23 @@ VOID Lyb_OnKey(HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
         switch (vk)
         {
         case VK_RIGHT:
-            TRACE(TEXT("右"));
             dotLeft = 1;
             break;
         case VK_LEFT:
-            TRACE(TEXT("左"));
             dotLeft = -1;
             break;
         case VK_DOWN:
-            TRACE(TEXT("下"));
             rect.top += LINE_HEIGHT;
             break;
         case VK_UP:
-            TRACE(TEXT("上"));
             rect.top -= LINE_HEIGHT;
             break;
         // 2024kai Enterでレイヤボックス上書き貼り付け対応
         case VK_RETURN:
-            TRACE(TEXT("Enter"));
             Lyb_OnCommand(hWnd, IDM_LYB_OVERRIDE, nullptr, 0);
             break;
         // 2024kai Escでレイヤボックスを閉じる
         case VK_ESCAPE:
-            TRACE(TEXT("Esc"));
             DestroyWindow(hWnd);
             break;
         default:
@@ -801,10 +780,6 @@ VOID Lyb_OnPaint(HWND hWnd)
                             }
 
                             bRslt = ExtTextOut(hdc, rdStart, height, 0, nullptr, ptText, cchMr, nullptr);
-                            if (!(bRslt))
-                            {
-                                TRACE(TEXT("ExtTextOut error"));
-                            }
 
                             if (cchLen != mz)
                             {
@@ -943,8 +918,6 @@ VOID Lyb_OnLButtonDown(HWND hWnd, BOOL fDoubleClick, INT x, INT y, UINT keyFlags
         sy = 0;
     iLine = sy / LINE_HEIGHT;
 
-    TRACE(TEXT("マウスボタンダウン[%d][%dx%d(%d)]"), fDoubleClick, iDot, sy, iLine);
-
     if (!(fDoubleClick))
         return; //    ダブウクルックでないと用はない
 
@@ -975,8 +948,6 @@ VOID Lyb_OnContextMenu(HWND hWnd, HWND hWndContext, UINT xPos, UINT yPos)
     posX = (SHORT)xPos; //    画面座標はマイナスもありうる
     posY = (SHORT)yPos;
 
-    TRACE(TEXT("LAYER_WM_CONTEXTMENU %d x %d"), posX, posY);
-
     hMenu = LoadMenu(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDM_LAYERBOX_POPUP));
     hSubMenu = GetSubMenu(hMenu, 0);
     MenuMnemonicApply(hSubMenu);
@@ -1003,8 +974,6 @@ HRESULT LayerTransparentToggle(HWND hWnd, UINT bMode)
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
             return E_OUTOFMEMORY;
-
-        TRACE(TEXT("공백 투과 선택 해제 %u"), bMode);
 
         //    行数確認
         iLines = itLyr->vcLyrImg.size();
@@ -1309,8 +1278,6 @@ HRESULT LayerFromSelectArea(LAYER_ITR itLyr, UINT bSqSel)
     LPTSTR ptString = nullptr;
     UINT cchSize;
     LPPOINT pstPos;
-
-    TRACE(TEXT("선택 범위에서 가져오기"));
 #ifdef DO_TRY_CATCH
     try
     {
@@ -1726,8 +1693,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
 
         xDot = xTgDot;
 
-        TRACE(TEXT("LAYER IMPORT[%d:%d]"), xTgDot, yTgLine);
-
         if (pXdot)
             *pXdot = xTgDot;
         if (pYline)
@@ -1748,7 +1713,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
         {
             iMinus = (dNeedLine + yTgLine) - iPageLine; //    追加する行数
             DocAdditionalLine(iMinus, &bFirst);         //    bFirst = FALSE;
-            TRACE(TEXT("ADD LINE[%d]"), iMinus);
         }
 
         //    白ヌキするには、前後の空白文字量を増やせばいい
@@ -1769,8 +1733,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
         {
             if (0 > dWkLine)
                 continue; //    上にめり込んでるのは処理しちゃいかん
-
-            TRACE(TEXT("Check Line V[%d] L[%d]"), dWkLine, dLyLine);
 
             //    挿入内容の位置の確認・ここで、各部分毎にばらせばいい。
             //    行単位ではなく、透過領域で区切られた文字領域毎に判定する
@@ -2014,7 +1976,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
             }
         }
 
-        TRACE(TEXT("Layer Insert OK！"));
 #ifdef DO_TRY_CATCH
     }
     catch (exception &err)

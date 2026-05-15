@@ -1157,8 +1157,6 @@ UINT DocDelayPageLoad(FILES_ITR itFile, INT iPage)
 {
     if (itFile->vcCont.at(iPage).ptRawData)
     {
-        TRACE(TEXT("지연 로딩 중입니다. [%d]"), iPage);
-
         DocDelayPageLoadFast(itFile, iPage);
 
         //    アンドゥは一旦リセットすべき＜頁開けただけなので
@@ -1301,7 +1299,6 @@ INT DocLineDataGetAlloc(INT rdLine, INT iStart, LPLETTER *pstTexts, PINT pchLen,
         *pstTexts = (LPLETTER)malloc(iSize * sizeof(LETTER));
         if (!(*pstTexts))
         {
-            TRACE(TEXT("malloc error"));
             return 0;
         }
 
@@ -1611,8 +1608,6 @@ HRESULT DocThreadDropCopy(VOID)
 
     cbSize =
         DocPageTextGetAlloc(gitFileIt, gixDropPage, D_SJIS, &pcString, FALSE);
-
-    TRACE(TEXT("%d 페이지를 복사"), gixDropPage);
 
     DocClipboardDataSet(pcString, cbSize, D_SJIS);
 

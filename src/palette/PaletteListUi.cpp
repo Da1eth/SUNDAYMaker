@@ -67,8 +67,6 @@ UINT PaletteListGridFluctuate(HWND hLvWnd, INT dFluct)
 
     clmCount = Header_GetItemCount(ListView_GetHeader(hLvWnd));
 
-    TRACE(TEXT("표시 수량 변경[%u][%d]"), clmCount, dFluct);
-
     if (0 > dFluct && 1 >= clmCount)
         return 0;
 
