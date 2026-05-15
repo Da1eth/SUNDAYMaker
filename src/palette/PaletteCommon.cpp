@@ -296,6 +296,36 @@ HRESULT PaletteCommonPositionReset(HWND hMainWnd)
 }
 //-------------------------------------------------------------------------------------------------
 
+HRESULT PaletteCommonReload(VOID)
+{
+    HRESULT hRslt;
+
+    hRslt = PaletteListGroupsLoad(FALSE, &gvcPalInsertTmpls);
+    if (FAILED(hRslt))
+        return hRslt;
+
+    if (gNowGroup >= gvcPalInsertTmpls.size())
+        gNowGroup = gvcPalInsertTmpls.empty() ? 0 : (UINT)gvcPalInsertTmpls.size() - 1;
+
+    if (ghCtgryBxWnd)
+    {
+        PaletteListComboReload(ghCtgryBxWnd, gvcPalInsertTmpls);
+        if (!(gvcPalInsertTmpls.empty()))
+            ComboBox_SetCurSel(ghCtgryBxWnd, gNowGroup);
+    }
+
+    if (ghLvItemWnd)
+    {
+        if (gvcPalInsertTmpls.empty())
+            ListView_DeleteAllItems(ghLvItemWnd);
+        else
+            PaletteCommonItemListOn(gNowGroup);
+    }
+
+    return S_OK;
+}
+//-------------------------------------------------------------------------------------------------
+
 // ドッキング状態で発生・くっついてるウインドウがリサイズされたら
 VOID PaletteCommonResize(HWND hPrntWnd, LPRECT pstFrame)
 {

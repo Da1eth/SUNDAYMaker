@@ -67,6 +67,7 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
     // 삽입 - 말풍선/유저
     {IDM_FRMINSBOX_OPEN, TEXT('I')},
     {IDM_INSFRAME_EDIT, TEXT('Z')},
+    {IDM_PALETTE_EDIT_OPEN, TEXT('P')},
 
     // 변형
     {IDM_RIGHT_GUIDE_SET, TEXT('R')},

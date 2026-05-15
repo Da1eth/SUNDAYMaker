@@ -165,6 +165,10 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
         FrameEditDialogue(stUiContext.hInstance, hWnd, 0);
         return TRUE;
 
+    case IDM_PALETTE_EDIT_OPEN:
+        PaletteEditorOpen(hWnd);
+        return TRUE;
+
     case IDM_GENERAL_OPTION:
         OptionDialogueOpen();
         return TRUE;

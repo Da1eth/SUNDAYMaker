@@ -61,6 +61,7 @@
 #define ORR_UI_LABEL_FRMINSBOX_OPEN        ORR_UI_TEXT("말풍선 박스")
 #define ORR_UI_LABEL_MN_INSFRAME_SEL       ORR_UI_TEXT("말풍선 입력")
 #define ORR_UI_LABEL_INSFRAME_EDIT         ORR_UI_TEXT("말풍선 편집")
+#define ORR_UI_LABEL_PALETTE_EDIT_OPEN     ORR_UI_TEXT("팔레트 편집")
 #define ORR_UI_LABEL_MN_USER_REFS          ORR_UI_TEXT("유저 아이템")
 #define ORR_UI_LABEL_USERINS_NA            ORR_UI_TEXT("유저 아이템")
 
