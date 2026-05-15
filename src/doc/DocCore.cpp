@@ -32,13 +32,19 @@ static HRESULT DocSyncFocusedPage(INT, INT);
 
 static HRESULT DocSyncFocusedPage(INT dPageNum, INT iPrePage)
 {
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
+
     gixFocusPage = dPageNum;
     DocCurrentFile().dNowPage = dPageNum;
     DocCurrentPage().bVisited = TRUE;
 
     DocDelayPageLoad(gitFileIt, dPageNum);
 
-    return DocAppPageListSelectionChange(dPageNum, iPrePage);
+    stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_SELECTION;
+    stSync.iPage = dPageNum;
+    stSync.iPrevPage = iPrePage;
+
+    return DocAppShellSync(stSync);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -287,7 +293,9 @@ LPARAM DocMultiFileCreate(LPTSTR ptDmyName)
         //    新規作成の準備
         gixFocusPage = -1;
 
-        DocAppPageListClear();
+        DOC_APP_SHELL_SYNC_REQUEST stSync{};
+        stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_CLEAR;
+        DocAppShellSync(stSync);
 
         itNew = gltMultiFiles.end();
         itNew--; //    末端に追加したからこれでおｋ
@@ -314,14 +322,20 @@ LPARAM DocMultiFileCreate(LPTSTR ptDmyName)
 HRESULT DocActivateEmptyCreate(LPTSTR ptFile)
 {
     INT iNewPage;
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
 
     DocMultiFileCreate(
         ptFile);                  //    新しいファイル置き場の準備・ここで返り血は要らない
     iNewPage = DocPageCreate(-1); //    ページ作っておく
-    DocAppPageListInsert(iNewPage);
+
+    stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_INSERT |
+                    DOC_APP_SYNC_FILE_TAB_FIRST |
+                    DOC_APP_SYNC_TITLE;
+    stSync.iPage = iNewPage;
+    stSync.ptText = ptFile;
+    DocAppShellSync(stSync);
+
     DocPageChange(iNewPage);      //    その頁にフォーカスを合わせる
-    DocAppMultiFileTabFirst(ptFile);
-    DocAppTitleChange(ptFile);
 
     return S_OK;
 }
@@ -331,6 +345,7 @@ HRESULT DocActivateEmptyCreate(LPTSTR ptFile)
 HRESULT DocMultiFileModify(UINT dMode)
 {
     TCHAR atFile[MAX_PATH]; // ファイル名
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
 
     StringCchCopy(atFile, MAX_PATH, DocCurrentFile().atFileName);
     if (0 == atFile[0])
@@ -345,7 +360,10 @@ HRESULT DocMultiFileModify(UINT dMode)
         StringCchCat(atFile, MAX_PATH, MODIFY_MSG);
     }
 
-    DocAppMultiFileTabRename(DocCurrentFile().dUnique, atFile);
+    stSync.dFlags = DOC_APP_SYNC_FILE_TAB_RENAME;
+    stSync.dFileNumber = DocCurrentFile().dUnique;
+    stSync.ptText = atFile;
+    DocAppShellSync(stSync);
 
     return S_OK;
 }
@@ -355,6 +373,7 @@ HRESULT DocMultiFileModify(UINT dMode)
 HRESULT DocMultiFileSelect(LPARAM uqNumber)
 {
     POINT stCaret;
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
 
     const auto itNow = std::find_if(
         gltMultiFiles.begin(), gltMultiFiles.end(),
@@ -366,13 +385,14 @@ HRESULT DocMultiFileSelect(LPARAM uqNumber)
 
     DocViewClearSelection();
 
-    DocAppPageListClear();
-
     gitFileIt = itNow; //    ファイルなう
 
-    DocAppPageListBuild(nullptr);
-
-    DocAppTitleChange(itNow->atFileName);
+    stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_CLEAR |
+                    DOC_APP_SYNC_PAGE_LIST_BUILD |
+                    DOC_APP_SYNC_TITLE;
+    stSync.pContext = nullptr;
+    stSync.ptText = itNow->atFileName;
+    DocAppShellSync(stSync);
 
     DocModifyContent(itNow->dModify); //    変更したかどうか
 
@@ -384,7 +404,9 @@ HRESULT DocMultiFileSelect(LPARAM uqNumber)
 
     DocViewResetCaret(stCaret.x, stCaret.y);
 
-    DocAppBackgroundPageLoadRestart(nullptr);
+    stSync = {};
+    stSync.dFlags = DOC_APP_SYNC_BACKGROUND_RESTART;
+    DocAppShellSync(stSync);
 
     return S_OK;
 }
@@ -612,6 +634,7 @@ VOID DocCaretPosMemory(UINT dMode, LPPOINT pstPos)
 HRESULT DocOpenFromNull(HWND hWnd)
 {
     LPARAM dNumber;
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
 
     TCHAR atDummyName[MAX_PATH];
     //    複数ファイル扱うなら、破棄は不要、新しいファイルインスタンス作って対応
@@ -619,13 +642,16 @@ HRESULT DocOpenFromNull(HWND hWnd)
     //    新しいファイル置き場の準備
     dNumber = DocMultiFileCreate(atDummyName); //    ファイルを新規作成するとき
 
-    DocAppMultiFileTabAppend(dNumber,
-                       DocCurrentFile().atDummyName); //    ファイルの新規作成した
-
-    DocAppTitleChange(atDummyName);
-
     gixFocusPage = DocPageCreate(-1);
-    DocAppPageListInsert(gixFocusPage);
+
+    stSync.dFlags = DOC_APP_SYNC_FILE_TAB_APPEND |
+                    DOC_APP_SYNC_TITLE |
+                    DOC_APP_SYNC_PAGE_LIST_INSERT;
+    stSync.dFileNumber = dNumber;
+    stSync.ptText = DocCurrentFile().atDummyName;
+    stSync.iPage = gixFocusPage;
+    DocAppShellSync(stSync);
+
     DocPageChange(0);
 
     DocViewRefreshAll();
@@ -738,11 +764,12 @@ LPARAM DocFileInflate(LPTSTR ptFileName)
     FREE(pBuffer); //    ＝ptString
 
     DocPageChange(0);           //    全部読み込んだので最初のページを表示する
-    DocAppPageListSelectionChange(-1, -1);
 
-    DocAppBackgroundPageLoadRestart(nullptr);
-
-    DocAppTitleChange(ptFileName);
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
+    stSync.dFlags = DOC_APP_SYNC_BACKGROUND_RESTART |
+                    DOC_APP_SYNC_TITLE;
+    stSync.ptText = ptFileName;
+    DocAppShellSync(stSync);
 
     return dNumber;
 }
@@ -751,8 +778,13 @@ LPARAM DocFileInflate(LPTSTR ptFileName)
 // 頁を作って内容をぶち込む
 UINT CALLBACK DocPageLoad(LPTSTR ptName, LPCTSTR ptCont, INT cchSize)
 {
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
+
     gixFocusPage = DocPageCreate(-1); //    頁を作成
-    DocAppPageListInsert(gixFocusPage);
+
+    stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_INSERT;
+    stSync.iPage = gixFocusPage;
+    DocAppShellSync(stSync);
 
     //    新しく作ったページにうつる
 
@@ -961,10 +993,15 @@ UINT DocImportSplitASD(LPSTR pcStr, INT cbSize, PAGELOAD pfPageLoad)
 // 頁名をセットする・ファイルコア函数
 HRESULT DocPageNameSet(LPTSTR ptName)
 {
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
+
     StringCchCopy((*gitFileIt).vcCont.at(gixFocusPage).atPageName, SUB_STRING,
                   ptName);
 
-    DocAppPageListNameSet(gixFocusPage, ptName);
+    stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_NAME;
+    stSync.iPage = gixFocusPage;
+    stSync.ptText = ptName;
+    DocAppShellSync(stSync);
 
     return S_OK;
 }
@@ -1057,6 +1094,7 @@ HRESULT DocPageDelete(INT iPage, INT iBack)
 {
     INT i, iNew;
     PAGE_ITR itPage;
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
 
     if (1 >= DocNowFilePageCount())
         return E_ACCESSDENIED;
@@ -1081,7 +1119,9 @@ HRESULT DocPageDelete(INT iPage, INT iBack)
         (*gitFileIt).vcCont.erase(itPage); //    さっくり削除
         gixFocusPage = -1;                 //    頁選択無効にする
 
-        DocAppPageListDelete(iPage);
+        stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_DELETE;
+        stSync.iPage = iPage;
+        DocAppShellSync(stSync);
 
         if (0 <= iBack) //    戻り先指定
         {
@@ -1132,7 +1172,10 @@ UINT DocDelayPageLoad(FILES_ITR itFile, INT iPage)
 
         if (itFile == gitFileIt)
         {
-            DocAppPageListRewrite(iPage);
+            DOC_APP_SHELL_SYNC_REQUEST stSync{};
+            stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_REWRITE;
+            stSync.iPage = iPage;
+            DocAppShellSync(stSync);
         }
 
     }
@@ -1182,6 +1225,7 @@ HRESULT DocPageInfoRenew(INT dPage, UINT bMode)
 {
     UINT_PTR dLines;
     UINT dBytes;
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
     //    TCHAR        atBuff[SUB_STRING];
 
     if (0 > dPage)
@@ -1193,7 +1237,8 @@ HRESULT DocPageInfoRenew(INT dPage, UINT bMode)
 
     if (bMode) //    ステータスバーにバイト数を表示する
     {
-        DocAppMainStatusSetByteCount(dBytes);
+        stSync.dFlags |= DOC_APP_SYNC_STATUS_BYTE_COUNT;
+        stSync.dBytes = dBytes;
     }
 
     if (gitFileIt->vcCont.at(dPage).ptRawData)
@@ -1205,7 +1250,11 @@ HRESULT DocPageInfoRenew(INT dPage, UINT bMode)
         dLines = gitFileIt->vcCont.at(dPage).ltPage.size();
     }
 
-    DocAppPageListInfoSet(dPage, dBytes, dLines);
+    stSync.dFlags |= DOC_APP_SYNC_PAGE_LIST_INFO;
+    stSync.iPage = dPage;
+    stSync.dBytes = dBytes;
+    stSync.dLines = dLines;
+    DocAppShellSync(stSync);
 
     return S_OK;
 }

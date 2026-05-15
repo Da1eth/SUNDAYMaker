@@ -120,11 +120,14 @@ HRESULT DocFileOpen(HWND hWnd)
 HRESULT DocDoOpenFile(HWND hWnd, LPTSTR ptFile)
 {
     LPARAM dNumber;
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
 
     dNumber = DocOpendFileCheck(ptFile);
     if (1 <= dNumber)
     {
-        if (SUCCEEDED(DocAppMultiFileTabSelect(dNumber)))
+        stSync.dFlags = DOC_APP_SYNC_FILE_TAB_SELECT;
+        stSync.dFileNumber = dNumber;
+        if (SUCCEEDED(DocAppShellSync(stSync)))
         {
             DocMultiFileSelect(dNumber);
             return S_OK;
@@ -139,8 +142,13 @@ HRESULT DocDoOpenFile(HWND hWnd, LPTSTR ptFile)
         return E_HANDLE;
     }
 
-    DocAppMultiFileTabAppend(dNumber, ptFile);
-    DocAppOpenHistoryLogging(hWnd, ptFile);
+    stSync = {};
+    stSync.dFlags = DOC_APP_SYNC_FILE_TAB_APPEND |
+                    DOC_APP_SYNC_OPEN_HISTORY;
+    stSync.dFileNumber = dNumber;
+    stSync.hWindow = hWnd;
+    stSync.ptText = ptFile;
+    DocAppShellSync(stSync);
 
     return S_OK;
 }
@@ -557,22 +565,31 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
     // 파일명이나 확장자가 바뀌었으면 UI 상태도 함께 갱신한다.
     if (bExtChg)
     {
-        DocAppMultiFileTabRename((*gitFileIt).dUnique, atFilePath);
-        DocAppTitleChange(atFilePath);
+        DOC_APP_SHELL_SYNC_REQUEST stSync{};
+        stSync.dFlags = DOC_APP_SYNC_FILE_TAB_RENAME |
+                        DOC_APP_SYNC_TITLE |
+                        DOC_APP_SYNC_OPEN_HISTORY;
+        stSync.dFileNumber = (*gitFileIt).dUnique;
+        stSync.hWindow = hWnd;
+        stSync.ptText = atFilePath;
+        DocAppShellSync(stSync);
+
         StringCchPrintf(atBuffer, MAX_STRING,
                         TEXT("%s 확장자로 파일을 저장했습니다."), gatDocSaveExtensions[idExten]);
         NotifyBalloonExist(atBuffer, TEXT("일했꼬꼬"), NIIF_INFO);
-
-        DocAppOpenHistoryLogging(hWnd, atFilePath);
     }
     else
     {
         if (bLastChg)
         {
-            DocAppMultiFileTabRename((*gitFileIt).dUnique, atFilePath);
-            DocAppTitleChange(atFilePath);
-
-            DocAppOpenHistoryLogging(hWnd, atFilePath);
+            DOC_APP_SHELL_SYNC_REQUEST stSync{};
+            stSync.dFlags = DOC_APP_SYNC_FILE_TAB_RENAME |
+                            DOC_APP_SYNC_TITLE |
+                            DOC_APP_SYNC_OPEN_HISTORY;
+            stSync.dFileNumber = (*gitFileIt).dUnique;
+            stSync.hWindow = hWnd;
+            stSync.ptText = atFilePath;
+            DocAppShellSync(stSync);
         }
 
         if (gbSaveMsgOn)
@@ -584,7 +601,10 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
 
     if (bForceMLT)
     {
-        DocAppPageListRewrite(-1);
+        DOC_APP_SHELL_SYNC_REQUEST stSync{};
+        stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_REWRITE;
+        stSync.iPage = -1;
+        DocAppShellSync(stSync);
     }
 
     return S_OK;

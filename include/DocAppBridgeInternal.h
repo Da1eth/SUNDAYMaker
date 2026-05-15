@@ -2,91 +2,43 @@
 
 #include "Sunday.h"
 
-// Doc 이 App 셸 구현 세부를 직접 알지 않도록 UI 동기화 호출을 모은다.
-inline HRESULT DocAppPageListSelectionChange(INT dPageNum, INT iPrevPage)
+enum DOC_APP_SHELL_SYNC_FLAGS : UINT
 {
-    return PageListViewChange(dPageNum, iPrevPage);
-}
+    DOC_APP_SYNC_PAGE_LIST_SELECTION = 0x00000001,
+    DOC_APP_SYNC_PAGE_LIST_CLEAR = 0x00000002,
+    DOC_APP_SYNC_PAGE_LIST_BUILD = 0x00000004,
+    DOC_APP_SYNC_PAGE_LIST_INSERT = 0x00000008,
+    DOC_APP_SYNC_PAGE_LIST_DELETE = 0x00000010,
+    DOC_APP_SYNC_PAGE_LIST_REWRITE = 0x00000020,
+    DOC_APP_SYNC_PAGE_LIST_NAME = 0x00000040,
+    DOC_APP_SYNC_PAGE_LIST_INFO = 0x00000080,
+    DOC_APP_SYNC_FILE_TAB_FIRST = 0x00000100,
+    DOC_APP_SYNC_FILE_TAB_APPEND = 0x00000200,
+    DOC_APP_SYNC_FILE_TAB_SELECT = 0x00000400,
+    DOC_APP_SYNC_FILE_TAB_RENAME = 0x00000800,
+    DOC_APP_SYNC_TITLE = 0x00001000,
+    DOC_APP_SYNC_BACKGROUND_RESTART = 0x00002000,
+    DOC_APP_SYNC_OPEN_HISTORY = 0x00004000,
+    DOC_APP_SYNC_STATUS_BYTE_COUNT = 0x00008000,
+};
 
-inline VOID DocAppPageListClear()
+struct DOC_APP_SHELL_SYNC_REQUEST
 {
-    PageListClear();
-}
+    UINT dFlags{};
+    INT iPage{-1};
+    INT iPrevPage{-1};
+    UINT dBytes{};
+    UINT_PTR dLines{};
+    LPARAM dFileNumber{};
+    LPVOID pContext{};
+    HWND hWindow{};
+    LPCTSTR ptText{};
+};
 
-inline VOID DocAppPageListBuild(LPVOID pContext)
-{
-    PageListBuild(pContext);
-}
+// Doc 이 App 셸 구현 세부를 직접 알지 않도록 UI 동기화 요청을 한 번에 넘긴다.
+HRESULT DocAppShellSync(const DOC_APP_SHELL_SYNC_REQUEST &stRequest);
 
-inline VOID DocAppPageListInsert(INT iPage)
-{
-    PageListInsert(iPage);
-}
-
-inline VOID DocAppPageListDelete(INT iPage)
-{
-    PageListDelete(iPage);
-}
-
-inline VOID DocAppPageListRewrite(INT iPage)
-{
-    PageListViewRewrite(iPage);
-}
-
-inline VOID DocAppPageListNameSet(INT iPage, LPTSTR ptName)
-{
-    PageListNameSet(iPage, ptName);
-}
-
-inline VOID DocAppPageListInfoSet(INT iPage, UINT dBytes, UINT_PTR dLines)
-{
-    PageListInfoSet(iPage, dBytes, dLines);
-}
-
-inline BOOLEAN DocAppPageListHasNamedPages(FILES_ITR itFile)
-{
-    return PageListIsNamed(itFile);
-}
-
-inline VOID DocAppMultiFileTabFirst(LPTSTR ptFile)
-{
-    MultiFileTabFirst(ptFile);
-}
-
-inline VOID DocAppMultiFileTabAppend(LPARAM dNumber, LPTSTR ptFile)
-{
-    MultiFileTabAppend(dNumber, ptFile);
-}
-
-inline HRESULT DocAppMultiFileTabSelect(LPARAM dNumber)
-{
-    return MultiFileTabSelect(dNumber);
-}
-
-inline VOID DocAppMultiFileTabRename(LPARAM dNumber, LPTSTR ptFile)
-{
-    MultiFileTabRename(dNumber, ptFile);
-}
-
-inline VOID DocAppTitleChange(LPTSTR ptTitle)
-{
-    AppTitleChange(ptTitle);
-}
-
-inline VOID DocAppBackgroundPageLoadRestart(HWND hWindow)
-{
-    AppBackgroundPageLoadRestart(hWindow);
-}
-
-inline VOID DocAppOpenHistoryLogging(HWND hWnd, LPTSTR ptFile)
-{
-    OpenHistoryLogging(hWnd, ptFile);
-}
-
-inline VOID DocAppMainStatusSetByteCount(UINT dBytes)
-{
-    MainSttBarSetByteCount(dBytes);
-}
+BOOLEAN DocAppPageListHasNamedPages(FILES_ITR itFile);
 
 inline HRESULT DocAppLoadFlipEntries(LPCTSTR ptFileName, UINT dMode, vector<JSON_FLIP_ENTRY> *pEntries)
 {

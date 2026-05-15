@@ -903,17 +903,10 @@ HRESULT OpenHistoryLoad(HWND hWnd, INT id)
     lUnique = DocOpendFileCheck(itHist->atFile);
     if (1 <= lUnique) //    既存のファイルヒット・そっちに移動する
     {
-        if (SUCCEEDED(MultiFileTabSelect(dNumber)))
-        {
-            DocMultiFileSelect(lUnique); //    そのタブのファイルを表示
-        }
-    }
-    else
-    {
-        DocDoOpenFile(hWnd, itHist->atFile); //    履歴から選択したファイルを開く
+        return AppHandleDocumentSelect(lUnique);
     }
 
-    return S_OK;
+    return AppHandleDocumentOpenPath(hWnd, itHist->atFile);
 }
 //-------------------------------------------------------------------------------------------------
 

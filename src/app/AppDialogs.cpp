@@ -1,6 +1,108 @@
 #include "Sunday.h"
+#include "DocAppBridgeInternal.h"
+#include "DocContextInternal.h"
 #include "AppModuleInternal.h"
 #include "ViewCentralInternal.h"
+
+HRESULT DocAppShellSync(const DOC_APP_SHELL_SYNC_REQUEST &stRequest)
+{
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_CLEAR)
+    {
+        PageListClear();
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_BUILD)
+    {
+        PageListBuild(stRequest.pContext);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_INSERT)
+    {
+        PageListInsert(stRequest.iPage);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_DELETE)
+    {
+        PageListDelete(stRequest.iPage);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_REWRITE)
+    {
+        PageListViewRewrite(stRequest.iPage);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_NAME)
+    {
+        PageListNameSet(stRequest.iPage, const_cast<LPTSTR>(stRequest.ptText));
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_INFO)
+    {
+        PageListInfoSet(stRequest.iPage, stRequest.dBytes, stRequest.dLines);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_PAGE_LIST_SELECTION)
+    {
+        PageListViewChange(stRequest.iPage, stRequest.iPrevPage);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_FILE_TAB_FIRST)
+    {
+        MultiFileTabFirst(const_cast<LPTSTR>(stRequest.ptText));
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_FILE_TAB_APPEND)
+    {
+        MultiFileTabAppend(stRequest.dFileNumber, const_cast<LPTSTR>(stRequest.ptText));
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_FILE_TAB_SELECT)
+    {
+        MultiFileTabSelect(stRequest.dFileNumber);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_FILE_TAB_RENAME)
+    {
+        MultiFileTabRename(stRequest.dFileNumber, const_cast<LPTSTR>(stRequest.ptText));
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_TITLE)
+    {
+        AppTitleChange(const_cast<LPTSTR>(stRequest.ptText));
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_BACKGROUND_RESTART)
+    {
+        AppBackgroundPageLoadRestart(stRequest.hWindow);
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_OPEN_HISTORY)
+    {
+        OpenHistoryLogging(stRequest.hWindow, const_cast<LPTSTR>(stRequest.ptText));
+    }
+
+    if (stRequest.dFlags & DOC_APP_SYNC_STATUS_BYTE_COUNT)
+    {
+        MainSttBarSetByteCount(stRequest.dBytes);
+    }
+
+    return S_OK;
+}
+
+BOOLEAN DocAppPageListHasNamedPages(FILES_ITR itFile)
+{
+    return PageListIsNamed(itFile);
+}
+
+HRESULT AppHandleDocumentOpenPath(HWND hWnd, LPTSTR ptFile)
+{
+    return DocDoOpenFile(hWnd, ptFile);
+}
+
+HRESULT AppHandleDocumentSelect(LPARAM dNumber)
+{
+    return MultiFileTabSelectDocument(dNumber);
+}
 
 static CONST TCHAR gcatLicense[] = {
     TEXT("이 프로그램은 자유 소프트웨어로, GNU 일반 공중 사용 허가서 버전 3 또는 그 이후 버전이 정하는 조건 하에 재배포 또는 수정할 수 있습니다. \r\n\r\n")
@@ -50,7 +152,50 @@ BOOLEAN AppHandleMainCommand(HWND hWnd, INT id)
         }
         return TRUE;
 
+    case IDM_FILE_CLOSE:
+        MultiFileTabClose(-1);
+        return TRUE;
+
+    case IDM_NEWFILE:
+        DocOpenFromNull(hWnd);
+        return TRUE;
+
+    case IDM_OPEN:
+        DocFileOpen(hWnd);
+        return TRUE;
+
+    case IDM_OVERWRITESAVE:
+        DocFileSave(hWnd, D_SJIS);
+        PreviewVisibalise(DocCurrentPageIndex(), FALSE);
+        return TRUE;
+
+    case IDM_RENAMESAVE:
+        DocFileSave(hWnd, (D_SJIS | D_RENAME));
+        PreviewVisibalise(DocCurrentPageIndex(), FALSE);
+        return TRUE;
+
+    case IDM_IMAGE_SAVE:
+        DocImageSave(hWnd, 0, ViewAaFontGet());
+        return TRUE;
+
+    case IDM_FILE_PREV:
+        MultiFileTabSlide(-1);
+        return TRUE;
+
+    case IDM_FILE_NEXT:
+        MultiFileTabSlide(1);
+        return TRUE;
+
+    case IDM_OPEN_HIS_CLEAR:
+        OpenHistoryLogging(hWnd, nullptr);
+        return TRUE;
+
     default:
+        if (IDM_OPEN_HIS_FIRST <= id && id <= IDM_OPEN_HIS_LAST)
+        {
+            OpenHistoryLoad(hWnd, id);
+            return TRUE;
+        }
         break;
     }
 

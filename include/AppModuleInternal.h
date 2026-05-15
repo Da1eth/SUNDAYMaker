@@ -56,6 +56,8 @@ VOID    AppTrayIconFinalise( VOID );
 BOOLEAN AppTrayIconHandleWindowMessage( HWND, UINT, WPARAM, LPARAM, LRESULT * );
 VOID    AppBackgroundPageLoadTick( HWND );
 
+HRESULT AppHandleDocumentOpenPath( HWND, LPTSTR );
+HRESULT AppHandleDocumentSelect( LPARAM );
 BOOLEAN AppHandleMainCommand( HWND, INT );
 
 BOOLEAN Cls_OnCreate( HWND, LPCREATESTRUCT );
