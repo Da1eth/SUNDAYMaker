@@ -249,45 +249,9 @@ static BOOLEAN OperationHandleDialogCommands(const VIEW_COMMAND_REQUEST &stComma
 
 static BOOLEAN OperationHandleFileCommands(const VIEW_COMMAND_REQUEST &stCommand)
 {
-    switch (stCommand.id)
-    {
-    case IDM_FILE_CLOSE:
-        MultiFileTabClose(-1);
-        return TRUE;
+    UNREFERENCED_PARAMETER(stCommand);
 
-    case IDM_NEWFILE:
-        DocOpenFromNull(stCommand.hMainWindow);
-        return TRUE;
-
-    case IDM_OPEN:
-        DocFileOpen(stCommand.hMainWindow);
-        return TRUE;
-
-    case IDM_OVERWRITESAVE:
-        DocFileSave(stCommand.hMainWindow, D_SJIS);
-        PreviewVisibalise(DocCurrentPageIndex(), FALSE);
-        return TRUE;
-
-    case IDM_RENAMESAVE:
-        DocFileSave(stCommand.hMainWindow, (D_SJIS | D_RENAME));
-        PreviewVisibalise(DocCurrentPageIndex(), FALSE);
-        return TRUE;
-
-    case IDM_IMAGE_SAVE:
-        DocImageSave(stCommand.hMainWindow, 0, ViewAaFontGet());
-        return TRUE;
-
-    case IDM_FILE_PREV:
-        MultiFileTabSlide(-1);
-        return TRUE;
-
-    case IDM_FILE_NEXT:
-        MultiFileTabSlide(1);
-        return TRUE;
-
-    default:
-        return FALSE;
-    }
+    return FALSE;
 }
 
 static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand)

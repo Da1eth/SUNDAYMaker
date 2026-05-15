@@ -152,7 +152,7 @@ void Cls_OnCopyData(HWND hWnd, HWND hWndFrom, PCOPYDATASTRUCT pstCopyData)
 
     TRACE(TEXT("COPYDATA[%s]"), atBuff);
 
-    DocDoOpenFile(hWnd, atBuff);
+    AppHandleDocumentOpenPath(hWnd, atBuff);
 }
 #endif
 
@@ -167,7 +167,7 @@ VOID Cls_OnDropFiles(HWND hWnd, HDROP hDrop)
 
     TRACE(TEXT("DROP[%s]"), atFileName);
 
-    DocDoOpenFile(hWnd, atFileName);
+    AppHandleDocumentOpenPath(hWnd, atFileName);
 }
 
 VOID Cls_OnHotKey(HWND hWnd, INT idHotKey, UINT fuModifiers, UINT vk)
