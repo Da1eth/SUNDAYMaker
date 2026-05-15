@@ -5,17 +5,33 @@
 static BOOLEAN AccelKeyCommandAllowed(UINT dCommandID);
 static ACCEL *AccelKeyFindByCommand(vector<ACCEL> *, WORD);
 static const ACCEL *AccelKeyFindByCommand(const vector<ACCEL> &, WORD);
+static LRESULT CALLBACK AccelKeyInputHookProc(INT, WPARAM, LPARAM);
 
 static INT_PTR CALLBACK AccelKeyDlgProc(HWND, UINT, WPARAM, LPARAM);
 static INT_PTR AccelKeyNotify(HWND, INT, LPNMHDR, vector<ACCEL> *);
+
+static VOID AccelKeyInputClear(HWND);
+static BOOLEAN AccelKeyInputGet(LPACCEL);
+static ACCEL AccelKeyInputMake(UINT);
+static VOID AccelKeyInputSet(HWND, const ACCEL *);
+static VOID AccelKeyInputSyncText(HWND);
 
 static HRESULT AccelKeyBindExistCheck(HWND, LPACCEL, vector<ACCEL> *);
 static HRESULT AccelKeyBindListMod(HWND, INT, LPACCEL, vector<ACCEL> *);
 static HRESULT AccelKeySettingReset(HWND, vector<ACCEL> *);
 static HRESULT AccelKeyBindString(LPACCEL, LPTSTR, UINT_PTR);
 static VOID AccelKeyListInit(HWND, vector<ACCEL> *);
-static BYTE AccelHotModExchange(BYTE, BOOLEAN);
 static HRESULT AccelKeyTableSave(vector<ACCEL> *);
+
+struct ACCEL_INPUT_STATE
+{
+    ACCEL stAccel{};
+    BOOLEAN bValid{};
+    HWND hInputWnd{};
+    HHOOK hHook{};
+};
+
+static ACCEL_INPUT_STATE gstAccelInput;
 
 static BOOLEAN AccelKeyCommandAllowed(UINT dCommandID)
 {
@@ -39,6 +55,85 @@ static const ACCEL *AccelKeyFindByCommand(const vector<ACCEL> &vcAccel,
                            { return stAccel.cmd == dCommand; });
 
     return (vcAccel.end() == itFound) ? nullptr : &(*itFound);
+}
+
+static ACCEL AccelKeyInputMake(UINT dKey)
+{
+    ACCEL stAccel = {};
+
+    stAccel.key = static_cast<WORD>(dKey);
+    stAccel.fVirt = FVIRTKEY | FNOINVERT;
+
+    if (VK_SHIFT != dKey && (0x8000 & GetKeyState(VK_SHIFT)))
+        stAccel.fVirt |= FSHIFT;
+    if (VK_CONTROL != dKey && (0x8000 & GetKeyState(VK_CONTROL)))
+        stAccel.fVirt |= FCONTROL;
+    if (VK_MENU != dKey && (0x8000 & GetKeyState(VK_MENU)))
+        stAccel.fVirt |= FALT;
+
+    return stAccel;
+}
+
+static VOID AccelKeyInputSyncText(HWND hWnd)
+{
+    TCHAR atBuffer[SUB_STRING];
+
+    if (!gstAccelInput.bValid)
+    {
+        SetWindowText(hWnd, TEXT(""));
+        return;
+    }
+
+    ZeroMemory(atBuffer, sizeof(atBuffer));
+    AccelKeyBindString(&gstAccelInput.stAccel, atBuffer, SUB_STRING);
+    SetWindowText(hWnd, atBuffer);
+}
+
+static VOID AccelKeyInputSet(HWND hWnd, const ACCEL *pstAccel)
+{
+    if (pstAccel)
+    {
+        gstAccelInput.stAccel = *pstAccel;
+        gstAccelInput.bValid = TRUE;
+    }
+    else
+    {
+        gstAccelInput.stAccel = {};
+        gstAccelInput.bValid = FALSE;
+    }
+
+    AccelKeyInputSyncText(hWnd);
+}
+
+static VOID AccelKeyInputClear(HWND hWnd)
+{
+    AccelKeyInputSet(hWnd, nullptr);
+}
+
+static BOOLEAN AccelKeyInputGet(LPACCEL pstAccel)
+{
+    if (!pstAccel || !gstAccelInput.bValid)
+        return FALSE;
+
+    *pstAccel = gstAccelInput.stAccel;
+    return TRUE;
+}
+
+static LRESULT CALLBACK AccelKeyInputHookProc(INT nCode, WPARAM wParam,
+                                              LPARAM lParam)
+{
+    constexpr LPARAM KEY_TRANSITION = 0x80000000;
+
+    if (HC_ACTION == nCode && gstAccelInput.hInputWnd &&
+        GetFocus() == gstAccelInput.hInputWnd && !(lParam & KEY_TRANSITION))
+    {
+        gstAccelInput.stAccel = AccelKeyInputMake(static_cast<UINT>(wParam));
+        gstAccelInput.bValid = TRUE;
+        AccelKeyInputSyncText(gstAccelInput.hInputWnd);
+        return 0;
+    }
+
+    return CallNextHookEx(gstAccelInput.hHook, nCode, wParam, lParam);
 }
 
 HRESULT AccelKeyDlgOpen(HWND hWnd)
@@ -73,7 +168,6 @@ static INT_PTR CALLBACK AccelKeyDlgProc(HWND hDlg, UINT message, WPARAM wParam,
 
     static HWND hHokyWnd;
     HWND hLvWnd;
-    LRESULT lRslt;
     ACCEL stAcce;
 
     INT i;
@@ -101,7 +195,21 @@ static INT_PTR CALLBACK AccelKeyDlgProc(HWND hDlg, UINT message, WPARAM wParam,
         AccelKeyListInit(hDlg, &cvcAccel);
 
         hHokyWnd = GetDlgItem(hDlg, IDHKC_FUNCKEY_INPUT);
+        gstAccelInput = {};
+        gstAccelInput.hInputWnd = hHokyWnd;
+        gstAccelInput.hHook = SetWindowsHookEx(WH_KEYBOARD,
+                                               AccelKeyInputHookProc, nullptr,
+                                               GetCurrentThreadId());
+        AccelKeyInputClear(hHokyWnd);
         return (INT_PTR)TRUE;
+
+    case WM_SYSCOMMAND:
+        if (hHokyWnd && GetFocus() == hHokyWnd &&
+            SC_KEYMENU == (wParam & 0xFFF0))
+        {
+            return (INT_PTR)TRUE;
+        }
+        break;
 
     case WM_COMMAND:
         id = LOWORD(wParam);
@@ -115,24 +223,26 @@ static INT_PTR CALLBACK AccelKeyDlgProc(HWND hDlg, UINT message, WPARAM wParam,
         case IDOK:
             AccelKeyTableSave(&cvcAccel);
         case IDCANCEL:
+            if (gstAccelInput.hHook)
+            {
+                UnhookWindowsHookEx(gstAccelInput.hHook);
+                gstAccelInput.hHook = nullptr;
+            }
             cvcAccel.clear();
             EndDialog(hDlg, id);
             return (INT_PTR)TRUE;
 
         case IDB_FUNCKEY_CLEAR:
-            SendMessage(hHokyWnd, HKM_SETHOTKEY, 0, 0);
+            AccelKeyInputClear(hHokyWnd);
             iItem = WndTagGet(hHokyWnd);
             AccelKeyBindListMod(hDlg, iItem, nullptr, &cvcAccel);
             return (INT_PTR)TRUE;
 
         case IDB_FUNCKEY_SET:
-            lRslt = SendMessage(hHokyWnd, HKM_GETHOTKEY, 0, 0);
-            stAcce.key = LOBYTE(lRslt);
-            if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDCB_FUNCKEY_SPACE))
+            if (!AccelKeyInputGet(&stAcce))
             {
-                stAcce.key = VK_SPACE;
+                return (INT_PTR)TRUE;
             }
-            stAcce.fVirt = AccelHotModExchange(HIBYTE(lRslt), 0);
             stAcce.cmd = 0;
             if (SUCCEEDED(AccelKeyBindExistCheck(hDlg, &stAcce, &cvcAccel)))
             {
@@ -171,7 +281,6 @@ static INT_PTR AccelKeyNotify(HWND hDlg, INT idFrom, LPNMHDR pstNmhdr,
 {
     LPNMLISTVIEW pstLv;
     LVITEM stLvi;
-    BYTE bMod;
     HWND hHokyWnd;
 
     if (IDLV_FUNCKEY_LIST == idFrom)
@@ -191,22 +300,11 @@ static INT_PTR AccelKeyNotify(HWND hDlg, INT idFrom, LPNMHDR pstNmhdr,
             if (const ACCEL *pstAccel =
                     AccelKeyFindByCommand(*pvcAccel, (WORD)stLvi.lParam))
             {
-                bMod = AccelHotModExchange(pstAccel->fVirt, 1);
-                if (0x20 == pstAccel->key)
-                {
-                    SendMessage(hHokyWnd, HKM_SETHOTKEY,
-                                MAKEWORD(pstAccel->key, bMod), 0);
-                }
-                else
-                {
-                    SendMessage(hHokyWnd, HKM_SETHOTKEY,
-                                MAKEWORD(pstAccel->key, (bMod | HOTKEYF_EXT)),
-                                0);
-                }
+                AccelKeyInputSet(hHokyWnd, pstAccel);
             }
             else
             {
-                SendMessage(hHokyWnd, HKM_SETHOTKEY, 0, 0);
+                AccelKeyInputClear(hHokyWnd);
             }
 
             SetFocus(GetDlgItem(hDlg, IDHKC_FUNCKEY_INPUT));
@@ -314,8 +412,17 @@ static HRESULT AccelKeyBindString(LPACCEL pstAccel, LPTSTR ptBuffer,
         case VK_CLEAR:
             StringCchCopy(atKey, MIN_STRING, TEXT("CLEAR"));
             break;
+        case VK_SHIFT:
+            StringCchCopy(atKey, MIN_STRING, TEXT("Shift"));
+            break;
+        case VK_CONTROL:
+            StringCchCopy(atKey, MIN_STRING, TEXT("Ctrl"));
+            break;
         case VK_RETURN:
             StringCchCopy(atKey, MIN_STRING, TEXT("Enter"));
+            break;
+        case VK_MENU:
+            StringCchCopy(atKey, MIN_STRING, TEXT("Alt"));
             break;
         case VK_PAUSE:
             StringCchCopy(atKey, MIN_STRING, TEXT("Pause"));
@@ -637,34 +744,6 @@ static VOID AccelKeyListInit(HWND hDlg, vector<ACCEL> *pvcAccel)
     }
 }
 
-static BYTE AccelHotModExchange(BYTE bSrc, BOOLEAN bDrct)
-{
-    BYTE bDest = 0;
-
-    if (bDrct)
-    {
-        if (bSrc & FSHIFT)
-            bDest |= HOTKEYF_SHIFT;
-        if (bSrc & FCONTROL)
-            bDest |= HOTKEYF_CONTROL;
-        if (bSrc & FALT)
-            bDest |= HOTKEYF_ALT;
-    }
-    else
-    {
-        if (bSrc & HOTKEYF_SHIFT)
-            bDest |= FSHIFT;
-        if (bSrc & HOTKEYF_CONTROL)
-            bDest |= FCONTROL;
-        if (bSrc & HOTKEYF_ALT)
-            bDest |= FALT;
-
-        bDest |= (FVIRTKEY | FNOINVERT);
-    }
-
-    return bDest;
-}
-
 static HRESULT AccelKeyTableSave(vector<ACCEL> *pvcAccel)
 {
     INT_PTR i;
@@ -813,7 +892,7 @@ static HRESULT AccelKeyBindListMod(HWND hDlg, INT iItem, LPACCEL pstAccel,
         }
 
         pvcAccel->erase(itAccel);
-        SendMessage(hHkcWnd, HKM_SETHOTKEY, 0, 0);
+    AccelKeyInputClear(hHkcWnd);
         ZeroMemory(atBuffer, sizeof(atBuffer));
         stLvi = {};
         stLvi.mask = LVIF_TEXT;

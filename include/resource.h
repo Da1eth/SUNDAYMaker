@@ -281,7 +281,6 @@
 #define IDB_FUNCKEY_CLEAR               1243
 #define IDB_FUNCKEY_SET                 1244
 #define IDB_FUNCKEY_EDIT                1245
-#define IDCB_FUNCKEY_SPACE              1246
 #define IDB_FUNCKEY_INIT                1248
 #define IDB_FRM_PADDING                 1249
 #define IDB_ADD_FRAME                   1250
