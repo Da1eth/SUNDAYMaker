@@ -249,13 +249,10 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
         CntxEditDlgOpen(hWnd);
         return TRUE;
 
-#ifdef ACCELERATOR_EDIT
     case IDM_ACCELKEY_EDIT_DLG_OPEN:
         AccelKeyDlgOpen(hWnd);
         return TRUE;
-#endif
 
-#ifdef FIND_STRINGS
     case IDM_FIND_DLG_OPEN:
         FindDialogueOpen(stUiContext.hInstance, hWnd);
         return TRUE;
@@ -266,7 +263,6 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
     case IDM_FIND_TARGET_SET:
         FindDirectly(stUiContext.hInstance, hWnd, IDM_FIND_TARGET_SET);
         return TRUE;
-#endif
 
     default:
         return FALSE;
@@ -372,7 +368,6 @@ static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand
 static BOOLEAN OperationHandleInsertCommands(const VIEW_COMMAND_REQUEST &stCommand)
 {
     UNREFERENCED_PARAMETER(stCommand);
-    const UINT dSquareSelect = ViewSquareSelectModeGet();
 
     switch (stCommand.id)
     {

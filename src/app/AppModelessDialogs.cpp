@@ -2,9 +2,7 @@
 #include "AppModuleInternal.h"
 #include "Palette.h"
 
-#ifdef FIND_STRINGS
 extern HWND ghFindDlg;
-#endif
 
 HWND ghColourTagDlg = nullptr;
 HWND ghGradientTagDlg = nullptr;
@@ -36,10 +34,8 @@ VOID AppModelessDialogDestroy(HWND *phDlg)
 
 BOOLEAN AppModelessDialogHandleMessage(LPMSG pstMsg)
 {
-#ifdef FIND_STRINGS
     if (AppModelessDialogProcess(pstMsg, ghFindDlg))
         return TRUE;
-#endif
 
     if (AppModelessDialogProcess(pstMsg, ghColourTagDlg))
         return TRUE;
@@ -54,9 +50,7 @@ BOOLEAN AppModelessDialogHandleMessage(LPMSG pstMsg)
 
 VOID AppModelessDialogsDestroy(VOID)
 {
-#ifdef FIND_STRINGS
     AppModelessDialogDestroy(&ghFindDlg);
-#endif
     AppModelessDialogDestroy(&ghColourTagDlg);
     AppModelessDialogDestroy(&ghGradientTagDlg);
     PaletteEditorDestroy();

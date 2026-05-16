@@ -721,8 +721,6 @@ LPARAM DocFileInflate(LPTSTR ptFileName)
         return 0;
     }
 
-    // InitLastOpen( INIT_SAVE, ptFileName );    //    複数ファイルでは意味が無い
-
     //    処理順番入替
 
     iByteSize = GetFileSize(hFile, nullptr);

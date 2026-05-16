@@ -37,14 +37,10 @@ extern UINT        gdGridXpos;
 extern UINT        gdGridYpos;
 extern UINT        gdRightRuler;
 extern UINT        gdUnderRuler;
-#ifdef FIND_STRINGS
 extern HWND        ghFindDlg;
-#endif
 extern HWND        ghColourTagDlg;
 extern HWND        ghGradientTagDlg;
-#ifdef SPMOZI_ENCODE
 extern UINT        gbSpMoziEnc;
-#endif
 extern list<OPENHIST> gltOpenHist;
 
 HRESULT AppUiResourcesInitialise( HINSTANCE );
@@ -74,9 +70,7 @@ VOID    Cls_OnContextMenu( HWND, HWND, UINT, UINT );
 VOID    Cls_OnHotKey( HWND, INT, UINT, UINT );
 VOID    Cls_OnDrawItem( HWND, CONST DRAWITEMSTRUCT * );
 BOOL    Cls_OnWindowPosChanging( HWND, LPWINDOWPOS );
-#ifdef MULTIACT_RELAY
 void    Cls_OnCopyData( HWND, HWND, PCOPYDATASTRUCT );
-#endif
 
 BOOLEAN AppModelessDialogHandleMessage( LPMSG );
 VOID    AppModelessDialogsDestroy( VOID );

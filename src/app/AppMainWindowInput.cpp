@@ -137,7 +137,6 @@ LRESULT Cls_OnNotify(HWND hWnd, INT idFrom, LPNMHDR pstNmhdr)
     return 0;
 }
 
-#ifdef MULTIACT_RELAY
 void Cls_OnCopyData(HWND hWnd, HWND hWndFrom, PCOPYDATASTRUCT pstCopyData)
 {
     TCHAR atBuff[MAX_PATH];
@@ -148,7 +147,6 @@ void Cls_OnCopyData(HWND hWnd, HWND hWndFrom, PCOPYDATASTRUCT pstCopyData)
 
     AppHandleDocumentOpenPath(hWnd, atBuff);
 }
-#endif
 
 VOID Cls_OnDropFiles(HWND hWnd, HDROP hDrop)
 {

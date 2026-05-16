@@ -393,7 +393,6 @@ namespace
     }
 } // namespace
 
-#ifdef SPMOZI_ENCODE
 EXTERNED UINT gbSpMoziEnc;
 
 static CONST TCHAR gatSpMoziList[] = {
@@ -425,7 +424,6 @@ UINT IsSpMozi(TCHAR tMozi)
 
     return 0;
 }
-#endif
 
 LPTSTR TextDecodeAutoAlloc(LPCVOID pBuffer, INT cbSize, PUINT pdCodePage)
 {
@@ -496,12 +494,10 @@ LPSTR LegacyEncodedTextEncodeAlloc(LPCTSTR ptTexts)
             StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), ptTexts[d]);
         }
 
-#ifdef SPMOZI_ENCODE
         if (IsSpMozi(ptTexts[d]))
         {
             StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), ptTexts[d]);
         }
-#endif
 
         sString += string(acNoSjisText);
     }

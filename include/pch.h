@@ -99,14 +99,8 @@ using namespace std;
 
 static constexpr GUID gcstGUID = { 0x66D3E881, 0x972B, 0x458B, { 0x93, 0x5E, 0x9E, 0x78, 0xB9, 0x26, 0xB4, 0x15 } };
 
-#define ACCELERATOR_EDIT
 #define USE_HOVERTIP
-#define EDGE_BLANK_STYLE
-#define MULTIACT_RELAY
-#define DOT_SPLIT_MODE
 #define SPLIT_BAR_POS_FIX
-#define SPMOZI_ENCODE
-#define FIND_STRINGS
 #define DO_TRY_CATCH
 
 #define EXTERNED

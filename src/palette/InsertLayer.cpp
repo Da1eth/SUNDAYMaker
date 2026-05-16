@@ -115,9 +115,7 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR);
 
 INT LayerTransparentAdjust(LAYER_ITR, INT, INT);
 
-#ifdef EDGE_BLANK_STYLE
 HRESULT LayerEdgeBlankSizeCheck(HWND, INT);
-#endif
 
 static HWND LayerCreateWindow(HINSTANCE hInst, DWORD dwStyle)
 {
@@ -169,9 +167,7 @@ static VOID LayerCreateToolbarOptions(HWND hToolWnd, HINSTANCE hInst)
 {
     HFONT hUIFont;
     HWND hBtn;
-#ifdef EDGE_BLANK_STYLE
     HWND hWorkWnd;
-#endif
 
     hUIFont = AppUiFontGet();
     if (!(hUIFont))
@@ -183,14 +179,12 @@ static VOID LayerCreateToolbarOptions(HWND hToolWnd, HINSTANCE hInst)
     CheckDlgButton(hToolWnd, IDCB_LAYER_QUICKCLOSE, gstLayerState.bQuickClose ? BST_CHECKED : BST_UNCHECKED);
     SendMessageW(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
-#ifdef EDGE_BLANK_STYLE
     hWorkWnd = CreateWindowExW(0, WC_COMBOBOX, L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 260, 1, 120, 70, hToolWnd, (HMENU)IDCB_LAYER_EDGE_BLANK, hInst, nullptr);
     ComboBox_AddString(hWorkWnd, L"여백 추가 없음");
     ComboBox_AddString(hWorkWnd, L"작은 여백 추가");
     ComboBox_AddString(hWorkWnd, L"큰 여백 추가");
     ComboBox_SetCurSel(hWorkWnd, 0);
     SendMessageW(hWorkWnd, WM_SETFONT, (WPARAM)hUIFont, TRUE);
-#endif
 }
 
 static VOID LayerLoadInitialContent(LAYER_ITR itLyr, LPCTSTR ptStr, BOOLEAN bSelect, UINT bSqSel)
@@ -458,7 +452,6 @@ static VOID LayerHandleQuickCloseToggle(HWND hWnd)
 
 static VOID LayerHandleEdgeBlankChange(HWND hWnd, HWND hWndCtl, UINT codeNotify)
 {
-#ifdef EDGE_BLANK_STYLE
     INT bEdgeBlank;
 
     if (CBN_SELCHANGE != codeNotify)
@@ -474,7 +467,6 @@ static VOID LayerHandleEdgeBlankChange(HWND hWnd, HWND hWndCtl, UINT codeNotify)
         LayerEdgeBlankSizeCheck(hWnd, kEdgeBlankWide);
     }
     SetFocus(hWnd);
-#endif
 }
 
 static BOOLEAN LayerEditHandleCommandShortcut(HWND hWnd, INT id)
@@ -601,11 +593,9 @@ VOID Lyb_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
         LayerHandleQuickCloseToggle(hWnd);
         break;
 
-#ifdef EDGE_BLANK_STYLE
     case IDCB_LAYER_EDGE_BLANK: //    白ヌキするか
         LayerHandleEdgeBlankChange(hWnd, hWndCtl, codeNotify);
         break;
-#endif
 
     case IDM_LYB_TRANCE_RELEASE: //    透過選択を解除
         LayerTransparentToggle(hWnd, 0);
@@ -662,11 +652,11 @@ VOID Lyb_OnKey(HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
         }
     }
     // 2024kai Shift←→で11ドットずつ移動、さらにCtrlも押していると5ドットずつ移動
-    BOOLEAN gbShiftOn = (0x8000 & GetKeyState(VK_SHIFT)) ? TRUE : FALSE;
-    BOOLEAN gbCtrlOn = (0x8000 & GetKeyState(VK_CONTROL)) ? TRUE : FALSE;
-    if (gbShiftOn && dotLeft != 0)
+    BOOLEAN bShiftPressed = (0x8000 & GetKeyState(VK_SHIFT)) ? TRUE : FALSE;
+    BOOLEAN bCtrlPressed = (0x8000 & GetKeyState(VK_CONTROL)) ? TRUE : FALSE;
+    if (bShiftPressed && dotLeft != 0)
     {
-        if (gbCtrlOn)
+        if (bCtrlPressed)
         {
             dotLeft *= 5;
         }
@@ -1656,10 +1646,8 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
     BOOLEAN bFirst = TRUE; //    なんか処理したらFALSE
     BOOLEAN bSpace, bBkSpase;
 
-#ifdef EDGE_BLANK_STYLE
     INT bEdgeBlank;
     INT xDotEx, iMoziEx;
-#endif
     LETR_ITR itLtr, itDel;
     wstring wsBuff;
 
@@ -1814,11 +1802,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                         iMozi = DocLetterPosGetAdjust(&xDot, dWkLine, -1); //    今の文字位置を確認
                                                                            //    iMozi：挿入位置文字数            xDot：文字列挿入位置ドット
 
-#ifndef EDGE_BLANK_STYLE
-                        //    そこの文字が空白か、空白ならどこまで続いてるか確認
-                        DocLineStateCheckWithDot(xDot, dWkLine, &dLeft, &dRight, &iStMozi, nullptr, &bSpace);
-                        //    dRight 使ってない
-#endif
                         //    先に上書きエリアの処理しないと、パディング直したらずれる
                         //    上書きの場合ここから先をさらに削除してギャップパディング
                         if (IDM_LYB_OVERRIDE == cmdID)
@@ -1828,7 +1811,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
 
                             //    20110817
                             dEndot = dInEnd;
-#ifdef EDGE_BLANK_STYLE
                             //    ここで dEndot をオフセットする？
                             if (1 == bEdgeBlank)
                             {
@@ -1838,7 +1820,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                             {
                                 dEndot += kEdgeBlankWide;
                             }
-#endif
                             iEdMozi = DocLetterPosGetAdjust(&dEndot, dWkLine, 1); //    上書きされる領域
                             //    キャレット位置修正
 
@@ -1875,7 +1856,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                             }
                         }
 
-#ifdef EDGE_BLANK_STYLE
                         if (bEdgeBlank)
                         {
                             //    オフセット位置確認
@@ -1913,11 +1893,8 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                             //    そこの文字が空白か、空白ならどこまで続いてるか確認
                             DocLineStateCheckWithDot(xDot, dWkLine, &dLeft, &dRight, &iStMozi, nullptr, &bSpace);
                             iMoziEx = iStMozi; //    特に意味はない
-#endif
                             dGap = (xTgDot + iSpDot) - xDot; //    前側の埋め処理
-#ifdef EDGE_BLANK_STYLE
                         }
-#endif
                         if (bSpace) //    空白なら、ギャップ分と合わせて入れ直す
                         {
                             dGap += (xDot - dLeft); //    パディングドット数
@@ -1926,11 +1903,9 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                         }
                         else //    文字であるなら、なにもしない
                         {
-#ifdef EDGE_BLANK_STYLE
                             //    必要なら、既存の文字列を一旦削除して
                             if (bEdgeBlank)
                                 DocRangeDeleteByMozi(xDot, dWkLine, iMoziEx, iMozi, &bFirst);
-#endif
                             dLeft = xDot; //    ギャップ開始位置
                         }
 
@@ -2071,8 +2046,6 @@ HRESULT LayerOnDelete(HWND hWnd)
 }
 //-------------------------------------------------------------------------------------------------
 
-#ifdef EDGE_BLANK_STYLE
-
 // 白抜き指定したときに、幅の狭い透過領域をキャンセルする
 HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
 {
@@ -2142,5 +2115,3 @@ HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
-
-#endif

@@ -9,8 +9,6 @@
 #include <memory>
 #include <numbers>
 
-#define TRC_SCROLLBAR
-
 #define TRC_POSITION_RANGE 2000
 #define TRC_POSITION_OFFSET 1000
 #define TRC_POSITION_PAGE_X 11
@@ -630,11 +628,7 @@ HRESULT TraceDialogueOpen(HINSTANCE hInst, HWND hWnd)
     }
 
     GetWindowRect(hWnd, &rect);
-#ifdef TRC_SCROLLBAR
     ghTraceDlg = CreateDialogParam(hInst, MAKEINTRESOURCE(IDD_TRACEADJUST_DLG2), hWnd, TraceCtrlDlgProc, 0);
-#else
-    ghTraceDlg = CreateDialogParam(hInst, MAKEINTRESOURCE(IDD_TRACEADJUST_DLG), hWnd, TraceCtrlDlgProc, 0);
-#endif
     GetClientRect(ghTraceDlg, &trRect);
 
     hDktpWnd = GetDesktopWindow();
@@ -687,7 +681,6 @@ static void TraceSubclassValueEdits(HWND hDlg)
     }
 }
 
-#ifdef TRC_SCROLLBAR
 static void TraceInitScrollControl(HWND hDlg, UINT sliderID, INT rangeMax, INT value, SCROLLINFO *pScrollInfo)
 {
     HWND hSlider = GetDlgItem(hDlg, sliderID);
@@ -695,13 +688,6 @@ static void TraceInitScrollControl(HWND hDlg, UINT sliderID, INT rangeMax, INT v
     SetScrollInfo(hSlider, SB_CTL, pScrollInfo, TRUE);
     TraceOnScroll(hDlg, hSlider, TB_THUMBPOSITION, value);
 }
-#else
-static void TraceInitScrollControl(HWND hDlg, UINT sliderID, INT rangeMax, INT value, void *)
-{
-    UNREFERENCED_PARAMETER(rangeMax);
-    TraceOnScroll(hDlg, GetDlgItem(hDlg, sliderID), TB_THUMBPOSITION, value);
-}
-#endif
 
 static void TraceResetDialogState(HWND hDlg)
 {
@@ -786,9 +772,7 @@ static INT_PTR CALLBACK TraceCtrlDlgProc(HWND hDlg, UINT message, WPARAM wParam,
     HWND hWndChild;
     RECT rect;
     COLORREF caretColour;
-#ifdef TRC_SCROLLBAR
     SCROLLINFO stSclInfo;
-#endif
 
     switch (message)
     {
@@ -804,11 +788,9 @@ static INT_PTR CALLBACK TraceCtrlDlgProc(HWND hDlg, UINT message, WPARAM wParam,
         gMoziClrBrush = CreateSolidBrush(gstTrcPrm.dMoziColour);
         TraceSubclassValueEdits(hDlg);
 
-#ifdef TRC_SCROLLBAR
         ZeroMemory(&stSclInfo, sizeof(SCROLLINFO));
         stSclInfo.cbSize = sizeof(SCROLLINFO);
         stSclInfo.fMask = SIF_RANGE;
-#endif
         TraceInitScrollControl(hDlg, IDSL_TRC_HRIZ_POS, TRC_POSITION_RANGE, gstTrcPrm.stOffsetPt.x, &stSclInfo);
         TraceInitScrollControl(hDlg, IDSL_TRC_VART_POS, TRC_POSITION_RANGE, gstTrcPrm.stOffsetPt.y, &stSclInfo);
         TraceInitScrollControl(hDlg, IDSL_TRC_CONTRAST, TRC_CONTRA_RANGE, gstTrcPrm.dContrast, &stSclInfo);
@@ -993,11 +975,7 @@ INT_PTR TraceOnScroll(HWND hDlg, HWND hWndCtl, UINT code, INT pos)
 
     if (isStepCode || isEndCode)
     {
-#ifdef TRC_SCROLLBAR
         pos = SendMessage(hWndCtl, SBM_GETPOS, 0, 0);
-#else
-        pos = SendMessage(hWndCtl, TBM_GETPOS, 0, 0);
-#endif
     }
 
     pos = ApplyTraceScrollDelta(ctlID, pos, code);
@@ -1053,11 +1031,7 @@ INT_PTR TraceOnScroll(HWND hDlg, HWND hWndCtl, UINT code, INT pos)
         return static_cast<INT_PTR>(FALSE);
     }
 
-#ifdef TRC_SCROLLBAR
     SendMessage(hWndCtl, SBM_SETPOS, pos, TRUE);
-#else
-    SendMessage(hWndCtl, TBM_SETPOS, TRUE, pos);
-#endif
 
     if ((isStepCode || isEndCode || isThumbCode) && ghImgDib)
     {

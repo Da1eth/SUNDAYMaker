@@ -1,7 +1,5 @@
 #include "Sunday.h"
 
-#ifdef ACCELERATOR_EDIT
-
 static BOOLEAN AccelKeyCommandAllowed(UINT dCommandID);
 static ACCEL *AccelKeyFindByCommand(vector<ACCEL> *, WORD);
 static const ACCEL *AccelKeyFindByCommand(const vector<ACCEL> &, WORD);
@@ -976,5 +974,3 @@ HRESULT AccelKeyMenuRewrite(HWND hWnd, LPACCEL pstAccel, CONST INT iEntry)
 
     return S_OK;
 }
-
-#endif

@@ -69,9 +69,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hWnd, WM_CONTEXTMENU, Cls_OnContextMenu);
         HANDLE_MSG(hWnd, WM_HOTKEY, Cls_OnHotKey);
         HANDLE_MSG(hWnd, WM_DRAWITEM, Cls_OnDrawItem);
-#ifdef MULTIACT_RELAY
         HANDLE_MSG(hWnd, WM_COPYDATA, Cls_OnCopyData);
-#endif
         HANDLE_MSG(hWnd, WM_KEYDOWN, Evw_OnKey);
         HANDLE_MSG(hWnd, WM_KEYUP, Evw_OnKey);
         HANDLE_MSG(hWnd, WM_CHAR, Evw_OnChar);

@@ -282,10 +282,8 @@ static INT_PTR CALLBACK OptionDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
 
         dValue = InitParamValue(INIT_LOAD, VL_LAST_OPEN, LASTOPEN_DO);
         CheckRadioButton(hDlg, IDRB_LASTOPEN_DO, IDRB_LASTOPEN_ASK, (IDRB_LASTOPEN_DO + dValue));
-#ifdef SPMOZI_ENCODE
         dValue = InitParamValue(INIT_LOAD, VL_SPMOZI_ENC, 0);
         CheckDlgButton(hDlg, IDCB_SPMOZI_ENCODE, dValue ? BST_CHECKED : BST_UNCHECKED);
-#endif
         dValue = InitParamValue(INIT_LOAD, VL_LAYER_TRANS, 192);
         SendDlgItemMessage(hDlg, IDSL_LAYERBOX_TRANCED, TBM_SETPOS, TRUE, (dValue - 0x1F));
 
@@ -356,11 +354,9 @@ static INT_PTR CALLBACK OptionDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
 
             dValue = IsDlgButtonChecked(hDlg, IDCB_DOCKING_STYLE);
             InitParamValue(INIT_SAVE, VL_PLS_LN_DOCK, dValue ? 1 : 0);
-#ifdef SPMOZI_ENCODE
             dValue = IsDlgButtonChecked(hDlg, IDCB_SPMOZI_ENCODE);
             gbSpMoziEnc = dValue ? 1 : 0;
             InitParamValue(INIT_SAVE, VL_SPMOZI_ENC, gbSpMoziEnc);
-#endif
             if (IsDlgButtonChecked(hDlg, IDRB_LASTOPEN_NON))
             {
                 dValue = LASTOPEN_NON;

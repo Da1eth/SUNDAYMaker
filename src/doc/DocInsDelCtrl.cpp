@@ -43,14 +43,12 @@ BOOLEAN DocBuildNoSjisText(TCHAR cchMozi, LPSTR pcNoSjisText)
         StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
     }
 
-#ifdef SPMOZI_ENCODE
     if (IsSpMozi(cchMozi)) //    機種依存文字変換
     {
         StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
 
         bCant = TRUE; //    ユニコードのみ文字として扱う
     }
-#endif
 
     StringCchCopyA(pcNoSjisText, 10, acNoSjisText);
 
