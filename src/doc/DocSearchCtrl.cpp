@@ -6,8 +6,6 @@
 
 // 마지막 검색 문자열과 다음 시작 위치를 유지해 F3 반복 검색에 사용한다.
 
-#ifdef FIND_STRINGS
-
 //-------------------------------------------------------------------------------------------------
 
 extern list<ONEFILE> gltMultiFiles; //    複数ファイル保持
@@ -497,5 +495,3 @@ HRESULT FindPageSelectSet(INT iOffset, INT iRange, INT iPage, FILES_ITR itFile)
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
-
-#endif //    FIND_STRINGS

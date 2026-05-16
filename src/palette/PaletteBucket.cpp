@@ -29,8 +29,6 @@ static HWND ghCtgryBxWnd;          // カテゴリコンボックス
 static HWND ghLvItemWnd;           // 内容リストビュー
 static HWND ghPalBucketLvTipWnd;   // 팔레트 버킷 리스트 툴팁
 
-static HWND ghMainWnd; // 編集ビューのある本体ウインドウ
-
 static UINT gNowGroup; // カテゴリ
 
 static WNDPROC gpfOrigPalBucketCtgryProc;
@@ -101,8 +99,6 @@ HWND PaletteBucketInitialise(HINSTANCE hInstance, HWND hParentWnd, LPRECT pstFra
     wcex.hIconSm = nullptr;
 
     RegisterClassEx(&wcex);
-
-    ghMainWnd = hParentWnd;
 
     gbPalBucketMode = FALSE;
     ZeroMemory(gatCurrentBucketPattern, sizeof(gatCurrentBucketPattern));

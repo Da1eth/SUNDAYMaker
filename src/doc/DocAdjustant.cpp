@@ -1536,7 +1536,6 @@ HRESULT DocHeadHalfSpaceExchange(HWND hWnd)
 }
 //-------------------------------------------------------------------------------------------------
 
-#ifdef DOT_SPLIT_MODE
 // キャレット位置から、左右に１dotずつずらす。文字なら空白に置き換えながら
 HRESULT DocCentreWidthShift(UINT vk, PINT pXdot, INT dLine)
 {
@@ -1723,4 +1722,3 @@ HRESULT DocCentreWidthShift(UINT vk, PINT pXdot, INT dLine)
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
-#endif

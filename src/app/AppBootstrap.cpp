@@ -22,10 +22,8 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     LPACCEL pstAccel;
     INT iEntry;
 
-#ifdef MULTIACT_RELAY
     HWND hWndActed;
     COPYDATASTRUCT stCopyData;
-#endif
 
     INITCOMMONCONTROLSEX iccex;
     iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -54,11 +52,9 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     AppMigrateLegacySettings(gatExePath);
     AppUiResourcesInitialise(hInstance);
 
-#ifdef MULTIACT_RELAY
     dMultiEna = InitParamValue(INIT_LOAD, VL_MULTI_ACT_E, 0);
     if (!(dMultiEna))
     {
-#endif
         SECURITY_DESCRIPTOR stSeqDes;
         SECURITY_ATTRIBUTES secAttribute;
         InitializeSecurityDescriptor(&stSeqDes, SECURITY_DESCRIPTOR_REVISION);
@@ -70,7 +66,6 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         ghAppMutex = CreateMutex(&secAttribute, TRUE, TEXT("SUNDAYMaker"));
         if (ghAppMutex && GetLastError() == ERROR_ALREADY_EXISTS)
         {
-#ifdef MULTIACT_RELAY
             hWndActed = FindWindow(gatMainWindowClass, nullptr);
             SetForegroundWindow(hWndActed);
 
@@ -82,16 +77,11 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
                 SendMessage(hWndActed, WM_COPYDATA, 0, (LPARAM)(&stCopyData));
             }
-#else
-            MessageBox(nullptr, TEXT("已にアプリは起動してるよ！"), TEXT("お燐からのお知らせ"), MB_OK | MB_ICONINFORMATION);
-#endif
             ReleaseMutex(ghAppMutex);
             CloseHandle(ghAppMutex);
             return 0;
         }
-#ifdef MULTIACT_RELAY
     }
-#endif
 
     InitWndwClass(hInstance);
 
@@ -224,9 +214,7 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
 
     gdPageByteMax = PAGE_BYTE_MAX;
 
-#ifdef SPMOZI_ENCODE
     gbSpMoziEnc = InitParamValue(INIT_LOAD, VL_SPMOZI_ENC, 0);
-#endif
 
     ghMainWnd = hWnd;
 
@@ -238,14 +226,8 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
 
     hSubMenu = GetSubMenu(ghMainMenu, 0);
     DeleteMenu(hSubMenu, IDM_TREE_RECONSTRUCT, MF_BYCOMMAND);
-#ifndef ACCELERATOR_EDIT
-    DeleteMenu(hSubMenu, IDM_ACCELKEY_EDIT_DLG_OPEN, MF_BYCOMMAND);
-#endif
 
     hSubMenu = GetSubMenu(ghMainMenu, 1);
-#ifndef FIND_STRINGS
-    DeleteMenu(hSubMenu, IDM_FIND_DLG_OPEN, MF_BYCOMMAND);
-#endif
 
     hSubMenu = GetSubMenu(ghMainMenu, 4);
     if (gbTmpltDock)
@@ -287,9 +269,7 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
     OpenHistoryInitialise(hWnd);
     DocInverseInit(TRUE);
 
-#ifdef FIND_STRINGS
     FindDialogueOpen(nullptr, nullptr);
-#endif
 
     SetFocus(ghViewWnd);
 

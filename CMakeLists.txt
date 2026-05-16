@@ -157,10 +157,9 @@ target_compile_definitions(Sunday PRIVATE
 
 target_compile_options(Sunday PRIVATE
     /utf-8
-    /W3
     /Zc:strictStrings-
-    $<$<CONFIG:Release>:/O2 /Oi /GL /GF>
-    $<$<CONFIG:Debug>:/Od /W4 /RTC1>
+    $<$<CONFIG:Release>:/W3 /O2 /Oi /GL /GF>
+    $<$<CONFIG:Debug>:/W4 /Od /RTC1>
 )
 
 # 정적 런타임 (/MT, /MTd)

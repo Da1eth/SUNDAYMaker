@@ -268,12 +268,10 @@ static VOID PageToolBarRewriteToolTips(HWND hWnd, LPACCEL pstAccel, INT iEntry)
             continue;
 
         StringCchCopy(atText, MAX_STRING, ptText);
-#ifdef ACCELERATOR_EDIT
         if (nullptr != pstAccel)
         {
             AccelKeyTextBuild(atText, MAX_STRING, gstPgTlBarInfo[i].idCommand, pstAccel, iEntry);
         }
-#endif
         SendMessage(hWnd, TB_SETBUTTONINFO, (WPARAM)(gstPgTlBarInfo[i].idCommand), (LPARAM)&stButtonInfo);
     }
 }
@@ -1008,7 +1006,6 @@ HRESULT PageListClear(VOID)
 // 開いている頁内容を変更
 HRESULT PageListViewChange(INT iPage, INT iPrePage)
 {
-    PAGE_LIST_CONTROLLER_STATE &stState = PageListStateGet();
     //    フォーカスページは、ここに来る前に変更しておくこと
 
     LONG iItem;

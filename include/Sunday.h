@@ -372,9 +372,7 @@ INT_PTR        CALLBACK About( HWND, UINT, WPARAM, LPARAM );
 VOID        WndTagSet( HWND, LONG_PTR );
 LONG_PTR    WndTagGet( HWND );
 
-#ifdef SPMOZI_ENCODE
 UINT        IsSpMozi( TCHAR );
-#endif
 
 HRESULT        InitWindowPos( UINT, UINT, LPRECT );
 INT            InitParamValue( UINT, UINT, INT );
@@ -424,11 +422,9 @@ HRESULT        OptionDialogueOpen( VOID  );
 
 COLORREF    InitColourValue( UINT, UINT, COLORREF );
 INT            InitTraceValue( UINT, LPTRACEPARAM );
-//HRESULT    InitLastOpen( UINT, LPTSTR );            //    
 INT            InitWindowTopMost( UINT, UINT, INT );
 HRESULT        InitToolBarLayout( UINT, INT, LPREBARLAYOUTINFO );
 
-#ifdef ACCELERATOR_EDIT
 LPACCEL        AccelKeyTableGetAlloc( LPINT  );
 LPACCEL        AccelKeyTableLoadAlloc( LPINT );
 HRESULT        AccelKeyDlgOpen( HWND );
@@ -436,7 +432,6 @@ HACCEL        AccelKeyHandleGet( HINSTANCE  );
 
 HACCEL        AccelKeyTableCreate( LPACCEL, INT );
 HRESULT        AccelKeyMenuRewrite( HWND, LPACCEL, CONST INT );
-#endif
 
 HRESULT        OpenHistoryInitialise( HWND );
 HRESULT        OpenHistoryLogging( HWND , LPTSTR );
@@ -733,7 +728,6 @@ HRESULT        DocSelRangeSet( INT, INT );
 HRESULT        DocSelRangeGet( PINT, PINT );
 HRESULT        DocSelRangeReset( PINT, PINT );
 VOID        DocSelByteSet( INT );
-//BOOLEAN        DocIsSelecting( VOID );
 
 LPTSTR        DocClipboardDataGet( PUINT );
 HRESULT        DocClipboardDataSet( LPVOID, INT, UINT );
@@ -778,9 +772,7 @@ HRESULT        DocLastLetterErase( PINT, INT );
 HRESULT        DocTopSpaceErase( PINT, INT );
 
 HRESULT        DocPositionShift( UINT, PINT, INT );
-#ifdef DOT_SPLIT_MODE
 HRESULT        DocCentreWidthShift( UINT vk, PINT, INT );
-#endif
 HRESULT        DocHeadHalfSpaceExchange( HWND );
 
 LPTSTR        DocLastSpDel( vector<LETTER> * );
@@ -826,11 +818,8 @@ UINT        SqnAppendSquare( LPUNDOBUFF, UINT, LPCTSTR, LPPOINT, INT, UINT );
 
 HRESULT        HangulNoSjisToggle( VOID );
 
-#ifdef FIND_STRINGS
 HRESULT        FindDialogueOpen( HINSTANCE, HWND );
 HRESULT        FindDirectly( HINSTANCE, HWND, INT );
-//INT            FindStringJump( UINT, PINT, PINT, PINT );
-#endif
 
 LPCTSTR        NextLineW( LPCTSTR );
 LPTSTR        NextLineW( LPTSTR );

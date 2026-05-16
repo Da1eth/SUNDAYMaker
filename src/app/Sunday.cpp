@@ -46,9 +46,7 @@ EXTERNED INT gbTmpltDock; // テンプレのドッキング
 list<OPENHIST> gltOpenHist; // ファイル開いた履歴
 HMENU ghHistyMenu;          // 履歴表示する部分
 
-#ifdef FIND_STRINGS
 extern HWND ghFindDlg; //    検索ダイヤログのハンドル
-#endif
 
 extern HWND ghViewWnd; //    ビュー
 
@@ -57,16 +55,12 @@ extern UINT gdGridYpos;   //    グリッド線のＹ間隔
 extern UINT gdRightRuler; //    右線の位置ドット
 extern UINT gdUnderRuler; //    下線の位置行数
 
-#ifdef SPMOZI_ENCODE
 extern UINT gbSpMoziEnc; // 機種依存文字を数値参照コピーする
-#endif
 //-------------------------------------------------------------------------------------------------
 
 extern list<ONEFILE> gltMultiFiles;
 extern FILES_ITR gitFileIt;
 //-------------------------------------------------------------------------------------------------
-
-#ifdef ACCELERATOR_EDIT
 
 // アクセラテーブルをダイナミックに確保
 LPACCEL AccelKeyTableGetAlloc(LPINT piEntry)
@@ -118,7 +112,6 @@ HACCEL AccelKeyTableCreate(LPACCEL pstAccel, INT iEntry)
     return hAccel;
 }
 //-------------------------------------------------------------------------------------------------
-#endif
 
 // タイトルバーを変更する
 HRESULT AppTitleChange(LPTSTR ptText)
@@ -527,7 +520,7 @@ INT InitParamValue(UINT dMode, UINT dStyle, INT nValue)
         break;
     case VL_SPMOZI_ENC:
         StringCchCopy(atKeyName, SUB_STRING, TEXT("SpMoziEnc"));
-        break; //    SPMOZI_ENCODE
+        break;
     default:
         return nValue;
     }

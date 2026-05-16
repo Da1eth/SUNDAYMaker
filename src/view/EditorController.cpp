@@ -704,7 +704,6 @@ BOOLEAN ViewLayoutCommandForward(INT id, HWND hMainWindow)
         DocPositionShift(VK_LEFT, &caret.dXdot, caret.dLine);
         break;
 
-#ifdef DOT_SPLIT_MODE
     case IDM_DOT_SPLIT_RIGHT:
         DocCentreWidthShift(VK_RIGHT, &caret.dXdot, caret.dLine);
         break;
@@ -712,13 +711,6 @@ BOOLEAN ViewLayoutCommandForward(INT id, HWND hMainWindow)
     case IDM_DOT_SPLIT_LEFT:
         DocCentreWidthShift(VK_LEFT, &caret.dXdot, caret.dLine);
         break;
-#else
-    case IDM_DOT_SPLIT_RIGHT:
-    case IDM_DOT_SPLIT_LEFT:
-        MessageBox(hMainWindow, TEXT("まだ出来てないよ"), TEXT("Coming Soon ! !"), MB_OK);
-        EditChangeSetApply(stChangeSet);
-        return TRUE;
-#endif
 
     case IDM_DOTDIFF_LOCK:
         gdAutoDiffBase = DocDiffAdjBaseSet(caret.dLine);
