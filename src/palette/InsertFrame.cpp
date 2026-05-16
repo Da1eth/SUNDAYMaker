@@ -1410,10 +1410,8 @@ LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO
     FRAME_VERTICAL_BAND_SPEC stPillarSpec{};
     FRAME_HORIZONTAL_BAND_SPEC stFloorSpec{};
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         iLines = iHeight / LINE_HEIGHT; //    切り捨てでおｋ
 
@@ -1508,7 +1506,6 @@ LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO
 
         ptBufStr = FrameJoinLines(vcString, FALSE);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1518,7 +1515,6 @@ LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO
     {
         return (LPTSTR)ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return ptBufStr;
 }
@@ -1542,10 +1538,8 @@ LPTSTR FrameMakeInsideBoundary(UINT dType, PINT piValue, LPFRAMEINFO pstInfo)
     LPFRAMEITEM apstFloorItems[] = {&(pstInfo->stTwilight), &(pstInfo->stMidnight), &(pstInfo->stDawn)};
     FRAME_HORIZONTAL_BAND_SPEC stBandSpec{};
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         bMultiPadd = pstInfo->dRestPadd; //    パディングするかどうか
 
@@ -1645,7 +1639,6 @@ LPTSTR FrameMakeInsideBoundary(UINT dType, PINT piValue, LPFRAMEINFO pstInfo)
 
         ptBufStr = FrameJoinLines(vcString, TRUE);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1655,7 +1648,6 @@ LPTSTR FrameMakeInsideBoundary(UINT dType, PINT piValue, LPFRAMEINFO pstInfo)
     {
         return (LPTSTR)ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return ptBufStr;
 }
@@ -1789,10 +1781,8 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
     LPFRAMEITEM pstItem;
     TCHAR atSubStr[MAX_PATH]; //    足りるか？
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         if (0 > dMode)
             return DocInsertSpoTag(dStyle);
@@ -1901,7 +1891,6 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
         DocInsertString(&iInX, &iLns, nullptr, ptString, 0, FALSE);
         FREE(ptString);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1911,11 +1900,8 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         //    最終的なキャレットの位置をリセット
         DocViewResetCaret(iInX, iLns);
@@ -1932,7 +1918,6 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
 
         DocPageInfoRenew(-1, 1);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1942,7 +1927,6 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------

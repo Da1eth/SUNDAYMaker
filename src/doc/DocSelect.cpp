@@ -403,10 +403,8 @@ INT DocSelectedDelete(PINT pdDot, PINT pdLine, UINT bSqSel, BOOLEAN bFirst)
     LETR_ITR itLtr, itEnd, itHead, itTail;
     LINE_ITR itLine;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         bSqSel &= D_SQUARE; //    矩形ビットだけ残す
 
@@ -523,7 +521,6 @@ INT DocSelectedDelete(PINT pdDot, PINT pdLine, UINT bSqSel, BOOLEAN bFirst)
 
         FREE(pstPt);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -533,7 +530,6 @@ INT DocSelectedDelete(PINT pdDot, PINT pdLine, UINT bSqSel, BOOLEAN bFirst)
     {
         return (INT)ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return bCrLf;
 }

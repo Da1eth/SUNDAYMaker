@@ -105,7 +105,7 @@ HRESULT FlipReplacementLoad(UINT dMode)
     if (!(pLoadedParts->empty()))
         return S_FALSE;
 
-    if (FAILED(DocAppLoadFlipEntries(atFileName, dMode, &vcEntries)))
+    if (FAILED(AppLoadFlipEntries(atFileName, dMode, &vcEntries)))
         return E_HANDLE;
     for (size_t i = 0; vcEntries.size() > i; i++)
     {
@@ -202,10 +202,8 @@ HRESULT DocInverseTransform(UINT dStyle, UINT dMode, PINT pXdot, INT dLine)
     INT_PTR iLines;
     INT iTop, iBtm, iInX;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         iLines = DocNowFilePageLineCount(); //    ページ全体の行数
 
@@ -260,7 +258,6 @@ HRESULT DocInverseTransform(UINT dStyle, UINT dMode, PINT pXdot, INT dLine)
         DocLetterPosGetAdjust(pXdot, dLine, 0); //    カーソル位置を適当に補正
         DocViewMoveCaret(*pXdot, dLine);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -270,7 +267,6 @@ HRESULT DocInverseTransform(UINT dStyle, UINT dMode, PINT pXdot, INT dLine)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -296,10 +292,8 @@ HRESULT DocMirrorTranceLine(INT iTop, INT iBtm)
 
     LINE_ITR itLine;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         FlipReplacementLoad(FLIP_HORIZONTAL); //    左右のパーツ確認
 
@@ -357,7 +351,6 @@ HRESULT DocMirrorTranceLine(INT iTop, INT iBtm)
 
         //    末端空白削除が必要
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -367,7 +360,6 @@ HRESULT DocMirrorTranceLine(INT iTop, INT iBtm)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -392,10 +384,8 @@ HRESULT DocMirrorTranceBox(INT iTop, INT iBtm)
 
     LINE_ITR itLine;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         FlipReplacementLoad(FLIP_HORIZONTAL); //    左右のパーツ確認
 
@@ -439,7 +429,6 @@ HRESULT DocMirrorTranceBox(INT iTop, INT iBtm)
             }
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -449,7 +438,6 @@ HRESULT DocMirrorTranceBox(INT iTop, INT iBtm)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -475,10 +463,8 @@ HRESULT DocUpsetTranceLine(INT iTop, INT iBtm)
     wstring wsInvBuff;
     vector<wstring> vcUpset; //    変換結果の一時保存
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         FlipReplacementLoad(FLIP_VERTICAL); //    上下のパーツ確認
 
@@ -529,7 +515,6 @@ HRESULT DocUpsetTranceLine(INT iTop, INT iBtm)
             }
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -539,7 +524,6 @@ HRESULT DocUpsetTranceLine(INT iTop, INT iBtm)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -563,10 +547,8 @@ HRESULT DocUpsetTranceBox(INT iTop, INT iBtm)
 
     vector<wstring> vcUpset; //    変換結果の一時保存
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         FlipReplacementLoad(FLIP_VERTICAL); //    上下のパーツ確認
 
         itLine = (*gitFileIt).vcCont.at(gixFocusPage).ltPage.begin();
@@ -634,7 +616,6 @@ HRESULT DocUpsetTranceBox(INT iTop, INT iBtm)
             FREE(ptInvStr);
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -644,7 +625,6 @@ HRESULT DocUpsetTranceBox(INT iTop, INT iBtm)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }

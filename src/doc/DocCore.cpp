@@ -265,10 +265,8 @@ LPARAM DocMultiFileCreate(LPTSTR ptDmyName)
     ONEFILE stFile;
     FILES_ITR itNew;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         ZeroMemory(stFile.atFileName, sizeof(stFile.atFileName));
         stFile.dModify = FALSE;
@@ -302,7 +300,6 @@ LPARAM DocMultiFileCreate(LPTSTR ptDmyName)
 
         gitFileIt = itNew; //    ファイルなう
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -312,7 +309,6 @@ LPARAM DocMultiFileCreate(LPTSTR ptDmyName)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return stFile.dUnique;
 }
@@ -1017,10 +1013,8 @@ INT DocPageCreate(INT iAdding)
 
     PAGE_ITR itPage;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         ZeroONELINE(&stLine); //    新規作成したら、壱行目が０文字な枠を作る
 
@@ -1071,7 +1065,6 @@ INT DocPageCreate(INT iAdding)
             iAddPage = iNext;
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1081,7 +1074,6 @@ INT DocPageCreate(INT iAdding)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return iAddPage; //    追加したページ番号
 }
@@ -1097,10 +1089,8 @@ HRESULT DocPageDelete(INT iPage, INT iBack)
     if (1 >= DocNowFilePageCount())
         return E_ACCESSDENIED;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         //    ここでバックアップを？
 
@@ -1134,7 +1124,6 @@ HRESULT DocPageDelete(INT iPage, INT iBack)
 
         DocPageChange(iNew); //    削除したら頁移動
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1144,7 +1133,6 @@ HRESULT DocPageDelete(INT iPage, INT iBack)
     {
         return ETC_MSG(("etc error"), E_FAIL);
     }
-#endif
 
     return S_OK;
 }
@@ -1190,17 +1178,14 @@ HRESULT DocPageChange(INT dPageNum)
     INT iPrePage;
 
     //    今の表示内容破棄とかいろいろある
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         DocViewClearSelection();
 
         iPrePage = gixFocusPage;
         DocSyncFocusedPage(dPageNum, iPrePage);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1210,7 +1195,6 @@ HRESULT DocPageChange(INT dPageNum)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -1355,10 +1339,8 @@ INT DocPageTextGetAlloc(FILES_ITR itFile, INT dPage, UINT bStyle, LPVOID *pText,
 
     LINE_ITR itLines;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         srString.clear();
         wsString.clear();
@@ -1484,7 +1466,6 @@ INT DocPageTextGetAlloc(FILES_ITR itFile, INT dPage, UINT bStyle, LPVOID *pText,
             }
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1494,7 +1475,6 @@ INT DocPageTextGetAlloc(FILES_ITR itFile, INT dPage, UINT bStyle, LPVOID *pText,
     {
         return (INT)ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return (INT)iSize;
 }

@@ -694,10 +694,8 @@ VOID Lyb_OnPaint(HWND hWnd)
 
     hdc = BeginPaint(hWnd, &ps);
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         height = gstLayerState.dToolBarHeight;
 
@@ -797,7 +795,6 @@ VOID Lyb_OnPaint(HWND hWnd)
             }
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -809,7 +806,6 @@ VOID Lyb_OnPaint(HWND hWnd)
         ETC_MSG(("etc error"), 0);
         return;
     }
-#endif
 
     EndPaint(hWnd, &ps);
 
@@ -956,10 +952,8 @@ HRESULT LayerTransparentToggle(HWND hWnd, UINT bMode)
     INT_PTR iLines, iL;
     LETR_ITR itMozi;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
@@ -990,7 +984,6 @@ HRESULT LayerTransparentToggle(HWND hWnd, UINT bMode)
             //    全部解除
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1000,7 +993,6 @@ HRESULT LayerTransparentToggle(HWND hWnd, UINT bMode)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -1014,10 +1006,8 @@ INT LayerTransparentAdjust(LAYER_ITR itLyr, INT dNowDot, INT rdLine)
     TCHAR ch, chb;
     LETR_ITR itMozi, itHead, itTail, itTemp;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         //    行のはみ出しを？
         iLines = itLyr->vcLyrImg.size();
@@ -1095,7 +1085,6 @@ INT LayerTransparentAdjust(LAYER_ITR itLyr, INT dNowDot, INT rdLine)
             itTemp->mzStyle ^= CT_LYR_TRNC;
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1105,7 +1094,6 @@ INT LayerTransparentAdjust(LAYER_ITR itLyr, INT dNowDot, INT rdLine)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return iLetter;
 }
@@ -1268,10 +1256,8 @@ HRESULT LayerFromSelectArea(LAYER_ITR itLyr, UINT bSqSel)
     LPTSTR ptString = nullptr;
     UINT cchSize;
     LPPOINT pstPos;
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         AppendEmptyLayerLine(*itLyr);
 
@@ -1284,7 +1270,6 @@ HRESULT LayerFromSelectArea(LAYER_ITR itLyr, UINT bSqSel)
         FREE(ptString);
         FREE(pstPos);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1294,7 +1279,6 @@ HRESULT LayerFromSelectArea(LAYER_ITR itLyr, UINT bSqSel)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
@@ -1328,10 +1312,8 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR itLyr)
     INT_PTR iLine, i;
     SIZE wdSize, tgtSize; // clSize
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         //    今の画面の行数とドット数確認
         dYline = ViewAreaSizeGet(&dViewXdot);
         dViewYdot = dYline * LINE_HEIGHT;
@@ -1378,7 +1360,6 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR itLyr)
 
     SetWindowPos(itLyr->hBoxWnd, HWND_TOPMOST, 0, 0, tgtSize.cx, tgtSize.cy, SWP_NOMOVE | SWP_NOZORDER);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1388,7 +1369,6 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR itLyr)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -1403,10 +1383,8 @@ HRESULT LayerBoxSetString(LAYER_ITR itLyr, LPCTSTR ptText, UINT cchSize, LPPOINT
     LPTSTR ptBuff, ptSpace = nullptr;
     ONELINE stLine;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         ZeroONELINE(&stLine);
 
         // 2024kai GetHdcCでhdcを一時共通にして高速化（0.9秒かかるAAのレイヤボックス表示が0.3秒に）
@@ -1506,7 +1484,6 @@ HRESULT LayerBoxSetString(LAYER_ITR itLyr, LPCTSTR ptText, UINT cchSize, LPPOINT
             LayerBoxSizeAdjust(itLyr);
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1516,7 +1493,6 @@ HRESULT LayerBoxSetString(LAYER_ITR itLyr, LPCTSTR ptText, UINT cchSize, LPPOINT
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -1530,10 +1506,8 @@ INT LayerHeadSpaceCheck(vector<LETTER> *vcTgLine, PINT pdMozi)
     UINT_PTR i, iMozi;
     BOOLEAN bDotAtLineHead;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         iMozi = vcTgLine->size();
 
         dDot = 0;
@@ -1580,7 +1554,6 @@ INT LayerHeadSpaceCheck(vector<LETTER> *vcTgLine, PINT pdMozi)
         {
             *pdMozi = cchSp;
         }
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1590,7 +1563,6 @@ INT LayerHeadSpaceCheck(vector<LETTER> *vcTgLine, PINT pdMozi)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return dDot;
 }
@@ -1601,10 +1573,8 @@ INT LayerInputLetter(LAYER_ITR itLyr, INT nowDot, INT rdLine, TCHAR ch)
 {
     LETTER stLetter;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         //    データ作成
         DocLetterDataCheck(&stLetter, ch); //    指定行のドット位置(キャレット位置)に壱文字追加する・レイヤボックス
 
@@ -1613,7 +1583,6 @@ INT LayerInputLetter(LAYER_ITR itLyr, INT nowDot, INT rdLine, TCHAR ch)
         itLyr->vcLyrImg.at(rdLine).iDotCnt += stLetter.rdWidth;
         itLyr->vcLyrImg.at(rdLine).iByteSz += stLetter.mzByte;
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1623,7 +1592,6 @@ INT LayerInputLetter(LAYER_ITR itLyr, INT nowDot, INT rdLine, TCHAR ch)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return stLetter.rdWidth;
 }
@@ -1651,10 +1619,8 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
     LETR_ITR itLtr, itDel;
     wstring wsBuff;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
@@ -1951,7 +1917,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
             }
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1961,7 +1926,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -2016,10 +1980,8 @@ HRESULT LayerForClipboard(HWND hWnd, UINT bStyle)
 // レイヤボックスの内容を削除する
 HRESULT LayerOnDelete(HWND hWnd)
 {
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
@@ -2030,7 +1992,6 @@ HRESULT LayerOnDelete(HWND hWnd)
 
         InvalidateRect(hWnd, nullptr, TRUE);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -2040,7 +2001,6 @@ HRESULT LayerOnDelete(HWND hWnd)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -2055,10 +2015,8 @@ HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
     LYLINE_ITR itLine;
     LETR_ITR itMozi, itMzx;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
@@ -2101,7 +2059,6 @@ HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
 
         InvalidateRect(hWnd, nullptr, TRUE); //    再描画
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -2111,7 +2068,6 @@ HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
