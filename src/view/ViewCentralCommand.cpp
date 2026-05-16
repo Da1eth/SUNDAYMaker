@@ -15,29 +15,16 @@ struct VIEW_COMMAND_REQUEST
 using VIEW_COMMAND_DISPATCH = BOOLEAN (*)(const VIEW_COMMAND_REQUEST &);
 
 static VOID OperationSetExtractionMode(BOOLEAN bEnable);
-static VOID OperationExtractionModeClear(VOID);
 static VOID OperationToggleDisplayFlag(UINT &dFlag, UINT dInitParam, INT idMenu, BOOLEAN bUpdateStatusBar);
 static VOID OperationToggleDisplayFlag(BOOLEAN &bFlag, UINT dInitParam, INT idMenu);
 static BOOLEAN OperationHandleDynamicCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleWindowCommands(const VIEW_COMMAND_REQUEST &);
-static BOOLEAN OperationHandleDialogCommands(const VIEW_COMMAND_REQUEST &);
-static BOOLEAN OperationHandleFileCommands(const VIEW_COMMAND_REQUEST &);
+static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl);
 static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleInsertCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleLayoutCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleViewCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandlePageCommands(const VIEW_COMMAND_REQUEST &);
-
-static const VIEW_COMMAND_DISPATCH gapfViewCommandDispatchers[] = {
-    OperationHandleWindowCommands,
-    OperationHandleDialogCommands,
-    OperationHandleFileCommands,
-    OperationHandleEditCommands,
-    OperationHandleInsertCommands,
-    OperationHandleLayoutCommands,
-    OperationHandleViewCommands,
-    OperationHandlePageCommands,
-};
 
 HRESULT OperationOnStatusBar(VOID)
 {
@@ -82,11 +69,6 @@ static VOID OperationSetExtractionMode(BOOLEAN bEnable)
 
     MenuItemCheckOnOff(IDM_EXTRACTION_MODE, ViewExtractionModeGet());
     OperationOnStatusBar();
-}
-
-static VOID OperationExtractionModeClear(VOID)
-{
-    OperationSetExtractionMode(FALSE);
 }
 
 static VOID OperationToggleDisplayFlag(UINT &dFlag, UINT dInitParam, INT idMenu, BOOLEAN bUpdateStatusBar)
@@ -269,18 +251,6 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
     }
 }
 
-static BOOLEAN OperationHandleDialogCommands(const VIEW_COMMAND_REQUEST &stCommand)
-{
-    return OperationHandleDialogCommands(stCommand.hMainWindow, stCommand.id, stCommand.hControl);
-}
-
-static BOOLEAN OperationHandleFileCommands(const VIEW_COMMAND_REQUEST &stCommand)
-{
-    UNREFERENCED_PARAMETER(stCommand);
-
-    return FALSE;
-}
-
 static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand)
 {
     const AppUiContext stUiContext = AppUiContextGet();
@@ -304,7 +274,7 @@ static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand
         if (ViewExtractionModeGet())
         {
             ViewEditExecuteExtraction(nullptr);
-            OperationExtractionModeClear();
+            OperationSetExtractionMode(FALSE);
         }
         else
         {
@@ -348,7 +318,7 @@ static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand
         if (ViewExtractionModeGet())
         {
             ViewEditExecuteExtraction(stUiContext.hInstance);
-            OperationExtractionModeClear();
+            OperationSetExtractionMode(FALSE);
         }
         else
         {
@@ -520,6 +490,20 @@ VOID OperationOnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
     stCommand.codeNotify = codeNotify;
 
     if (OperationHandleDynamicCommands(stCommand))
+    {
+        return;
+    }
+
+    static const VIEW_COMMAND_DISPATCH gapfViewCommandDispatchers[] = {
+        OperationHandleWindowCommands,
+        OperationHandleEditCommands,
+        OperationHandleInsertCommands,
+        OperationHandleLayoutCommands,
+        OperationHandleViewCommands,
+        OperationHandlePageCommands,
+    };
+
+    if (OperationHandleDialogCommands(stCommand.hMainWindow, stCommand.id, stCommand.hControl))
     {
         return;
     }

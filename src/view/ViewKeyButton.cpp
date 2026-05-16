@@ -44,10 +44,8 @@ VOID Evw_OnKey(HWND hWnd, UINT vk, BOOL fDown, INT cRepeat, UINT flags)
     ViewSelPositionSet(nullptr); //    操作直前の位置
     //    中でルーラーのドローが発生してる。Ctrlとか押しっぱでちらつく
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         if (fDown)
         {
@@ -190,7 +188,6 @@ VOID Evw_OnKey(HWND hWnd, UINT vk, BOOL fDown, INT cRepeat, UINT flags)
             //    ない？
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -202,7 +199,6 @@ VOID Evw_OnKey(HWND hWnd, UINT vk, BOOL fDown, INT cRepeat, UINT flags)
         ETC_MSG(("etc error"), 0);
         return;
     }
-#endif
 
     return;
 }

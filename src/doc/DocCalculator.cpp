@@ -366,10 +366,8 @@ INT DocLineParamGet(INT rdLine, PINT pdMozi, PINT pdByte)
     INT_PTR iLines;
     INT dDotCnt;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         LINE_ITR itLine;
 
@@ -394,7 +392,6 @@ INT DocLineParamGet(INT rdLine, PINT pdMozi, PINT pdByte)
         itLine->iByteSz = stMetrics.dByteCnt;
         dDotCnt = stMetrics.dDotCnt;
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -404,7 +401,6 @@ INT DocLineParamGet(INT rdLine, PINT pdMozi, PINT pdByte)
     {
         return ETC_MSG(("etc error"), -1);
     }
-#endif
 
     return dDotCnt;
 }
@@ -417,10 +413,8 @@ INT DocLetterPosGetAdjust(PINT pNowDot, INT rdLine, INT round)
 
     LINE_ITR itLine;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         //    もし範囲外なら、範囲内にいれておく
         iMaxLine = DocNowFilePageLineCount(); // DocPageParamGet( nullptr, nullptr
@@ -441,7 +435,6 @@ INT DocLetterPosGetAdjust(PINT pNowDot, INT rdLine, INT round)
         itLine->iDotCnt = stMetrics.dDotCnt;
         itLine->iByteSz = stMetrics.dByteCnt;
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -451,7 +444,6 @@ INT DocLetterPosGetAdjust(PINT pNowDot, INT rdLine, INT round)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return DocLetterPosAdjustInLine(*itLine, pNowDot, round);
 }

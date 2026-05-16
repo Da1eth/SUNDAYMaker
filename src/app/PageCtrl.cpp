@@ -132,10 +132,7 @@ static VOID PageToolBarAssignToolTips(HWND);
 static VOID PageToolBarRewriteToolTips(HWND, LPACCEL, INT);
 
 static INT_PTR CALLBACK PageNameDlgProc(HWND, UINT, WPARAM, LPARAM);
-
-#ifdef USE_HOVERTIP
 static LPTSTR CALLBACK PageListHoverTipInfo(LPVOID);
-#endif
 static HRESULT PageListPreviewTextGetAlloc(INT, LPTSTR *);
 //-------------------------------------------------------------------------------------------------
 
@@ -556,9 +553,7 @@ HWND PageListInitialise(HINSTANCE hInstance, HWND hParentWnd, LPRECT pstFrame)
     ShowWindow(stState.hPageWindow, SW_SHOW);
     UpdateWindow(stState.hPageWindow);
 
-#ifdef USE_HOVERTIP
     HoverTipInitialise(hInstance, stState.hPageWindow);
-#endif
 
     return stState.hPageWindow;
 }
@@ -597,9 +592,7 @@ LRESULT CALLBACK PageListProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HANDLE_MSG(hWnd, WM_CONTEXTMENU, Plt_OnContextMenu);
 
     case WM_DESTROY:
-    #ifdef USE_HOVERTIP
         HoverTipInitialise(nullptr, nullptr);
-    #endif
         if (stState.hToolbarImageList)
         {
             ImageList_Destroy(stState.hToolbarImageList);
@@ -1376,7 +1369,6 @@ static LRESULT CALLBACK gpfPageViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
         HANDLE_MSG(hWnd, WM_MOUSEMOVE, Plv_OnMouseMove);
         HANDLE_MSG(hWnd, WM_COMMAND, Plt_OnCommand);
 
-#ifdef USE_HOVERTIP
     case WM_MOUSEHOVER:
         HoverTipOnMouseHover(hWnd, wParam, lParam, PageListHoverTipInfo);
         return 0;
@@ -1385,7 +1377,6 @@ static LRESULT CALLBACK gpfPageViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
         HoverTipOnMouseLeave(hWnd);
         stState.ixMouseSelection = -1;
         return 0;
-#endif
     }
 
     return CallWindowProc(stState.pfOrigPageViewProc, hWnd, msg, wParam, lParam);
@@ -1409,17 +1400,14 @@ static VOID Plv_OnMouseMove(HWND hWnd, INT, INT y, UINT)
         bReDraw = TRUE;
     stState.ixMouseSelection = iItem;
 
-#ifdef USE_HOVERTIP
     if (bReDraw)
     {
         HoverTipResist(stState.hPageListWindow);
     }
-#endif
 
     return;
 }
 
-#ifdef USE_HOVERTIP
 // HoverTip用のコールバック受取
 static LPTSTR CALLBACK PageListHoverTipInfo(LPVOID)
 {
@@ -1440,4 +1428,3 @@ static LPTSTR CALLBACK PageListHoverTipInfo(LPVOID)
     return ptBuffer;
 }
 //-------------------------------------------------------------------------------------------------
-#endif

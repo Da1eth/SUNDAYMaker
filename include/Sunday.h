@@ -343,15 +343,6 @@ using PAGELOAD = UINT (CALLBACK*)(LPTSTR, LPCTSTR, INT);
 
 
 
-#ifdef USE_HOVERTIP
-
-//!    HoverTip用の表示内容確保・内容は増やすかも
-//typedef struct tagHOVERTIPINFO
-//{
-//    LPTSTR    ptInfo;    //    文字列内容を示すポインタ
-//
-//} HOVERTIPINFO, *LPHOVERTIPINFO;
-
 // HoverTip 콜백
 using HOVERTIPDISP = LPTSTR (CALLBACK*)( LPVOID );
 
@@ -360,9 +351,6 @@ HRESULT    HoverTipFontRefresh( VOID );
 HRESULT    HoverTipResist( HWND  );
 LRESULT    HoverTipOnMouseHover( HWND, WPARAM, LPARAM, HOVERTIPDISP );
 LRESULT    HoverTipOnMouseLeave( HWND );
-
-
-#endif
 //-------------------------------------------------------------------------------------------------
 
 
@@ -568,8 +556,6 @@ INT            ViewSelPageAll( INT );
 UINT        ViewSqSelModeToggle( UINT, LPVOID );
 HRESULT        ViewSelAreaSelect( LPVOID );
 
-// ViewInsertUniSpace, ViewInsertTmpleString, ViewBrushStyleSetting,
-// ViewLayoutCommandForward 는 EditorController.h 로 이동함.
 INT            ViewInsertColourTag( UINT );
 HRESULT        DocInsertSpoTag( UINT );
 HRESULT        ColourTagDialogueOpen( HINSTANCE, HWND );

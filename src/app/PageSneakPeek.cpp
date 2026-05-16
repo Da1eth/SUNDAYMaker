@@ -1,8 +1,6 @@
 // 페이지 미리보기
 #include "Sunday.h"
 
-#ifdef USE_HOVERTIP
-
 #define HOVER_TIPS_CLASS TEXT("HOVER_TIPS")
 
 #define HOVER_TIME 15000 // デフォルト表示ｍｓ
@@ -349,5 +347,3 @@ VOID Htp_OnMouseMove(HWND hWnd, INT x, INT y, UINT keyFlags)
     return;
 }
 //-------------------------------------------------------------------------------------------------
-
-#endif

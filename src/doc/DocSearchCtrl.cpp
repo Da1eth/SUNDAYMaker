@@ -94,7 +94,7 @@ INT_PTR CALLBACK FindStrDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
         hWorkWnd = GetDlgItem(hDlg, IDE_FIND_TEXT);
         Edit_SetText(hWorkWnd, gatLastPtn); //    今の検索内容があれば転写する
-        DocUiFocusWindow(hWorkWnd);
+        SetFocus(hWorkWnd);
 
         return (INT_PTR)FALSE;
 
@@ -111,16 +111,16 @@ INT_PTR CALLBACK FindStrDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             return (INT_PTR)TRUE; //    検索する
 
         case IDM_PASTE:
-            DocUiSendWindowMessage(hWorkWnd, WM_PASTE, 0, 0);
+            SendMessage(hWorkWnd, WM_PASTE, 0, 0);
             return (INT_PTR)TRUE;
         case IDM_COPY:
-            DocUiSendWindowMessage(hWorkWnd, WM_COPY, 0, 0);
+            SendMessage(hWorkWnd, WM_COPY, 0, 0);
             return (INT_PTR)TRUE;
         case IDM_CUT:
-            DocUiSendWindowMessage(hWorkWnd, WM_CUT, 0, 0);
+            SendMessage(hWorkWnd, WM_CUT, 0, 0);
             return (INT_PTR)TRUE;
         case IDM_UNDO:
-            DocUiSendWindowMessage(hWorkWnd, WM_UNDO, 0, 0);
+            SendMessage(hWorkWnd, WM_UNDO, 0, 0);
             return (INT_PTR)TRUE;
         default:
             break;

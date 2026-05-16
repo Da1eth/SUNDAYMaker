@@ -195,10 +195,8 @@ HRESULT DocInputReturn(INT nowDot, INT rdLine)
 
     LINE_ITR itLine, ltLineItr;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         iLines = DocNowFilePageLineCount();
 
@@ -264,7 +262,6 @@ HRESULT DocInputReturn(INT nowDot, INT rdLine)
         DocBadSpaceCheck(rdLine);     //    ここで空白チェキ
         DocBadSpaceCheck(rdLine + 1); //    空白チェキ・次の行も確認
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -274,7 +271,6 @@ HRESULT DocInputReturn(INT nowDot, INT rdLine)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -558,10 +554,8 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
 
     //    アンドゥリドゥは呼んだところで
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         if (0 == ch)
         {
@@ -604,7 +598,6 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
 
         //    DocBadSpaceCheck( rdLine );    呼んだところでまとめてやる
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -614,7 +607,6 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return stLetter.rdWidth;
 }
@@ -658,10 +650,8 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
     dLn = *pdLine;
     insDot = *pNowDot;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         // 2024kai クリップボード貼り付け、ページ移動高速化（3倍以上）
         GetHdcC();
         for (i = 0; cchSize > i; i++)
@@ -685,7 +675,6 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
         }
         ReleaseHdcC();
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -695,19 +684,15 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
     {
         return (INT)ETC_MSG(("etc error"), 0);
     }
-#endif
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         //    ここで空白チェキ・開始行から終了行までブンブンする
         for (i = dLn; *pdLine >= i; i++)
         {
             DocBadSpaceCheck(i);
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -717,7 +702,6 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
     {
         return (INT)ETC_MSG(("etc error"), 0);
     }
-#endif
     //    アンドゥリドゥはここではなく呼んだほうで面倒見るほうがいい
 
     *pNowDot = insDot;

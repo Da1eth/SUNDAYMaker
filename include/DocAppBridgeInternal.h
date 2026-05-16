@@ -39,18 +39,3 @@ struct DOC_APP_SHELL_SYNC_REQUEST
 HRESULT DocAppShellSync(const DOC_APP_SHELL_SYNC_REQUEST &stRequest);
 
 BOOLEAN DocAppPageListHasNamedPages(FILES_ITR itFile);
-
-inline HRESULT DocAppLoadFlipEntries(LPCTSTR ptFileName, UINT dMode, vector<JSON_FLIP_ENTRY> *pEntries)
-{
-    return AppLoadFlipEntries(ptFileName, dMode, pEntries);
-}
-
-inline VOID DocUiFocusWindow(HWND hWnd)
-{
-    SetFocus(hWnd);
-}
-
-inline LRESULT DocUiSendWindowMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    return SendMessage(hWnd, message, wParam, lParam);
-}
