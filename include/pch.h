@@ -3,10 +3,12 @@
 
 #define STRICT
 
+#ifdef _MSC_VER
 #pragma warning( disable : 4100 )
 #pragma warning( disable : 4201 )
 #pragma warning( disable : 4244 )
 #pragma warning( disable : 4312 )
+#endif
 
 #ifndef NTDDI_VERSION
 #define NTDDI_VERSION 0x0A000000
@@ -24,25 +26,37 @@
 #define _WIN32_WINDOWS _WIN32_WINNT
 #endif
 
+#ifdef _MSC_VER
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#endif
 
 #include <windows.h>
 #include <shlobj.h>
 #include <shellapi.h>
-#include <windowsX.h>
+#include <windowsx.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "shell32.lib")
+#endif
 
 #include <commdlg.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "Comdlg32.lib")
+#endif
 
-#include <Commctrl.h>
+#include <commctrl.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "ComCtl32.lib")
+#endif
 
 #include <imm.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "imm32.lib")
+#endif
 
 #include "Sqlite3/sqlite3.h"
+#ifdef _MSC_VER
 #pragma comment(lib, "sqlite3.lib")
+#endif
 
 #include <iterator>
 #include <malloc.h>
@@ -60,7 +74,7 @@
 #define STRSAFE_NO_CB_FUNCTIONS
 #include <strsafe.h>
 
-#ifdef _WIN64
+#if defined(_MSC_VER) && defined(_WIN64)
 inline HRESULT StringCchLengthW(STRSAFE_PCNZWCH psz, size_t cchMax, UINT *pcch)
 {
     size_t n = 0;
@@ -77,12 +91,37 @@ inline HRESULT StringCchLengthA(STRSAFE_PCNZCH psz, size_t cchMax, UINT *pcch)
 }
 #endif
 
-#pragma warning( disable : 4995 )
-#include <shlwapi.h>
-#pragma warning( default : 4995 )
-#pragma comment(lib, "shlwapi.lib")
+#if !defined(_MSC_VER)
+inline HRESULT StringCchLengthW(LPCWSTR psz, size_t cchMax, UINT *pcch)
+{
+    size_t n = 0;
+    HRESULT hr = ::StringCchLengthW(psz, cchMax, &n);
+    *pcch = static_cast<UINT>(n);
+    return hr;
+}
+inline HRESULT StringCchLengthA(LPCSTR psz, size_t cchMax, UINT *pcch)
+{
+    size_t n = 0;
+    HRESULT hr = ::StringCchLengthA(psz, cchMax, &n);
+    *pcch = static_cast<UINT>(n);
+    return hr;
+}
+#endif
 
+#ifdef _MSC_VER
 #pragma warning( disable : 4995 )
+#endif
+#include <shlwapi.h>
+#ifdef _MSC_VER
+#pragma warning( default : 4995 )
+#endif
+#ifdef _MSC_VER
+#pragma comment(lib, "shlwapi.lib")
+#endif
+
+#ifdef _MSC_VER
+#pragma warning( disable : 4995 )
+#endif
 #include <vector>
 #include <list>
 #include <string>
@@ -91,7 +130,9 @@ inline HRESULT StringCchLengthA(STRSAFE_PCNZCH psz, size_t cchMax, UINT *pcch)
 #include <array>
 #include <optional>
 #include <span>
+#ifdef _MSC_VER
 #pragma warning( default : 4995 )
+#endif
 
 using namespace std;
 

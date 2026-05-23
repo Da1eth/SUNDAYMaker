@@ -13,8 +13,11 @@ SUNDAY Maker는 일본의 [OrinrinEditor](https://github.com/SikigamiHNQ/Orinrin
 >git clone --recursive https://github.com/Da1eth/SUNDAYMaker
 
 서브모듈이 포함되어 있기 때문에 꼭 "--recursive" 옵션을 포함해 주세요.  
-빌드에는 Windows 10 또는 11 SDK, Windows용 C++ CMake 도구, x64/x86용 MSVC 빌드 도구(최신)이 필요합니다. [Visual Studio 공식 페이지](https://visualstudio.microsoft.com/ko/downloads/#build-tools-for-visual-studio-2026) 에서 필요한 도구를 설치할 수 있습니다.  
-cmake --preset x64-release 및 cmake --build --preset x64-release 를 진행하면 빌드가 완료됩니다.
+윈도우에서 빌드할 때에는 Windows 10 또는 11 SDK, Windows용 C++ CMake 도구, x64/x86용 MSVC 빌드 도구(최신)이 필요합니다. [Visual Studio 공식 페이지](https://visualstudio.microsoft.com/ko/downloads/#build-tools-for-visual-studio-2026) 에서 필요한 도구를 설치할 수 있습니다.  
+cmake --preset x64-release 및 cmake --build --preset x64-release 를 진행하면 빌드가 완료됩니다.  
+
+Arch Linux에서 빌드할 때에는 cmake, ninja, mingw-w64-gcc 패키지가 필요합니다. sudo pacman은 답을 알고 있습니다.  
+cmake --build build/mingw-x64-release 를 진행하면 빌드가 완료됩니다.
 
 ## 기능
 기존 오린린과 달라진 기능은 다음과 같습니다.

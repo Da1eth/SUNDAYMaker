@@ -155,12 +155,22 @@ target_compile_definitions(Sunday PRIVATE
     $<$<CONFIG:Release>:NDEBUG>
 )
 
-target_compile_options(Sunday PRIVATE
-    /utf-8
-    /Zc:strictStrings-
-    $<$<CONFIG:Release>:/W3 /O2 /Oi /GL /GF>
-    $<$<CONFIG:Debug>:/W4 /Od /RTC1>
-)
+if(MSVC)
+    target_compile_options(Sunday PRIVATE
+        /utf-8
+        /Zc:strictStrings-
+        $<$<CONFIG:Release>:/W3 /O2 /Oi /GL /GF>
+        $<$<CONFIG:Debug>:/W4 /Od /RTC1>
+    )
+else()
+    target_compile_options(Sunday PRIVATE
+        -finput-charset=UTF-8
+        -fexec-charset=UTF-8
+        -fpermissive
+        $<$<CONFIG:Release>:-O2>
+        $<$<CONFIG:Debug>:-g>
+    )
+endif()
 
 # 정적 런타임 (/MT, /MTd)
 set_property(TARGET Sunday PROPERTY
@@ -170,6 +180,7 @@ set_property(TARGET Sunday PROPERTY
 target_include_directories(Sunday PRIVATE
     ${CMAKE_SOURCE_DIR}
     ${ORR_INCLUDE_DIR}
+    ${ORR_RES_DIR}
 )
 
 target_precompile_headers(Sunday PRIVATE
@@ -179,23 +190,37 @@ target_precompile_headers(Sunday PRIVATE
 # 링크
 target_link_libraries(Sunday PRIVATE
     shell32
-    Comdlg32
-    ComCtl32
+    comdlg32
+    comctl32
     imm32
     shlwapi
     sqlite3
 )
 
-target_link_options(Sunday PRIVATE
-    /MACHINE:X64
-    /MANIFEST:NO
-    $<$<CONFIG:Release>:/LTCG /OPT:REF /OPT:ICF>
-    $<$<CONFIG:Debug>:/DEBUG>
-)
+if(MSVC)
+    target_link_options(Sunday PRIVATE
+        /MACHINE:X64
+        /MANIFEST:NO
+        $<$<CONFIG:Release>:/LTCG /OPT:REF /OPT:ICF>
+        $<$<CONFIG:Debug>:/DEBUG>
+    )
 
-# 빌드 후 매니페스트 삽입
-add_custom_command(TARGET Sunday POST_BUILD
-    COMMAND "${CMAKE_MT}" -nologo -manifest "${ORR_RES_DIR}/Sunday.manifest"
-            "-outputresource:$<TARGET_FILE:Sunday>;#1"
-    COMMENT "Embedding manifest"
-)
+    # 빌드 후 매니페스트 삽입
+    add_custom_command(TARGET Sunday POST_BUILD
+        COMMAND "${CMAKE_MT}" -nologo -manifest "${ORR_RES_DIR}/Sunday.manifest"
+                "-outputresource:$<TARGET_FILE:Sunday>;#1"
+        COMMENT "Embedding manifest"
+    )
+else()
+    target_compile_definitions(Sunday PRIVATE
+        SUNDAY_EMBED_MANIFEST_IN_RC
+    )
+
+    target_link_options(Sunday PRIVATE
+        -municode
+        -mwindows
+        -static
+        -static-libgcc
+        -static-libstdc++
+    )
+endif()
