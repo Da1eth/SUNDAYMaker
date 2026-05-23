@@ -14,7 +14,10 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
-IDR_HEADKASEN_TTF       RCDATA                  "font\\HeadKasen.ttf"
+#ifdef SUNDAY_EMBED_MANIFEST_IN_RC
+1                       RT_MANIFEST             "Sunday.manifest"
+#endif
+IDR_HEADKASEN_TTF       RCDATA                  "font/HeadKasen.ttf"
 
 #include "rc/Icon.rc"
 #include "rc/SundayMain.rc"
@@ -88,4 +91,3 @@ END
 
 #ifndef APSTUDIO_INVOKED
 #endif
-

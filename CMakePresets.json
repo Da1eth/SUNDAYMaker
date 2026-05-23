@@ -21,6 +21,27 @@
             "displayName": "x64 Release",
             "inherits": "x64-base",
             "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+        },
+        {
+            "name": "mingw-x64-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/mingw-toolchain.cmake"
+            }
+        },
+        {
+            "name": "mingw-x64-debug",
+            "displayName": "MinGW x64 Debug",
+            "inherits": "mingw-x64-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+        },
+        {
+            "name": "mingw-x64-release",
+            "displayName": "MinGW x64 Release",
+            "inherits": "mingw-x64-base",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
         }
     ],
     "buildPresets": [
@@ -33,6 +54,16 @@
             "name": "x64-release",
             "displayName": "x64 Release Build",
             "configurePreset": "x64-release"
+        },
+        {
+            "name": "mingw-x64-debug",
+            "displayName": "MinGW x64 Debug Build",
+            "configurePreset": "mingw-x64-debug"
+        },
+        {
+            "name": "mingw-x64-release",
+            "displayName": "MinGW x64 Release Build",
+            "configurePreset": "mingw-x64-release"
         }
     ]
 }
