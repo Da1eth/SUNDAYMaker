@@ -80,8 +80,6 @@ VOID AppPersistWindowState(HWND hWnd)
 
 VOID Cls_OnActivate(HWND hWnd, UINT state, HWND hWndActDeact, BOOL fMinimized)
 {
-    TRACE(TEXT("MAIN ACTIVATE STATE[%u] HWND[%X] MIN[%u]"), state, hWndActDeact, fMinimized);
-
     if (WA_INACTIVE != state)
     {
         AppActivateAuxWindow(hWnd, ghPgVwWnd, FALSE);
@@ -188,8 +186,6 @@ BOOL Cls_OnWindowPosChanging(HWND hWnd, LPWINDOWPOS pstWpos)
     GetWindowRect(hWnd, &winPos);
     winPos.right = winPos.right - winPos.left;
     winPos.bottom = winPos.bottom - winPos.top;
-
-    TRACE(TEXT("MAIN WM_WINDOWPOSCHANGING [%d %d %d %d][%d %d %d %d]"), winPos.left, winPos.top, winPos.right, winPos.bottom, pstWpos->x, pstWpos->y, pstWpos->cx, pstWpos->cy);
 
     giResizeWide = pstWpos->cx - winPos.right;
 

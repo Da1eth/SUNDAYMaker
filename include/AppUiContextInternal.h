@@ -99,13 +99,3 @@ inline HWND AppPageListWindowGet()
 {
     return AppUiContextGet().hPageListWindow;
 }
-
-inline HWND AppInsertPaletteWindowGet()
-{
-    return AppUiContextGet().hInsertPaletteWindow;
-}
-
-inline HWND AppBucketPaletteWindowGet()
-{
-    return AppUiContextGet().hBucketPaletteWindow;
-}

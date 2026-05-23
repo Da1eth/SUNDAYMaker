@@ -136,6 +136,7 @@ constexpr APP_COMMAND_ITEM gatCommandItemsBeforeFrame[] = {
     {IDM_INSTAG_GRADIENT, nullptr},
     {IDM_MN_INSFRAME_SEL, nullptr},
     {IDM_INSFRAME_EDIT, nullptr},
+    {IDM_PALETTE_EDIT_OPEN, nullptr},
     {IDM_FRMINSBOX_OPEN, nullptr},
 };
 

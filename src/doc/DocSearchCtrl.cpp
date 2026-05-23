@@ -6,8 +6,6 @@
 
 // 마지막 검색 문자열과 다음 시작 위치를 유지해 F3 반복 검색에 사용한다.
 
-#ifdef FIND_STRINGS
-
 //-------------------------------------------------------------------------------------------------
 
 extern list<ONEFILE> gltMultiFiles; //    複数ファイル保持
@@ -96,7 +94,7 @@ INT_PTR CALLBACK FindStrDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
         hWorkWnd = GetDlgItem(hDlg, IDE_FIND_TEXT);
         Edit_SetText(hWorkWnd, gatLastPtn); //    今の検索内容があれば転写する
-        DocUiFocusWindow(hWorkWnd);
+        SetFocus(hWorkWnd);
 
         return (INT_PTR)FALSE;
 
@@ -113,16 +111,16 @@ INT_PTR CALLBACK FindStrDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             return (INT_PTR)TRUE; //    検索する
 
         case IDM_PASTE:
-            DocUiSendWindowMessage(hWorkWnd, WM_PASTE, 0, 0);
+            SendMessage(hWorkWnd, WM_PASTE, 0, 0);
             return (INT_PTR)TRUE;
         case IDM_COPY:
-            DocUiSendWindowMessage(hWorkWnd, WM_COPY, 0, 0);
+            SendMessage(hWorkWnd, WM_COPY, 0, 0);
             return (INT_PTR)TRUE;
         case IDM_CUT:
-            DocUiSendWindowMessage(hWorkWnd, WM_CUT, 0, 0);
+            SendMessage(hWorkWnd, WM_CUT, 0, 0);
             return (INT_PTR)TRUE;
         case IDM_UNDO:
-            DocUiSendWindowMessage(hWorkWnd, WM_UNDO, 0, 0);
+            SendMessage(hWorkWnd, WM_UNDO, 0, 0);
             return (INT_PTR)TRUE;
         default:
             break;
@@ -360,8 +358,6 @@ INT_PTR FindPageSearch(LPTSTR ptPattern, INT iTgtPage, FILES_ITR itFile)
 
     //    TCHAR    ttBuf;
 
-    TRACE(TEXT("PAGE[%d] SEARCH"), iTgtPage);
-
     if (!(ptPattern))
     {
         return -1;
@@ -499,5 +495,3 @@ HRESULT FindPageSelectSet(INT iOffset, INT iRange, INT iPage, FILES_ITR itFile)
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
-
-#endif //    FIND_STRINGS

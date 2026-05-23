@@ -29,8 +29,6 @@ static HWND ghCtgryBxWnd;          // カテゴリコンボックス
 static HWND ghLvItemWnd;           // 内容リストビュー
 static HWND ghPalBucketLvTipWnd;   // 팔레트 버킷 리스트 툴팁
 
-static HWND ghMainWnd; // 編集ビューのある本体ウインドウ
-
 static UINT gNowGroup; // カテゴリ
 
 static WNDPROC gpfOrigPalBucketCtgryProc;
@@ -101,8 +99,6 @@ HWND PaletteBucketInitialise(HINSTANCE hInstance, HWND hParentWnd, LPRECT pstFra
     wcex.hIconSm = nullptr;
 
     RegisterClassEx(&wcex);
-
-    ghMainWnd = hParentWnd;
 
     gbPalBucketMode = FALSE;
     ZeroMemory(gatCurrentBucketPattern, sizeof(gatCurrentBucketPattern));
@@ -268,6 +264,36 @@ HRESULT PaletteBucketPositionReset(HWND hMainWnd)
     rect.bottom = BT_HEIGHT;
 
     SetWindowPos(ghPalBucketHostWnd, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW | SWP_NOZORDER);
+
+    return S_OK;
+}
+//-------------------------------------------------------------------------------------------------
+
+HRESULT PaletteBucketReload(VOID)
+{
+    HRESULT hRslt;
+
+    hRslt = PaletteListGroupsLoad(TRUE, &gvcPalBucketTmpls);
+    if (FAILED(hRslt))
+        return hRslt;
+
+    if (gNowGroup >= gvcPalBucketTmpls.size())
+        gNowGroup = gvcPalBucketTmpls.empty() ? 0 : (UINT)gvcPalBucketTmpls.size() - 1;
+
+    if (ghCtgryBxWnd)
+    {
+        PaletteListComboReload(ghCtgryBxWnd, gvcPalBucketTmpls);
+        if (!(gvcPalBucketTmpls.empty()))
+            ComboBox_SetCurSel(ghCtgryBxWnd, gNowGroup);
+    }
+
+    if (ghLvItemWnd)
+    {
+        if (gvcPalBucketTmpls.empty())
+            ListView_DeleteAllItems(ghLvItemWnd);
+        else
+            InsertBucketItemListOn(gNowGroup);
+    }
 
     return S_OK;
 }
@@ -571,8 +597,6 @@ UINT InsertBucketItemListOn(UINT listNum)
     }
 
     const vector<wstring> &vcItems = gvcPalBucketTmpls.at(listNum).vcItems;
-
-    TRACE(TEXT("BRUSH open NUM[%u] ITEM[%u] GRID[%d]"), listNum, (UINT)vcItems.size(), gBrhClmCnt);
 
     PaletteListPopulate(ghLvItemWnd, vcItems, gBrhClmCnt);
 

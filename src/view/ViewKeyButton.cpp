@@ -44,10 +44,8 @@ VOID Evw_OnKey(HWND hWnd, UINT vk, BOOL fDown, INT cRepeat, UINT flags)
     ViewSelPositionSet(nullptr); //    操作直前の位置
     //    中でルーラーのドローが発生してる。Ctrlとか押しっぱでちらつく
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         if (fDown)
         {
@@ -190,7 +188,6 @@ VOID Evw_OnKey(HWND hWnd, UINT vk, BOOL fDown, INT cRepeat, UINT flags)
             //    ない？
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -202,7 +199,6 @@ VOID Evw_OnKey(HWND hWnd, UINT vk, BOOL fDown, INT cRepeat, UINT flags)
         ETC_MSG(("etc error"), 0);
         return;
     }
-#endif
 
     return;
 }
@@ -217,31 +213,24 @@ VOID Evw_OnChar(HWND hWnd, TCHAR ch, INT cRepeat)
     //    Ctrl+Zとかは制御文字で来るので注意
     if (isctrl) //    制御文字はBSとReturn以外は無視でいいか
     {
-        TRACE(TEXT("制御文字[%04X]"), ch);
-
         //    TABはこっちに来る
 
         if (VK_RETURN == ch) //    改行
         {
-            TRACE(TEXT("Enter Shift[%d]"), gbShiftOn);
             ViewEditInsertLineBreak(gbShiftOn);
         }
 
         if (VK_BACK == ch) //    BackSpace
         {
-            TRACE(TEXT("BACKSP"));
             ViewEditDeleteBackward();
         }
 
         return;
     }
 
-    TRACE(TEXT("入力文字[%c]"), ch);
-
     if (0 < gdSqFillCnt) //    IME経由で矩形塗り潰しが発生している
     {
         gdSqFillCnt--;
-        TRACE(TEXT("キャンセル[%u]"), gdSqFillCnt);
         return;
     }
 
@@ -277,15 +266,11 @@ VOID Evw_OnLButtonDown(HWND hWnd, BOOL fDoubleClick, INT x, INT y, UINT keyFlags
 
     if (fDoubleClick) //    ダブルクルック
     {
-        TRACE(TEXT("マウス左ダブルクルック[%d / %d]%d:%d:%d"), dDot, dLine, gbShiftOn, gbCtrlOn, gbAltOn);
-
         ViewSelAreaSelect(nullptr);
 
         gbLDoubleClick = TRUE;
         return; //    これ以降は処理しなくて良いはず
     }
-
-    TRACE(TEXT("マウス左ダウン[%d / %d]%d:%d:%d"), dDot, dLine, gbShiftOn, gbCtrlOn, gbAltOn);
 
     SetCapture(hWnd); //    マウスキャプチャ
 
@@ -405,8 +390,6 @@ VOID Evw_OnLButtonUp(HWND hWnd, INT x, INT y, UINT keyFlags)
 {
     auto caret = ViewCurrentCaret();
 
-    TRACE(TEXT("マウス左アップ[%d / %d]"), x, y);
-
     //    ダブルクルック操作後はすることはない
     if (gbLDoubleClick)
     {
@@ -448,7 +431,6 @@ VOID Evw_OnRButtonDown(HWND hWnd, BOOL fDoubleClick, INT x, INT y, UINT keyFlags
 
     if (IsSelecting(nullptr)) //    選択作業中であるならなにもしない
     {
-        TRACE(TEXT("[%X]マウス右ダウン　%d:%d　選択中"), hWnd, x, y);
         return;
     }
 
@@ -458,8 +440,6 @@ VOID Evw_OnRButtonDown(HWND hWnd, BOOL fDoubleClick, INT x, INT y, UINT keyFlags
 
     dDot = dX;
     dLine = dY / LINE_HEIGHT;
-
-    TRACE(TEXT("[%X]マウス右ダウン[%d:%d[%d] / %d:%d:%d]"), hWnd, dX, dY, dLine, gbShiftOn, gbCtrlOn, gbAltOn);
 
     if (0 <= dX || 0 <= dY) //    マイナスのときはルーラーか行番号エリア
     {
@@ -500,8 +480,6 @@ VOID Evw_OnMouseWheel(HWND hWnd, INT xPos, INT yPos, INT zDelta, UINT fwKeys)
 
     HWND hChdWnd;
     POINT stPoint;
-
-    TRACE(TEXT("POS[%d x %d] DELTA[%d] K[%X]"), xPos, yPos, zDelta, fwKeys);
     //    fwKeys    SHIFT 0x4, CTRL 0x8
 
     stPoint.x = xPos;
@@ -538,8 +516,6 @@ VOID Evw_OnImeComposition(HWND hWnd, WPARAM wParam, LPARAM lParam)
     UINT bSqSel = 0;
     auto caret = ViewCurrentCaret();
 
-    TRACE(TEXT("WM_IME_COMPOSITION[0x%X][0x%X]"), wParam, lParam);
-
     bSelect = IsSelecting(&bSqSel);
     gdSqFillCnt = 0;
 
@@ -555,7 +531,6 @@ VOID Evw_OnImeComposition(HWND hWnd, WPARAM wParam, LPARAM lParam)
         ptBuffer = (LPTSTR)malloc(cbSize);
         ZeroMemory(ptBuffer, cbSize);
         ImmGetCompositionString(hImc, GCS_RESULTSTR, ptBuffer, cbSize);
-        TRACE(TEXT("COMPOSITION MOZI[%d][%s]"), cbSize, ptBuffer);
         ImmReleaseContext(ghViewWnd, hImc);
 
         //    塗り潰し処理

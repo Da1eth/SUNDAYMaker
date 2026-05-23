@@ -132,10 +132,7 @@ static VOID PageToolBarAssignToolTips(HWND);
 static VOID PageToolBarRewriteToolTips(HWND, LPACCEL, INT);
 
 static INT_PTR CALLBACK PageNameDlgProc(HWND, UINT, WPARAM, LPARAM);
-
-#ifdef USE_HOVERTIP
 static LPTSTR CALLBACK PageListHoverTipInfo(LPVOID);
-#endif
 static HRESULT PageListPreviewTextGetAlloc(INT, LPTSTR *);
 //-------------------------------------------------------------------------------------------------
 
@@ -268,12 +265,10 @@ static VOID PageToolBarRewriteToolTips(HWND hWnd, LPACCEL pstAccel, INT iEntry)
             continue;
 
         StringCchCopy(atText, MAX_STRING, ptText);
-#ifdef ACCELERATOR_EDIT
         if (nullptr != pstAccel)
         {
             AccelKeyTextBuild(atText, MAX_STRING, gstPgTlBarInfo[i].idCommand, pstAccel, iEntry);
         }
-#endif
         SendMessage(hWnd, TB_SETBUTTONINFO, (WPARAM)(gstPgTlBarInfo[i].idCommand), (LPARAM)&stButtonInfo);
     }
 }
@@ -558,9 +553,7 @@ HWND PageListInitialise(HINSTANCE hInstance, HWND hParentWnd, LPRECT pstFrame)
     ShowWindow(stState.hPageWindow, SW_SHOW);
     UpdateWindow(stState.hPageWindow);
 
-#ifdef USE_HOVERTIP
     HoverTipInitialise(hInstance, stState.hPageWindow);
-#endif
 
     return stState.hPageWindow;
 }
@@ -599,9 +592,7 @@ LRESULT CALLBACK PageListProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HANDLE_MSG(hWnd, WM_CONTEXTMENU, Plt_OnContextMenu);
 
     case WM_DESTROY:
-    #ifdef USE_HOVERTIP
         HoverTipInitialise(nullptr, nullptr);
-    #endif
         if (stState.hToolbarImageList)
         {
             ImageList_Destroy(stState.hToolbarImageList);
@@ -910,7 +901,6 @@ static LRESULT PageListNotify(HWND, LPNMLISTVIEW pstLv)
     {
         if (0 <= iItem) //    該当ページへの移動
         {
-            TRACE(TEXT("페이지 선택[%d]"), iItem);
             PageListSelectAndSync(iItem, stState.bReturnFocus, FALSE);
         }
     }
@@ -932,8 +922,6 @@ static LRESULT PageListNotify(HWND, LPNMLISTVIEW pstLv)
         iSel = ListView_GetNextItem(hLvWnd, -1, LVNI_ALL | LVNI_SELECTED);
         if (0 > iSel)
             return 0; //    選択してなかったら終わり
-
-        TRACE(TEXT("NM_RETURN[%d]"), iSel);
     }
     //    NM_KEYDOWN    NM_CHAR    関知できず
 
@@ -963,10 +951,6 @@ static LRESULT PageListNotify(HWND, LPNMLISTVIEW pstLv)
             if (DocCurrentPageIndex() == lvLine) //    今の行・とりあえず青
             {
                 pstDraw->clrTextBk = 0x00FF8080;
-            }
-            else if (stState.ixPreviousSelection == lvLine) //    前の行・とりやえず灰
-            {
-                pstDraw->clrTextBk = 0x00CCCCDD;
             }
             else
             {
@@ -1015,16 +999,11 @@ HRESULT PageListClear(VOID)
 // 開いている頁内容を変更
 HRESULT PageListViewChange(INT iPage, INT iPrePage)
 {
-    PAGE_LIST_CONTROLLER_STATE &stState = PageListStateGet();
     //    フォーカスページは、ここに来る前に変更しておくこと
 
     LONG iItem;
 
-    // 현재 선택과 직전 선택 행만 다시 그려 전체 깜빡임을 줄인다.
     SendMessage(PageListViewWindowGet(), LVM_REDRAWITEMS, iPrePage, iPrePage);
-    SendMessage(PageListViewWindowGet(), LVM_REDRAWITEMS, stState.ixPreviousSelection, stState.ixPreviousSelection);
-
-    stState.ixPreviousSelection = iPrePage; //    直前の選択頁を記録しておく
 
     iItem = ListView_GetItemCount(PageListViewWindowGet());
     if (iItem <= iPage || 0 > iPage)
@@ -1161,8 +1140,6 @@ static HRESULT PageListSpinning(INT iPage, INT bDir)
     {
         return E_ABORT;
     }
-
-    TRACE(TEXT("페이지 이동 처리[%d]"), iPage);
 
     iSwapPage = iPage - ((0 < bDir) ? 1 : -1);
     std::swap(DocCurrentFile().vcCont.at(iPage), DocCurrentFile().vcCont.at(iSwapPage));
@@ -1373,8 +1350,6 @@ static HRESULT PageListDuplicate(INT iNowPage)
 {
     INT iNewPage;
 
-    TRACE(TEXT("페이지 복제"));
-
     iNewPage = DocPageCreate(iNowPage); //    新頁
     PageListInsert(iNewPage);           //    ページリストビューに追加
 
@@ -1394,7 +1369,6 @@ static LRESULT CALLBACK gpfPageViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
         HANDLE_MSG(hWnd, WM_MOUSEMOVE, Plv_OnMouseMove);
         HANDLE_MSG(hWnd, WM_COMMAND, Plt_OnCommand);
 
-#ifdef USE_HOVERTIP
     case WM_MOUSEHOVER:
         HoverTipOnMouseHover(hWnd, wParam, lParam, PageListHoverTipInfo);
         return 0;
@@ -1403,7 +1377,6 @@ static LRESULT CALLBACK gpfPageViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
         HoverTipOnMouseLeave(hWnd);
         stState.ixMouseSelection = -1;
         return 0;
-#endif
     }
 
     return CallWindowProc(stState.pfOrigPageViewProc, hWnd, msg, wParam, lParam);
@@ -1427,17 +1400,14 @@ static VOID Plv_OnMouseMove(HWND hWnd, INT, INT y, UINT)
         bReDraw = TRUE;
     stState.ixMouseSelection = iItem;
 
-#ifdef USE_HOVERTIP
     if (bReDraw)
     {
         HoverTipResist(stState.hPageListWindow);
     }
-#endif
 
     return;
 }
 
-#ifdef USE_HOVERTIP
 // HoverTip用のコールバック受取
 static LPTSTR CALLBACK PageListHoverTipInfo(LPVOID)
 {
@@ -1454,9 +1424,7 @@ static LPTSTR CALLBACK PageListHoverTipInfo(LPVOID)
     }
 
     PageListPreviewTextGetAlloc(stState.ixMouseSelection, &ptBuffer);
-    TRACE(TEXT("HOVER CALL %d"), stState.ixMouseSelection);
 
     return ptBuffer;
 }
 //-------------------------------------------------------------------------------------------------
-#endif

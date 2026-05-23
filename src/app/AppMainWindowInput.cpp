@@ -69,8 +69,6 @@ BOOLEAN AppHandleMainNotifyRoute(HWND hWnd, INT idFrom, LPNMHDR pstNmhdr)
     {
         curSel = TabCtrl_GetCurSel(pstNmhdr->hwndFrom);
 
-        TRACE(TEXT("TMPL TAB sel [%d]"), curSel);
-
         AppHandleDockTabSelection(curSel);
         return TRUE;
     }
@@ -119,8 +117,6 @@ VOID Cls_OnContextMenu(HWND hWnd, HWND hWndContext, UINT xPos, UINT yPos)
     stPost.x = (SHORT)xPos;
     stPost.y = (SHORT)yPos;
 
-    TRACE(TEXT("MAIN CONTEXT[%d x %d]"), stPost.x, stPost.y);
-
     AppHandleMainContextMenuRoute(hWnd, hWndContext, &stPost);
 }
 
@@ -141,7 +137,6 @@ LRESULT Cls_OnNotify(HWND hWnd, INT idFrom, LPNMHDR pstNmhdr)
     return 0;
 }
 
-#ifdef MULTIACT_RELAY
 void Cls_OnCopyData(HWND hWnd, HWND hWndFrom, PCOPYDATASTRUCT pstCopyData)
 {
     TCHAR atBuff[MAX_PATH];
@@ -150,11 +145,8 @@ void Cls_OnCopyData(HWND hWnd, HWND hWndFrom, PCOPYDATASTRUCT pstCopyData)
 
     StringCchCopy(atBuff, MAX_PATH, (LPTSTR)(pstCopyData->lpData));
 
-    TRACE(TEXT("COPYDATA[%s]"), atBuff);
-
-    DocDoOpenFile(hWnd, atBuff);
+    AppHandleDocumentOpenPath(hWnd, atBuff);
 }
-#endif
 
 VOID Cls_OnDropFiles(HWND hWnd, HDROP hDrop)
 {
@@ -165,9 +157,7 @@ VOID Cls_OnDropFiles(HWND hWnd, HDROP hDrop)
     DragQueryFile(hDrop, 0, atFileName, MAX_PATH);
     DragFinish(hDrop);
 
-    TRACE(TEXT("DROP[%s]"), atFileName);
-
-    DocDoOpenFile(hWnd, atFileName);
+    AppHandleDocumentOpenPath(hWnd, atFileName);
 }
 
 VOID Cls_OnHotKey(HWND hWnd, INT idHotKey, UINT fuModifiers, UINT vk)
@@ -178,7 +168,6 @@ VOID Cls_OnHotKey(HWND hWnd, INT idHotKey, UINT fuModifiers, UINT vk)
 
     if (VK_D == vk)
     {
-        TRACE(TEXT("Hotkey Incoming!!"));
         DocThreadDropCopy();
     }
 }

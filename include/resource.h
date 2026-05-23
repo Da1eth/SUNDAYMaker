@@ -147,7 +147,6 @@
 #define IDI_TREE_FILE_MLT               604
 #define IDI_TREE_FILE_ETC               605
 #define IDR_HEADKASEN_TTF               607
-#define IDM_TESTCODE                    999
 #define IDSB_VIEW_STATUS_BAR            1000
 #define IDLV_PAGELISTVIEW               1001
 #define IDTB_MAIN_TOOLBAR               1002
@@ -281,7 +280,6 @@
 #define IDB_FUNCKEY_CLEAR               1243
 #define IDB_FUNCKEY_SET                 1244
 #define IDB_FUNCKEY_EDIT                1245
-#define IDCB_FUNCKEY_SPACE              1246
 #define IDB_FUNCKEY_INIT                1248
 #define IDB_FRM_PADDING                 1249
 #define IDB_ADD_FRAME                   1250
@@ -298,6 +296,17 @@
 #define IDE_GRADIENT_GEND_SHADOW        1269
 #define IDE_GRADIENT_GSTART_LINE        1270
 #define IDE_GRADIENT_GEND_LINE          1271
+#define IDE_PALETTE_EDIT_ITEMS          1272
+#define IDLV_PALETTE_EDIT_GROUPS        1273
+#define IDTB_PALETTE_EDIT_GROUPS        1274
+#define IDB_PALETTE_EDIT_SAVE           1275
+#define IDB_PALETTE_EDIT_CANCEL         1276
+#define IDB_PALETTE_EDIT_CLOSE          1277
+#define IDB_PALETTE_EDIT_ADD            1278
+#define IDB_PALETTE_EDIT_DEL            1279
+#define IDB_PALETTE_EDIT_UP             1280
+#define IDB_PALETTE_EDIT_DOWN           1281
+#define IDB_PALETTE_EDIT_RENAME         1282
 #define IDTV_ITEMTREE                   2000
 #define IDTB_TREESEL                    2001
 #define IDSO_AAITEMS                    2002
@@ -485,6 +494,7 @@
 #define IDM_DB_THUMB_REGULAR            33034
 #define IDM_DB_THUMB_DEMIBOLD           33036
 #define IDM_DB_THUMB_ULTRABOLD          33038
+#define IDM_PALETTE_EDIT_OPEN           33041
 #define IDM_PLUGIN_ITEM_BASE            34000
 #define IDC_STATIC                      -1
 
@@ -494,8 +504,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        238
-#define _APS_NEXT_COMMAND_VALUE         33041
-#define _APS_NEXT_CONTROL_VALUE         1272
+#define _APS_NEXT_COMMAND_VALUE         33042
+#define _APS_NEXT_CONTROL_VALUE         1283
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

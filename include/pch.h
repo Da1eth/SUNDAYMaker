@@ -99,15 +99,7 @@ using namespace std;
 
 static constexpr GUID gcstGUID = { 0x66D3E881, 0x972B, 0x458B, { 0x93, 0x5E, 0x9E, 0x78, 0xB9, 0x26, 0xB4, 0x15 } };
 
-#define ACCELERATOR_EDIT
-#define USE_HOVERTIP
-#define EDGE_BLANK_STYLE
-#define MULTIACT_RELAY
-#define DOT_SPLIT_MODE
 #define SPLIT_BAR_POS_FIX
-#define SPMOZI_ENCODE
-#define FIND_STRINGS
-#define DO_TRY_CATCH
 
 #define EXTERNED
 
@@ -115,10 +107,8 @@ static constexpr GUID gcstGUID = { 0x66D3E881, 0x972B, 0x458B, { 0x93, 0x5E, 0x9
 
 #define SQL_DEBUG(db)
 
-#ifdef DO_TRY_CATCH
 #define ETC_MSG(str,ret)    ExceptionMessage( str, __FUNCTION__, __LINE__, ret )
 LRESULT ExceptionMessage( LPCSTR, LPCSTR, UINT, LPARAM );
-#endif
 
 template<typename T>
 inline void SafeFree( T*& pp ) { if( pp ){ free( pp ); pp = nullptr; } }
