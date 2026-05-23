@@ -187,11 +187,6 @@ inline UINT ViewSquareSelectModeGet()
     return ViewCommandStateGet().dSquareSelect;
 }
 
-inline UINT ViewBrushBucketModeGet()
-{
-    return ViewCommandStateGet().dBucketMode;
-}
-
 inline BOOLEAN ViewExtractionModeGet()
 {
     return ViewCommandStateGet().bExtract;

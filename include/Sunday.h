@@ -343,15 +343,6 @@ using PAGELOAD = UINT (CALLBACK*)(LPTSTR, LPCTSTR, INT);
 
 
 
-#ifdef USE_HOVERTIP
-
-//!    HoverTip用の表示内容確保・内容は増やすかも
-//typedef struct tagHOVERTIPINFO
-//{
-//    LPTSTR    ptInfo;    //    文字列内容を示すポインタ
-//
-//} HOVERTIPINFO, *LPHOVERTIPINFO;
-
 // HoverTip 콜백
 using HOVERTIPDISP = LPTSTR (CALLBACK*)( LPVOID );
 
@@ -360,9 +351,6 @@ HRESULT    HoverTipFontRefresh( VOID );
 HRESULT    HoverTipResist( HWND  );
 LRESULT    HoverTipOnMouseHover( HWND, WPARAM, LPARAM, HOVERTIPDISP );
 LRESULT    HoverTipOnMouseLeave( HWND );
-
-
-#endif
 //-------------------------------------------------------------------------------------------------
 
 
@@ -372,9 +360,7 @@ INT_PTR        CALLBACK About( HWND, UINT, WPARAM, LPARAM );
 VOID        WndTagSet( HWND, LONG_PTR );
 LONG_PTR    WndTagGet( HWND );
 
-#ifdef SPMOZI_ENCODE
 UINT        IsSpMozi( TCHAR );
-#endif
 
 HRESULT        InitWindowPos( UINT, UINT, LPRECT );
 INT            InitParamValue( UINT, UINT, INT );
@@ -424,11 +410,9 @@ HRESULT        OptionDialogueOpen( VOID  );
 
 COLORREF    InitColourValue( UINT, UINT, COLORREF );
 INT            InitTraceValue( UINT, LPTRACEPARAM );
-//HRESULT    InitLastOpen( UINT, LPTSTR );            //    
 INT            InitWindowTopMost( UINT, UINT, INT );
 HRESULT        InitToolBarLayout( UINT, INT, LPREBARLAYOUTINFO );
 
-#ifdef ACCELERATOR_EDIT
 LPACCEL        AccelKeyTableGetAlloc( LPINT  );
 LPACCEL        AccelKeyTableLoadAlloc( LPINT );
 HRESULT        AccelKeyDlgOpen( HWND );
@@ -436,7 +420,6 @@ HACCEL        AccelKeyHandleGet( HINSTANCE  );
 
 HACCEL        AccelKeyTableCreate( LPACCEL, INT );
 HRESULT        AccelKeyMenuRewrite( HWND, LPACCEL, CONST INT );
-#endif
 
 HRESULT        OpenHistoryInitialise( HWND );
 HRESULT        OpenHistoryLogging( HWND , LPTSTR );
@@ -573,8 +556,6 @@ INT            ViewSelPageAll( INT );
 UINT        ViewSqSelModeToggle( UINT, LPVOID );
 HRESULT        ViewSelAreaSelect( LPVOID );
 
-// ViewInsertUniSpace, ViewInsertTmpleString, ViewBrushStyleSetting,
-// ViewLayoutCommandForward 는 EditorController.h 로 이동함.
 INT            ViewInsertColourTag( UINT );
 HRESULT        DocInsertSpoTag( UINT );
 HRESULT        ColourTagDialogueOpen( HINSTANCE, HWND );
@@ -733,7 +714,6 @@ HRESULT        DocSelRangeSet( INT, INT );
 HRESULT        DocSelRangeGet( PINT, PINT );
 HRESULT        DocSelRangeReset( PINT, PINT );
 VOID        DocSelByteSet( INT );
-//BOOLEAN        DocIsSelecting( VOID );
 
 LPTSTR        DocClipboardDataGet( PUINT );
 HRESULT        DocClipboardDataSet( LPVOID, INT, UINT );
@@ -778,9 +758,7 @@ HRESULT        DocLastLetterErase( PINT, INT );
 HRESULT        DocTopSpaceErase( PINT, INT );
 
 HRESULT        DocPositionShift( UINT, PINT, INT );
-#ifdef DOT_SPLIT_MODE
 HRESULT        DocCentreWidthShift( UINT vk, PINT, INT );
-#endif
 HRESULT        DocHeadHalfSpaceExchange( HWND );
 
 LPTSTR        DocLastSpDel( vector<LETTER> * );
@@ -826,11 +804,8 @@ UINT        SqnAppendSquare( LPUNDOBUFF, UINT, LPCTSTR, LPPOINT, INT, UINT );
 
 HRESULT        HangulNoSjisToggle( VOID );
 
-#ifdef FIND_STRINGS
 HRESULT        FindDialogueOpen( HINSTANCE, HWND );
 HRESULT        FindDirectly( HINSTANCE, HWND, INT );
-//INT            FindStringJump( UINT, PINT, PINT, PINT );
-#endif
 
 LPCTSTR        NextLineW( LPCTSTR );
 LPTSTR        NextLineW( LPTSTR );

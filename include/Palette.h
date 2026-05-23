@@ -29,7 +29,13 @@ VOID DockingTabSizeGet(LPRECT);
 HRESULT DockingTabContextMenu(HWND, HWND, LONG, LONG);
 HWND DockingTabGet(VOID);
 HRESULT DockingTmplViewToggle(UINT);
+HRESULT PaletteCommonReload(VOID);
 HWND PaletteBucketInitialise(HINSTANCE, HWND, LPRECT, HWND);
 LPTSTR BrushStringMake(INT, LPTSTR);
 VOID PaletteBucketResize(HWND, LPRECT);
 HRESULT PaletteBucketPositionReset(HWND);
+HRESULT PaletteBucketReload(VOID);
+
+HRESULT PaletteEditorOpen(HWND);
+BOOLEAN PaletteEditorHandleMessage(LPMSG);
+VOID PaletteEditorDestroy(VOID);

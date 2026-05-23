@@ -10,7 +10,6 @@ struct PAGE_LIST_CONTROLLER_STATE
     HWND hToolWindow{};
     HWND hPageListWindow{};
     BOOLEAN bPageTooltipView{};
-    INT ixPreviousSelection{-1};
     INT ixMouseSelection{-1};
     BOOLEAN bReturnFocus{};
     WNDPROC pfOrigPageViewProc{};

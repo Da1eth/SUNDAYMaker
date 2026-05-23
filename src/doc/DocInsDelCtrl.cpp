@@ -43,14 +43,12 @@ BOOLEAN DocBuildNoSjisText(TCHAR cchMozi, LPSTR pcNoSjisText)
         StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
     }
 
-#ifdef SPMOZI_ENCODE
     if (IsSpMozi(cchMozi)) //    機種依存文字変換
     {
         StringCchPrintfA(acNoSjisText, 10, ("&#%d;"), cchMozi);
 
         bCant = TRUE; //    ユニコードのみ文字として扱う
     }
-#endif
 
     StringCchCopyA(pcNoSjisText, 10, acNoSjisText);
 
@@ -197,10 +195,8 @@ HRESULT DocInputReturn(INT nowDot, INT rdLine)
 
     LINE_ITR itLine, ltLineItr;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         iLines = DocNowFilePageLineCount();
 
@@ -266,7 +262,6 @@ HRESULT DocInputReturn(INT nowDot, INT rdLine)
         DocBadSpaceCheck(rdLine);     //    ここで空白チェキ
         DocBadSpaceCheck(rdLine + 1); //    空白チェキ・次の行も確認
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -276,7 +271,6 @@ HRESULT DocInputReturn(INT nowDot, INT rdLine)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -299,8 +293,6 @@ INT DocInputBkSpace(PINT pdDot, PINT pdLine)
 
     iLetter = DocLetterPosGetAdjust(pdDot, dLine, 0); //    今の文字位置を確認
     neDot = *pdDot;
-
-    //    TRACE( TEXT("後空白[D%d C%d]"), neDot, iLetter );
 
     if (0 == iLetter && 0 == dLine)
         return 0; //    先頭かつ最初の行なら、なにもしない
@@ -354,8 +346,6 @@ INT DocInputDelete(INT xDot, INT yLine)
         return 0; //    はみ出してたらアウツ！
 
     iLetter = DocLetterPosGetAdjust(&xDot, yLine, 0); //    今の文字位置を確認
-
-    //    TRACE( TEXT("削除[D%d C%d]"), xDot, iLetter );
 
     DocLineParamGet(yLine, &iCount, nullptr); //    この行の文字数を斗留
 
@@ -564,14 +554,11 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
 
     //    アンドゥリドゥは呼んだところで
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         if (0 == ch)
         {
-            TRACE(TEXT("nullptr 문자가 삽입되었습니다."));
             return 0;
         }
 
@@ -579,7 +566,6 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
 
         if (iLines <= rdLine)
         {
-            TRACE(TEXT("OutOfRange [%d]Dot [%d]Line"), rdLine, iLines);
             return 0;
         }
 
@@ -612,7 +598,6 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
 
         //    DocBadSpaceCheck( rdLine );    呼んだところでまとめてやる
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -622,7 +607,6 @@ INT DocInputLetter(INT nowDot, INT rdLine, TCHAR ch)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return stLetter.rdWidth;
 }
@@ -666,10 +650,8 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
     dLn = *pdLine;
     insDot = *pNowDot;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         // 2024kai クリップボード貼り付け、ページ移動高速化（3倍以上）
         GetHdcC();
         for (i = 0; cchSize > i; i++)
@@ -693,7 +675,6 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
         }
         ReleaseHdcC();
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -703,19 +684,15 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
     {
         return (INT)ETC_MSG(("etc error"), 0);
     }
-#endif
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         //    ここで空白チェキ・開始行から終了行までブンブンする
         for (i = dLn; *pdLine >= i; i++)
         {
             DocBadSpaceCheck(i);
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -725,7 +702,6 @@ INT DocStringAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize)
     {
         return (INT)ETC_MSG(("etc error"), 0);
     }
-#endif
     //    アンドゥリドゥはここではなく呼んだほうで面倒見るほうがいい
 
     *pNowDot = insDot;
@@ -770,7 +746,6 @@ INT DocSquareAdd(PINT pNowDot, PINT pdLine, LPCTSTR ptStr, INT cchSize, LPPOINT 
     }
     else
     {
-        TRACE(TEXT("fatal mem error"));
         return 0;
     }
 
@@ -1047,8 +1022,6 @@ INT DocExClipSelect(UINT bStyle)
 
     cbSize = DocSelectTextGetAlloc(bStyle, &pString, nullptr);
 
-    TRACE(TEXT("BYTE:%d"), cbSize);
-
     //    もし選択範囲なかったら、Focus行の内容をコピるとか
 
     DocClipboardDataSet(pString, cbSize, bStyle);
@@ -1197,8 +1170,6 @@ HRESULT DocClipboardDataSet(LPVOID pDatum, INT cbSize, UINT dStyle)
     //    クリップボード閉じる・閉じたら即CHAINが発生する・函数内で発生させてる？
     CloseClipboard();
 
-    TRACE(TEXT("COPY DONE"));
-
     return hRslt;
 }
 //-------------------------------------------------------------------------------------------------
@@ -1226,8 +1197,6 @@ HRESULT DocPageAllCopy(UINT bStyle)
     //    SJISの場合は、ユニコード文字は&#dddd;で確保される
 
     cbSize = DocPageGetAlloc(bStyle, &pString);
-
-    TRACE(TEXT("BYTE:%d"), cbSize);
 
     DocClipboardDataSet(pString, cbSize, bStyle);
 

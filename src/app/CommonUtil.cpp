@@ -229,7 +229,6 @@ LPTSTR FindStringProc(LPTSTR ptText, LPTSTR ptPattern, LPINT pdCch)
     return (nullptr);
 }
 
-#ifdef DO_TRY_CATCH
 LRESULT ExceptionMessage(LPCSTR pcExpMsg, LPCSTR pcFuncName, UINT dLine,
                          LPARAM lReturn)
 {
@@ -244,4 +243,3 @@ LRESULT ExceptionMessage(LPCSTR pcExpMsg, LPCSTR pcFuncName, UINT dLine,
     return lReturn;
 }
 
-#endif

@@ -115,9 +115,7 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR);
 
 INT LayerTransparentAdjust(LAYER_ITR, INT, INT);
 
-#ifdef EDGE_BLANK_STYLE
 HRESULT LayerEdgeBlankSizeCheck(HWND, INT);
-#endif
 
 static HWND LayerCreateWindow(HINSTANCE hInst, DWORD dwStyle)
 {
@@ -169,9 +167,7 @@ static VOID LayerCreateToolbarOptions(HWND hToolWnd, HINSTANCE hInst)
 {
     HFONT hUIFont;
     HWND hBtn;
-#ifdef EDGE_BLANK_STYLE
     HWND hWorkWnd;
-#endif
 
     hUIFont = AppUiFontGet();
     if (!(hUIFont))
@@ -183,31 +179,26 @@ static VOID LayerCreateToolbarOptions(HWND hToolWnd, HINSTANCE hInst)
     CheckDlgButton(hToolWnd, IDCB_LAYER_QUICKCLOSE, gstLayerState.bQuickClose ? BST_CHECKED : BST_UNCHECKED);
     SendMessageW(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
-#ifdef EDGE_BLANK_STYLE
     hWorkWnd = CreateWindowExW(0, WC_COMBOBOX, L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 260, 1, 120, 70, hToolWnd, (HMENU)IDCB_LAYER_EDGE_BLANK, hInst, nullptr);
     ComboBox_AddString(hWorkWnd, L"여백 추가 없음");
     ComboBox_AddString(hWorkWnd, L"작은 여백 추가");
     ComboBox_AddString(hWorkWnd, L"큰 여백 추가");
     ComboBox_SetCurSel(hWorkWnd, 0);
     SendMessageW(hWorkWnd, WM_SETFONT, (WPARAM)hUIFont, TRUE);
-#endif
 }
 
 static VOID LayerLoadInitialContent(LAYER_ITR itLyr, LPCTSTR ptStr, BOOLEAN bSelect, UINT bSqSel)
 {
     if (ptStr)
     {
-        TRACE(TEXT("LAYER from STRING"));
         LayerFromString(itLyr, ptStr);
     }
     else if (bSelect)
     {
-        TRACE(TEXT("LAYER from Select"));
         LayerFromSelectArea(itLyr, bSqSel);
     }
     else
     {
-        TRACE(TEXT("LAYER from ClipBoard"));
         LayerFromClipboard(itLyr);
     }
 }
@@ -339,7 +330,6 @@ HWND LayerBoxVisibalise(HINSTANCE hInst, LPCTSTR ptStr, UINT bNormal)
     x = caret.dXdot;
     y = caret.dLine * LINE_HEIGHT;
     ViewPositionTransform(&x, &y, TRUE);
-    TRACE(TEXT("%d x %d"), x, y);
 
     InsertUiPlaceContentAtViewPoint(ghViewWnd, stLayer.hBoxWnd, &(stLayer.stGeometry), gstLayerState.dToolBarHeight, x, y);
 
@@ -462,7 +452,6 @@ static VOID LayerHandleQuickCloseToggle(HWND hWnd)
 
 static VOID LayerHandleEdgeBlankChange(HWND hWnd, HWND hWndCtl, UINT codeNotify)
 {
-#ifdef EDGE_BLANK_STYLE
     INT bEdgeBlank;
 
     if (CBN_SELCHANGE != codeNotify)
@@ -478,7 +467,6 @@ static VOID LayerHandleEdgeBlankChange(HWND hWnd, HWND hWndCtl, UINT codeNotify)
         LayerEdgeBlankSizeCheck(hWnd, kEdgeBlankWide);
     }
     SetFocus(hWnd);
-#endif
 }
 
 static BOOLEAN LayerEditHandleCommandShortcut(HWND hWnd, INT id)
@@ -523,7 +511,6 @@ LRESULT CALLBACK gpfLyrEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         id = LOWORD(wParam);         //    発生したコマンドの識別子
         hWndCtl = (HWND)lParam;      //    コマンドを発生させた子ウインドウのハンドル
         codeNotify = HIWORD(wParam); //    追加の通知メッセージ
-        TRACE(TEXT("[%X]LyrEdit COMMAND %d"), hWnd, id);
 
         if (LayerEditHandleCommandShortcut(hWnd, id))
         {
@@ -583,15 +570,6 @@ VOID Lyb_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
     switch (id)
     {
     case IDE_LYB_TEXTEDIT: //    レイヤ非表示にしてもKILLFOCUS出る
-        if (EN_SETFOCUS == codeNotify)
-        {
-            TRACE(TEXT("LYREDIT_SETFOCUS"));
-        }
-
-        if (EN_KILLFOCUS == codeNotify)
-        {
-            TRACE(TEXT("LYREDIT_KILLFOCUS"));
-        }
         break;
 
     case IDM_LYB_INSERT: //    貼り付ける
@@ -615,11 +593,9 @@ VOID Lyb_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
         LayerHandleQuickCloseToggle(hWnd);
         break;
 
-#ifdef EDGE_BLANK_STYLE
     case IDCB_LAYER_EDGE_BLANK: //    白ヌキするか
         LayerHandleEdgeBlankChange(hWnd, hWndCtl, codeNotify);
         break;
-#endif
 
     case IDM_LYB_TRANCE_RELEASE: //    透過選択を解除
         LayerTransparentToggle(hWnd, 0);
@@ -632,7 +608,6 @@ VOID Lyb_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
         break;
 
     default:
-        TRACE(TEXT("Layer未知のコマンド %d"), id);
         break;
     }
 
@@ -653,29 +628,23 @@ VOID Lyb_OnKey(HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
         switch (vk)
         {
         case VK_RIGHT:
-            TRACE(TEXT("右"));
             dotLeft = 1;
             break;
         case VK_LEFT:
-            TRACE(TEXT("左"));
             dotLeft = -1;
             break;
         case VK_DOWN:
-            TRACE(TEXT("下"));
             rect.top += LINE_HEIGHT;
             break;
         case VK_UP:
-            TRACE(TEXT("上"));
             rect.top -= LINE_HEIGHT;
             break;
         // 2024kai Enterでレイヤボックス上書き貼り付け対応
         case VK_RETURN:
-            TRACE(TEXT("Enter"));
             Lyb_OnCommand(hWnd, IDM_LYB_OVERRIDE, nullptr, 0);
             break;
         // 2024kai Escでレイヤボックスを閉じる
         case VK_ESCAPE:
-            TRACE(TEXT("Esc"));
             DestroyWindow(hWnd);
             break;
         default:
@@ -683,11 +652,11 @@ VOID Lyb_OnKey(HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
         }
     }
     // 2024kai Shift←→で11ドットずつ移動、さらにCtrlも押していると5ドットずつ移動
-    BOOLEAN gbShiftOn = (0x8000 & GetKeyState(VK_SHIFT)) ? TRUE : FALSE;
-    BOOLEAN gbCtrlOn = (0x8000 & GetKeyState(VK_CONTROL)) ? TRUE : FALSE;
-    if (gbShiftOn && dotLeft != 0)
+    BOOLEAN bShiftPressed = (0x8000 & GetKeyState(VK_SHIFT)) ? TRUE : FALSE;
+    BOOLEAN bCtrlPressed = (0x8000 & GetKeyState(VK_CONTROL)) ? TRUE : FALSE;
+    if (bShiftPressed && dotLeft != 0)
     {
-        if (gbCtrlOn)
+        if (bCtrlPressed)
         {
             dotLeft *= 5;
         }
@@ -725,10 +694,8 @@ VOID Lyb_OnPaint(HWND hWnd)
 
     hdc = BeginPaint(hWnd, &ps);
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         height = gstLayerState.dToolBarHeight;
 
@@ -801,10 +768,6 @@ VOID Lyb_OnPaint(HWND hWnd)
                             }
 
                             bRslt = ExtTextOut(hdc, rdStart, height, 0, nullptr, ptText, cchMr, nullptr);
-                            if (!(bRslt))
-                            {
-                                TRACE(TEXT("ExtTextOut error"));
-                            }
 
                             if (cchLen != mz)
                             {
@@ -832,7 +795,6 @@ VOID Lyb_OnPaint(HWND hWnd)
             }
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -844,7 +806,6 @@ VOID Lyb_OnPaint(HWND hWnd)
         ETC_MSG(("etc error"), 0);
         return;
     }
-#endif
 
     EndPaint(hWnd, &ps);
 
@@ -943,8 +904,6 @@ VOID Lyb_OnLButtonDown(HWND hWnd, BOOL fDoubleClick, INT x, INT y, UINT keyFlags
         sy = 0;
     iLine = sy / LINE_HEIGHT;
 
-    TRACE(TEXT("マウスボタンダウン[%d][%dx%d(%d)]"), fDoubleClick, iDot, sy, iLine);
-
     if (!(fDoubleClick))
         return; //    ダブウクルックでないと用はない
 
@@ -975,8 +934,6 @@ VOID Lyb_OnContextMenu(HWND hWnd, HWND hWndContext, UINT xPos, UINT yPos)
     posX = (SHORT)xPos; //    画面座標はマイナスもありうる
     posY = (SHORT)yPos;
 
-    TRACE(TEXT("LAYER_WM_CONTEXTMENU %d x %d"), posX, posY);
-
     hMenu = LoadMenu(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDM_LAYERBOX_POPUP));
     hSubMenu = GetSubMenu(hMenu, 0);
     MenuMnemonicApply(hSubMenu);
@@ -995,16 +952,12 @@ HRESULT LayerTransparentToggle(HWND hWnd, UINT bMode)
     INT_PTR iLines, iL;
     LETR_ITR itMozi;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
             return E_OUTOFMEMORY;
-
-        TRACE(TEXT("공백 투과 선택 해제 %u"), bMode);
 
         //    行数確認
         iLines = itLyr->vcLyrImg.size();
@@ -1031,7 +984,6 @@ HRESULT LayerTransparentToggle(HWND hWnd, UINT bMode)
             //    全部解除
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1041,7 +993,6 @@ HRESULT LayerTransparentToggle(HWND hWnd, UINT bMode)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -1055,10 +1006,8 @@ INT LayerTransparentAdjust(LAYER_ITR itLyr, INT dNowDot, INT rdLine)
     TCHAR ch, chb;
     LETR_ITR itMozi, itHead, itTail, itTemp;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         //    行のはみ出しを？
         iLines = itLyr->vcLyrImg.size();
@@ -1136,7 +1085,6 @@ INT LayerTransparentAdjust(LAYER_ITR itLyr, INT dNowDot, INT rdLine)
             itTemp->mzStyle ^= CT_LYR_TRNC;
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1146,7 +1094,6 @@ INT LayerTransparentAdjust(LAYER_ITR itLyr, INT dNowDot, INT rdLine)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return iLetter;
 }
@@ -1309,12 +1256,8 @@ HRESULT LayerFromSelectArea(LAYER_ITR itLyr, UINT bSqSel)
     LPTSTR ptString = nullptr;
     UINT cchSize;
     LPPOINT pstPos;
-
-    TRACE(TEXT("선택 범위에서 가져오기"));
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         AppendEmptyLayerLine(*itLyr);
 
@@ -1327,7 +1270,6 @@ HRESULT LayerFromSelectArea(LAYER_ITR itLyr, UINT bSqSel)
         FREE(ptString);
         FREE(pstPos);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1337,7 +1279,6 @@ HRESULT LayerFromSelectArea(LAYER_ITR itLyr, UINT bSqSel)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
@@ -1371,10 +1312,8 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR itLyr)
     INT_PTR iLine, i;
     SIZE wdSize, tgtSize; // clSize
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         //    今の画面の行数とドット数確認
         dYline = ViewAreaSizeGet(&dViewXdot);
         dViewYdot = dYline * LINE_HEIGHT;
@@ -1421,7 +1360,6 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR itLyr)
 
     SetWindowPos(itLyr->hBoxWnd, HWND_TOPMOST, 0, 0, tgtSize.cx, tgtSize.cy, SWP_NOMOVE | SWP_NOZORDER);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1431,7 +1369,6 @@ HRESULT LayerBoxSizeAdjust(LAYER_ITR itLyr)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -1446,10 +1383,8 @@ HRESULT LayerBoxSetString(LAYER_ITR itLyr, LPCTSTR ptText, UINT cchSize, LPPOINT
     LPTSTR ptBuff, ptSpace = nullptr;
     ONELINE stLine;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         ZeroONELINE(&stLine);
 
         // 2024kai GetHdcCでhdcを一時共通にして高速化（0.9秒かかるAAのレイヤボックス表示が0.3秒に）
@@ -1549,7 +1484,6 @@ HRESULT LayerBoxSetString(LAYER_ITR itLyr, LPCTSTR ptText, UINT cchSize, LPPOINT
             LayerBoxSizeAdjust(itLyr);
         }
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1559,7 +1493,6 @@ HRESULT LayerBoxSetString(LAYER_ITR itLyr, LPCTSTR ptText, UINT cchSize, LPPOINT
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -1573,10 +1506,8 @@ INT LayerHeadSpaceCheck(vector<LETTER> *vcTgLine, PINT pdMozi)
     UINT_PTR i, iMozi;
     BOOLEAN bDotAtLineHead;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         iMozi = vcTgLine->size();
 
         dDot = 0;
@@ -1623,7 +1554,6 @@ INT LayerHeadSpaceCheck(vector<LETTER> *vcTgLine, PINT pdMozi)
         {
             *pdMozi = cchSp;
         }
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1633,7 +1563,6 @@ INT LayerHeadSpaceCheck(vector<LETTER> *vcTgLine, PINT pdMozi)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return dDot;
 }
@@ -1644,10 +1573,8 @@ INT LayerInputLetter(LAYER_ITR itLyr, INT nowDot, INT rdLine, TCHAR ch)
 {
     LETTER stLetter;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
         //    データ作成
         DocLetterDataCheck(&stLetter, ch); //    指定行のドット位置(キャレット位置)に壱文字追加する・レイヤボックス
 
@@ -1656,7 +1583,6 @@ INT LayerInputLetter(LAYER_ITR itLyr, INT nowDot, INT rdLine, TCHAR ch)
         itLyr->vcLyrImg.at(rdLine).iDotCnt += stLetter.rdWidth;
         itLyr->vcLyrImg.at(rdLine).iByteSz += stLetter.mzByte;
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -1666,7 +1592,6 @@ INT LayerInputLetter(LAYER_ITR itLyr, INT nowDot, INT rdLine, TCHAR ch)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return stLetter.rdWidth;
 }
@@ -1689,17 +1614,13 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
     BOOLEAN bFirst = TRUE; //    なんか処理したらFALSE
     BOOLEAN bSpace, bBkSpase;
 
-#ifdef EDGE_BLANK_STYLE
     INT bEdgeBlank;
     INT xDotEx, iMoziEx;
-#endif
     LETR_ITR itLtr, itDel;
     wstring wsBuff;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
@@ -1726,8 +1647,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
 
         xDot = xTgDot;
 
-        TRACE(TEXT("LAYER IMPORT[%d:%d]"), xTgDot, yTgLine);
-
         if (pXdot)
             *pXdot = xTgDot;
         if (pYline)
@@ -1748,7 +1667,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
         {
             iMinus = (dNeedLine + yTgLine) - iPageLine; //    追加する行数
             DocAdditionalLine(iMinus, &bFirst);         //    bFirst = FALSE;
-            TRACE(TEXT("ADD LINE[%d]"), iMinus);
         }
 
         //    白ヌキするには、前後の空白文字量を増やせばいい
@@ -1769,8 +1687,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
         {
             if (0 > dWkLine)
                 continue; //    上にめり込んでるのは処理しちゃいかん
-
-            TRACE(TEXT("Check Line V[%d] L[%d]"), dWkLine, dLyLine);
 
             //    挿入内容の位置の確認・ここで、各部分毎にばらせばいい。
             //    行単位ではなく、透過領域で区切られた文字領域毎に判定する
@@ -1852,11 +1768,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                         iMozi = DocLetterPosGetAdjust(&xDot, dWkLine, -1); //    今の文字位置を確認
                                                                            //    iMozi：挿入位置文字数            xDot：文字列挿入位置ドット
 
-#ifndef EDGE_BLANK_STYLE
-                        //    そこの文字が空白か、空白ならどこまで続いてるか確認
-                        DocLineStateCheckWithDot(xDot, dWkLine, &dLeft, &dRight, &iStMozi, nullptr, &bSpace);
-                        //    dRight 使ってない
-#endif
                         //    先に上書きエリアの処理しないと、パディング直したらずれる
                         //    上書きの場合ここから先をさらに削除してギャップパディング
                         if (IDM_LYB_OVERRIDE == cmdID)
@@ -1866,7 +1777,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
 
                             //    20110817
                             dEndot = dInEnd;
-#ifdef EDGE_BLANK_STYLE
                             //    ここで dEndot をオフセットする？
                             if (1 == bEdgeBlank)
                             {
@@ -1876,7 +1786,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                             {
                                 dEndot += kEdgeBlankWide;
                             }
-#endif
                             iEdMozi = DocLetterPosGetAdjust(&dEndot, dWkLine, 1); //    上書きされる領域
                             //    キャレット位置修正
 
@@ -1913,7 +1822,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                             }
                         }
 
-#ifdef EDGE_BLANK_STYLE
                         if (bEdgeBlank)
                         {
                             //    オフセット位置確認
@@ -1951,11 +1859,8 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                             //    そこの文字が空白か、空白ならどこまで続いてるか確認
                             DocLineStateCheckWithDot(xDot, dWkLine, &dLeft, &dRight, &iStMozi, nullptr, &bSpace);
                             iMoziEx = iStMozi; //    特に意味はない
-#endif
                             dGap = (xTgDot + iSpDot) - xDot; //    前側の埋め処理
-#ifdef EDGE_BLANK_STYLE
                         }
-#endif
                         if (bSpace) //    空白なら、ギャップ分と合わせて入れ直す
                         {
                             dGap += (xDot - dLeft); //    パディングドット数
@@ -1964,11 +1869,9 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
                         }
                         else //    文字であるなら、なにもしない
                         {
-#ifdef EDGE_BLANK_STYLE
                             //    必要なら、既存の文字列を一旦削除して
                             if (bEdgeBlank)
                                 DocRangeDeleteByMozi(xDot, dWkLine, iMoziEx, iMozi, &bFirst);
-#endif
                             dLeft = xDot; //    ギャップ開始位置
                         }
 
@@ -2014,8 +1917,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
             }
         }
 
-        TRACE(TEXT("Layer Insert OK！"));
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -2025,7 +1926,6 @@ HRESULT LayerContentsImportable(HWND hWnd, UINT cmdID, LPINT pXdot, LPINT pYline
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
@@ -2080,10 +1980,8 @@ HRESULT LayerForClipboard(HWND hWnd, UINT bStyle)
 // レイヤボックスの内容を削除する
 HRESULT LayerOnDelete(HWND hWnd)
 {
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
@@ -2094,7 +1992,6 @@ HRESULT LayerOnDelete(HWND hWnd)
 
         InvalidateRect(hWnd, nullptr, TRUE);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -2104,13 +2001,10 @@ HRESULT LayerOnDelete(HWND hWnd)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
 
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
-
-#ifdef EDGE_BLANK_STYLE
 
 // 白抜き指定したときに、幅の狭い透過領域をキャンセルする
 HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
@@ -2121,10 +2015,8 @@ HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
     LYLINE_ITR itLine;
     LETR_ITR itMozi, itMzx;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         const auto itLyr = FindLayerByWindow(hWnd);
         if (itLyr == gstLayerState.ltLayers.end())
@@ -2167,7 +2059,6 @@ HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
 
         InvalidateRect(hWnd, nullptr, TRUE); //    再描画
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -2177,9 +2068,6 @@ HRESULT LayerEdgeBlankSizeCheck(HWND hWnd, INT iCanWid)
     {
         return (HRESULT)ETC_MSG(("etc error"), E_UNEXPECTED);
     }
-#endif
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
-
-#endif

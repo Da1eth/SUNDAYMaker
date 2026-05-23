@@ -110,6 +110,7 @@ static const UI_TEXT_ENTRY gstUiTextTable[] =
     {IDM_NOW_PAGE_REFRESH, ORR_UI_LABEL_NOW_PAGE_REFRESH},
     {IDM_MIRROR_INVERSE, ORR_UI_LABEL_MIRROR_INVERSE},
     {IDM_UPSET_INVERSE, ORR_UI_LABEL_UPSET_INVERSE},
+    {IDM_PALETTE_EDIT_OPEN, ORR_UI_LABEL_PALETTE_EDIT_OPEN},
 };
 
 static const INT giUiTextCount = static_cast<INT>(sizeof(gstUiTextTable) / sizeof(gstUiTextTable[0]));

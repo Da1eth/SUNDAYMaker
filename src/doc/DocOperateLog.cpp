@@ -87,8 +87,6 @@ HRESULT SqnNumberCheck(LPUNDOBUFF pstBuff)
         return S_FALSE;
     }
 
-    TRACE(TEXT("UNDO BUF err %d %d"), pstBuff->dNowSqn, pstBuff->dTopSqn);
-
     itOpe = pstBuff->vcOpeSqn.end();
     itOpe--; //    最後のいっこ
 
@@ -108,8 +106,6 @@ HRESULT SqnNumberCheck(LPUNDOBUFF pstBuff)
     } while (itOpe != pstBuff->vcOpeSqn.begin());
 
     pstBuff->dTopSqn = itOpe->ixSequence;
-
-    TRACE(TEXT("UNDO BUF chk %d %d"), itOpe->ixSequence, pstBuff->dTopSqn);
 
     return S_OK;
 }
@@ -252,10 +248,8 @@ INT SqnUndoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
     if (pstBuff == nullptr)
         return 0; //    安全対策
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         do
         {
@@ -267,7 +261,6 @@ INT SqnUndoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
             }
 
             dNow--; //    位置合わせ
-            TRACE(TEXT("UNDO SQNUM:%u"), dNow);
 
             const auto &stOpe = pstBuff->vcOpeSqn.at(dNow);
             dCmd = stOpe.dCommando;
@@ -295,8 +288,6 @@ INT SqnUndoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
                 }
             }
 
-            TRACE(TEXT("UNDO CMD:%u GRP:%u  D:%d, L:%d"), dCmd, dGrp, xDot, yLine);
-
             ptStr = stOpe.ptText;
             // OutOfRangeは、始点ドットが狂ってる場合があるようだ
             switch (dCmd)
@@ -311,7 +302,6 @@ INT SqnUndoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
                 break;
 
             default:
-                TRACE(TEXT("실행 취소 오류！　[%u]알 수 없는 코드"), dCmd);
                 return dCrLf;
             }
 
@@ -332,7 +322,6 @@ INT SqnUndoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
 
         } while (pstBuff->dNowSqn);
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -342,7 +331,6 @@ INT SqnUndoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return dCrLf;
 }
@@ -356,10 +344,8 @@ INT SqnRedoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
     UINT dPreGroup = 0;
     LPTSTR ptStr;
 
-#ifdef DO_TRY_CATCH
     try
     {
-#endif
 
         do
         {
@@ -370,8 +356,6 @@ INT SqnRedoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
             }
 
             // dNow++;    //    位置合わせ
-            TRACE(TEXT("REDO SQNUM:%u"), dNow);
-
             const auto &stOpe = pstBuff->vcOpeSqn.at(dNow);
             dCmd = stOpe.dCommando;
             dGrp = stOpe.ixGroup;
@@ -398,8 +382,6 @@ INT SqnRedoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
                 }
             }
 
-            TRACE(TEXT("REDO CMD:%u GRP:%u  D:%d, L:%d"), dCmd, dGrp, xDot, yLine);
-
             ptStr = stOpe.ptText;
 
             switch (dCmd) //    リドゥの場合は素直に処理すればいい
@@ -414,7 +396,6 @@ INT SqnRedoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
                 break;
 
             default:
-                TRACE(TEXT("다시 실행 오류！　[%u]알 수 없는 코드"), dCmd);
                 return dCrLf;
             }
 
@@ -435,7 +416,6 @@ INT SqnRedoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
 
         } while (pstBuff->dNowSqn != pstBuff->vcOpeSqn.size());
 
-#ifdef DO_TRY_CATCH
     }
     catch (exception &err)
     {
@@ -445,7 +425,6 @@ INT SqnRedoExec(LPUNDOBUFF pstBuff, PINT pxDot, PINT pyLine)
     {
         return ETC_MSG(("etc error"), 0);
     }
-#endif
 
     return dCrLf;
 }

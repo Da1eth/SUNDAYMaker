@@ -14,29 +14,17 @@ struct VIEW_COMMAND_REQUEST
 
 using VIEW_COMMAND_DISPATCH = BOOLEAN (*)(const VIEW_COMMAND_REQUEST &);
 
-static VOID OperationExtractionModeClear(VOID);
+static VOID OperationSetExtractionMode(BOOLEAN bEnable);
+static VOID OperationToggleDisplayFlag(UINT &dFlag, UINT dInitParam, INT idMenu, BOOLEAN bUpdateStatusBar);
+static VOID OperationToggleDisplayFlag(BOOLEAN &bFlag, UINT dInitParam, INT idMenu);
 static BOOLEAN OperationHandleDynamicCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleWindowCommands(const VIEW_COMMAND_REQUEST &);
-static BOOLEAN OperationHandleDialogCommands(const VIEW_COMMAND_REQUEST &);
-static BOOLEAN OperationHandleFileCommands(const VIEW_COMMAND_REQUEST &);
+static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl);
 static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleInsertCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleLayoutCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandleViewCommands(const VIEW_COMMAND_REQUEST &);
 static BOOLEAN OperationHandlePageCommands(const VIEW_COMMAND_REQUEST &);
-static BOOLEAN OperationHandleMiscCommands(const VIEW_COMMAND_REQUEST &);
-
-static const VIEW_COMMAND_DISPATCH gapfViewCommandDispatchers[] = {
-    OperationHandleWindowCommands,
-    OperationHandleDialogCommands,
-    OperationHandleFileCommands,
-    OperationHandleEditCommands,
-    OperationHandleInsertCommands,
-    OperationHandleLayoutCommands,
-    OperationHandleViewCommands,
-    OperationHandlePageCommands,
-    OperationHandleMiscCommands,
-};
 
 HRESULT OperationOnStatusBar(VOID)
 {
@@ -69,13 +57,38 @@ HRESULT OperationOnStatusBar(VOID)
     return S_OK;
 }
 
-static VOID OperationExtractionModeClear(VOID)
+static VOID OperationSetExtractionMode(BOOLEAN bEnable)
 {
-    ViewExtractionModeSet(FALSE);
-    ViewSelPageAll(-1);
-    ViewRedrawSetLine(-1);
-    MenuItemCheckOnOff(IDM_EXTRACTION_MODE, 0);
+    ViewExtractionModeSet(bEnable);
+
+    if (!(bEnable))
+    {
+        ViewSelPageAll(-1);
+        ViewRedrawSetLine(-1);
+    }
+
+    MenuItemCheckOnOff(IDM_EXTRACTION_MODE, ViewExtractionModeGet());
     OperationOnStatusBar();
+}
+
+static VOID OperationToggleDisplayFlag(UINT &dFlag, UINT dInitParam, INT idMenu, BOOLEAN bUpdateStatusBar)
+{
+    dFlag = !(dFlag);
+    InitParamValue(INIT_SAVE, dInitParam, dFlag);
+    MenuItemCheckOnOff(idMenu, dFlag);
+    if (bUpdateStatusBar)
+    {
+        OperationOnStatusBar();
+    }
+    ViewRedrawSetLine(-1);
+}
+
+static VOID OperationToggleDisplayFlag(BOOLEAN &bFlag, UINT dInitParam, INT idMenu)
+{
+    bFlag = !(bFlag);
+    InitParamValue(INIT_SAVE, dInitParam, bFlag);
+    MenuItemCheckOnOff(idMenu, bFlag);
+    ViewRedrawSetLine(-1);
 }
 
 static BOOLEAN OperationHandleDynamicCommands(const VIEW_COMMAND_REQUEST &stCommand)
@@ -165,6 +178,10 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
         FrameEditDialogue(stUiContext.hInstance, hWnd, 0);
         return TRUE;
 
+    case IDM_PALETTE_EDIT_OPEN:
+        PaletteEditorOpen(hWnd);
+        return TRUE;
+
     case IDM_GENERAL_OPTION:
         OptionDialogueOpen();
         return TRUE;
@@ -214,13 +231,10 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
         CntxEditDlgOpen(hWnd);
         return TRUE;
 
-#ifdef ACCELERATOR_EDIT
     case IDM_ACCELKEY_EDIT_DLG_OPEN:
         AccelKeyDlgOpen(hWnd);
         return TRUE;
-#endif
 
-#ifdef FIND_STRINGS
     case IDM_FIND_DLG_OPEN:
         FindDialogueOpen(stUiContext.hInstance, hWnd);
         return TRUE;
@@ -230,55 +244,6 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
 
     case IDM_FIND_TARGET_SET:
         FindDirectly(stUiContext.hInstance, hWnd, IDM_FIND_TARGET_SET);
-        return TRUE;
-#endif
-
-    default:
-        return FALSE;
-    }
-}
-
-static BOOLEAN OperationHandleDialogCommands(const VIEW_COMMAND_REQUEST &stCommand)
-{
-    return OperationHandleDialogCommands(stCommand.hMainWindow, stCommand.id, stCommand.hControl);
-}
-
-static BOOLEAN OperationHandleFileCommands(const VIEW_COMMAND_REQUEST &stCommand)
-{
-    switch (stCommand.id)
-    {
-    case IDM_FILE_CLOSE:
-        MultiFileTabClose(-1);
-        return TRUE;
-
-    case IDM_NEWFILE:
-        DocOpenFromNull(stCommand.hMainWindow);
-        return TRUE;
-
-    case IDM_OPEN:
-        DocFileOpen(stCommand.hMainWindow);
-        return TRUE;
-
-    case IDM_OVERWRITESAVE:
-        DocFileSave(stCommand.hMainWindow, D_SJIS);
-        PreviewVisibalise(DocCurrentPageIndex(), FALSE);
-        return TRUE;
-
-    case IDM_RENAMESAVE:
-        DocFileSave(stCommand.hMainWindow, (D_SJIS | D_RENAME));
-        PreviewVisibalise(DocCurrentPageIndex(), FALSE);
-        return TRUE;
-
-    case IDM_IMAGE_SAVE:
-        DocImageSave(stCommand.hMainWindow, 0, ViewAaFontGet());
-        return TRUE;
-
-    case IDM_FILE_PREV:
-        MultiFileTabSlide(-1);
-        return TRUE;
-
-    case IDM_FILE_NEXT:
-        MultiFileTabSlide(1);
         return TRUE;
 
     default:
@@ -309,7 +274,7 @@ static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand
         if (ViewExtractionModeGet())
         {
             ViewEditExecuteExtraction(nullptr);
-            OperationExtractionModeClear();
+            OperationSetExtractionMode(FALSE);
         }
         else
         {
@@ -346,25 +311,14 @@ static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand
         return TRUE;
 
     case IDM_EXTRACTION_MODE:
-        if (ViewExtractionModeGet())
-        {
-            ViewExtractionModeSet(FALSE);
-            ViewSelPageAll(-1);
-            ViewRedrawSetLine(-1);
-        }
-        else
-        {
-            ViewExtractionModeSet(TRUE);
-        }
-        MenuItemCheckOnOff(IDM_EXTRACTION_MODE, ViewExtractionModeGet());
-        OperationOnStatusBar();
+        OperationSetExtractionMode(!(ViewExtractionModeGet()));
         return TRUE;
 
     case IDM_LAYERBOX:
         if (ViewExtractionModeGet())
         {
             ViewEditExecuteExtraction(stUiContext.hInstance);
-            OperationExtractionModeClear();
+            OperationSetExtractionMode(FALSE);
         }
         else
         {
@@ -384,7 +338,6 @@ static BOOLEAN OperationHandleEditCommands(const VIEW_COMMAND_REQUEST &stCommand
 static BOOLEAN OperationHandleInsertCommands(const VIEW_COMMAND_REQUEST &stCommand)
 {
     UNREFERENCED_PARAMETER(stCommand);
-    const UINT dSquareSelect = ViewSquareSelectModeGet();
 
     switch (stCommand.id)
     {
@@ -465,32 +418,19 @@ static BOOLEAN OperationHandleViewCommands(const VIEW_COMMAND_REQUEST &stCommand
         return TRUE;
 
     case IDM_SPACE_VIEW_TOGGLE:
-        stDisplayState.dSpaceView = !(stDisplayState.dSpaceView);
-        InitParamValue(INIT_SAVE, VL_SPACE_VIEW, stDisplayState.dSpaceView);
-        MenuItemCheckOnOff(IDM_SPACE_VIEW_TOGGLE, stDisplayState.dSpaceView);
-        OperationOnStatusBar();
-        ViewRedrawSetLine(-1);
+        OperationToggleDisplayFlag(stDisplayState.dSpaceView, VL_SPACE_VIEW, IDM_SPACE_VIEW_TOGGLE, TRUE);
         return TRUE;
 
     case IDM_GRID_VIEW_TOGGLE:
-        stDisplayState.bGridView = !(stDisplayState.bGridView);
-        InitParamValue(INIT_SAVE, VL_GRID_VIEW, stDisplayState.bGridView);
-        MenuItemCheckOnOff(IDM_GRID_VIEW_TOGGLE, stDisplayState.bGridView);
-        ViewRedrawSetLine(-1);
+        OperationToggleDisplayFlag(stDisplayState.bGridView, VL_GRID_VIEW, IDM_GRID_VIEW_TOGGLE);
         return TRUE;
 
     case IDM_RIGHT_RULER_TOGGLE:
-        stDisplayState.bRightRulerView = !(stDisplayState.bRightRulerView);
-        InitParamValue(INIT_SAVE, VL_R_RULER_VIEW, stDisplayState.bRightRulerView);
-        MenuItemCheckOnOff(IDM_RIGHT_RULER_TOGGLE, stDisplayState.bRightRulerView);
-        ViewRedrawSetLine(-1);
+        OperationToggleDisplayFlag(stDisplayState.bRightRulerView, VL_R_RULER_VIEW, IDM_RIGHT_RULER_TOGGLE);
         return TRUE;
 
     case IDM_UNDER_RULER_TOGGLE:
-        stDisplayState.bUnderRulerView = !(stDisplayState.bUnderRulerView);
-        InitParamValue(INIT_SAVE, VL_U_RULER_VIEW, stDisplayState.bUnderRulerView);
-        MenuItemCheckOnOff(IDM_UNDER_RULER_TOGGLE, stDisplayState.bUnderRulerView);
-        ViewRedrawSetLine(-1);
+        OperationToggleDisplayFlag(stDisplayState.bUnderRulerView, VL_U_RULER_VIEW, IDM_UNDER_RULER_TOGGLE);
         return TRUE;
 
     case IDM_REBER_DORESET:
@@ -540,19 +480,6 @@ static BOOLEAN OperationHandlePageCommands(const VIEW_COMMAND_REQUEST &stCommand
     }
 }
 
-static BOOLEAN OperationHandleMiscCommands(const VIEW_COMMAND_REQUEST &stCommand)
-{
-    switch (stCommand.id)
-    {
-    case IDM_TESTCODE:
-        TRACE(TEXT("기능 테스트"));
-        return TRUE;
-
-    default:
-        return FALSE;
-    }
-}
-
 VOID OperationOnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
 {
     VIEW_COMMAND_REQUEST stCommand{};
@@ -567,11 +494,23 @@ VOID OperationOnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
         return;
     }
 
+    static const VIEW_COMMAND_DISPATCH gapfViewCommandDispatchers[] = {
+        OperationHandleWindowCommands,
+        OperationHandleEditCommands,
+        OperationHandleInsertCommands,
+        OperationHandleLayoutCommands,
+        OperationHandleViewCommands,
+        OperationHandlePageCommands,
+    };
+
+    if (OperationHandleDialogCommands(stCommand.hMainWindow, stCommand.id, stCommand.hControl))
+    {
+        return;
+    }
+
     for (const auto pfnDispatch : gapfViewCommandDispatchers)
     {
         if (pfnDispatch(stCommand))
             return;
     }
-
-    TRACE(TEXT("未実装"));
 }

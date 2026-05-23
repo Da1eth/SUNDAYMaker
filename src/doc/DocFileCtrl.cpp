@@ -2,27 +2,69 @@
 #include "DocAppBridgeInternal.h"
 #include "DocContextInternal.h"
 #include "DocViewBridgeInternal.h"
-//-------------------------------------------------------------------------------------------------
 
-extern list<ONEFILE> gltMultiFiles; // 複数ファイル保持
-extern FILES_ITR gitFileIt;         // 今見てるファイルの本体
-extern INT gixFocusPage;            // 注目中のページ・とりあえず０・０インデックス
+extern list<ONEFILE> gltMultiFiles; // 열린 파일 목록
+extern FILES_ITR gitFileIt;         // 현재 보고 있는 파일
+extern INT gixFocusPage;            // 현재 선택된 페이지 인덱스
 
-extern UINT gbAutoBUmsg; //        自動バックアップメッセージ出すか？
+extern UINT gbAutoBUmsg; // 자동 백업 알림 표시 여부
 
-extern UINT gbSaveMsgOn; //        保存メッセージ出すか？
+extern UINT gbSaveMsgOn; // 저장 알림 표시 여부
 
 static TCHAR gatBackUpDirty[MAX_PATH];
-
-//-------------------------------------------------------------------------------------------------
 
 INT DocAstSeparatorGetAlloc(FILES_ITR, INT, UINT, LPVOID *);
 UINT DocMltSeparatorGetAlloc(LPVOID *);
 
 INT DocUnicode2UTF8(LPVOID *);
-//-------------------------------------------------------------------------------------------------
 
-// 該当するファイルは開き済か
+namespace
+{
+
+    enum DocSaveExtensionIndex
+    {
+        DOC_EXT_AST = 0,
+        DOC_EXT_MLT = 1,
+        DOC_EXT_TXT = 2,
+    };
+
+    constexpr TCHAR gatDocSaveExtensions[3][5] = {
+        TEXT(".ast"),
+        TEXT(".mlt"),
+        TEXT(".txt"),
+    };
+
+    INT DocImageSaveTypeFromFilter(UINT dFilterIndex)
+    {
+        if (dFilterIndex == 2)
+            return ISAVE_BMP;
+
+        return ISAVE_PNG;
+    }
+
+    LPCTSTR DocImageExtensionFromType(INT bType)
+    {
+        if (bType == ISAVE_BMP)
+            return TEXT(".bmp");
+
+        return TEXT(".png");
+    }
+
+    VOID DocAppendExtensionIfMissing(LPTSTR ptFilePath, size_t cchFilePath,
+                                     LPCTSTR ptExtension)
+    {
+        if (!ptFilePath || !ptExtension)
+            return;
+
+        if (PathFindExtension(ptFilePath)[0] != TEXT('\0'))
+            return;
+
+        StringCchCat(ptFilePath, cchFilePath, ptExtension);
+    }
+
+} // namespace
+
+// 이미 열린 파일인지 확인한다.
 LPARAM DocOpendFileCheck(LPTSTR ptFile)
 {
     for (const auto &stFile : gltMultiFiles)
@@ -35,9 +77,8 @@ LPARAM DocOpendFileCheck(LPTSTR ptFile)
 
     return -1;
 }
-//-------------------------------------------------------------------------------------------------
 
-// ファイルから読み込む
+// 파일 열기 대화상자를 띄운다.
 HRESULT DocFileOpen(HWND hWnd)
 {
     OPENFILENAME stOpenFile;
@@ -59,7 +100,6 @@ HRESULT DocFileOpen(HWND hWnd)
     stOpenFile.nMaxFile = MAX_PATH;
     stOpenFile.lpstrFileTitle = atFileName;
     stOpenFile.nMaxFileTitle = MAX_STRING;
-    //    stOpenFile.lpstrInitialDir =
     stOpenFile.lpstrTitle = TEXT("어떤 파일을 불러올까요?");
     stOpenFile.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     stOpenFile.lpstrDefExt = TEXT("mlt");
@@ -75,17 +115,19 @@ HRESULT DocFileOpen(HWND hWnd)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
-// ファイル名を受けて、オーポン処理する
+// 파일 경로를 받아 실제 열기 처리를 수행한다.
 HRESULT DocDoOpenFile(HWND hWnd, LPTSTR ptFile)
 {
     LPARAM dNumber;
+    DOC_APP_SHELL_SYNC_REQUEST stSync{};
 
     dNumber = DocOpendFileCheck(ptFile);
     if (1 <= dNumber)
     {
-        if (SUCCEEDED(DocAppMultiFileTabSelect(dNumber)))
+        stSync.dFlags = DOC_APP_SYNC_FILE_TAB_SELECT;
+        stSync.dFileNumber = dNumber;
+        if (SUCCEEDED(DocAppShellSync(stSync)))
         {
             DocMultiFileSelect(dNumber);
             return S_OK;
@@ -100,8 +142,13 @@ HRESULT DocDoOpenFile(HWND hWnd, LPTSTR ptFile)
         return E_HANDLE;
     }
 
-    DocAppMultiFileTabAppend(dNumber, ptFile);
-    DocAppOpenHistoryLogging(hWnd, ptFile);
+    stSync = {};
+    stSync.dFlags = DOC_APP_SYNC_FILE_TAB_APPEND |
+                    DOC_APP_SYNC_OPEN_HISTORY;
+    stSync.dFileNumber = dNumber;
+    stSync.hWindow = hWnd;
+    stSync.ptText = ptFile;
+    DocAppShellSync(stSync);
 
     return S_OK;
 }
@@ -118,21 +165,19 @@ VOID DocBackupDirectoryInit(LPTSTR ptCurrent)
 }
 //-------------------------------------------------------------------------------------------------
 
-// インターバルで自動保存
+// 자동 백업을 수행한다.
 HRESULT DocFileBackup(HWND hWnd)
 {
-    CONST TCHAR aatExte[3][5] = {{TEXT(".ast")}, {TEXT(".mlt")}, {TEXT(".txt")}};
-
     TCHAR atFilePath[MAX_PATH], atFileName[MAX_STRING];
     TCHAR atBuffer[MAX_PATH];
 
     HANDLE hFile;
     DWORD wrote;
 
-    LPTSTR ptExten; //    ファイル名の拡張子
+    LPTSTR ptExten;
     TCHAR atExBuf[10];
 
-    LPVOID pBuffer; //    文字列バッファ用ポインター
+    LPVOID pBuffer;
     INT iByteSize, iNullTmt, iCrLf;
 
     LPVOID pbSplit;
@@ -141,7 +186,7 @@ HRESULT DocFileBackup(HWND hWnd)
 
     INT isAST, isMLT, idExten;
 
-    UINT_PTR iPages, i; //    頁数
+    UINT_PTR iPages, i;
 
     FILES_ITR itFile;
 
@@ -149,11 +194,10 @@ HRESULT DocFileBackup(HWND hWnd)
     ZeroMemory(atFileName, sizeof(atFileName));
     ZeroMemory(atBuffer, sizeof(atBuffer));
 
-    // 複数ファイル、各ファイルをセーブするには？
     for (itFile = gltMultiFiles.begin(); itFile != gltMultiFiles.end();
          itFile++)
     {
-        iPages = itFile->vcCont.size(); //    総頁数
+        iPages = itFile->vcCont.size();
 
         if (1 >= iPages)
             isMLT = FALSE;
@@ -164,20 +208,20 @@ HRESULT DocFileBackup(HWND hWnd)
 
         if (isAST)
         {
-            idExten = 0;
-        } //    AST
+            idExten = DOC_EXT_AST;
+        }
         else if (isMLT)
         {
-            idExten = 1;
-        } //    MLT
+            idExten = DOC_EXT_MLT;
+        }
         else
         {
-            idExten = 2;
-        } //    TXT
+            idExten = DOC_EXT_TXT;
+        }
 
         StringCchCopy(atBuffer, MAX_PATH, itFile->atFileName);
 
-        if (atBuffer[0] == TEXT('\0')) //    名称未設定状態
+        if (atBuffer[0] == TEXT('\0'))
         {
             StringCchCopy(atFileName, MAX_STRING, itFile->atDummyName);
         }
@@ -187,38 +231,34 @@ HRESULT DocFileBackup(HWND hWnd)
             StringCchCopy(atFileName, MAX_STRING, atBuffer);
         }
 
-        //    拡張子を確認・ドット込みだよ～ん
-        ptExten = PathFindExtension(
-            atFileName); //    拡張子が無いならnullptr、というか末端になる
+        ptExten = PathFindExtension(atFileName);
         if (0 == *ptExten)
         {
-            //    拡張子指定がないならそのまま対応のをくっつける
-            StringCchCopy(ptExten, 5, aatExte[idExten]);
+            StringCchCopy(ptExten, 5, gatDocSaveExtensions[idExten]);
         }
-        else //    既存の拡張子があったら
+        else
         {
             StringCchCopy(atExBuf, 10, ptExten);
-            CharLower(atExBuf); //    比較のために小文字にしちゃう
+            CharLower(atExBuf);
 
-            if (isAST) //    ASTは優先的に適用
+            if (isAST)
             {
-                if (StrCmp(atExBuf, aatExte[0])) //    もしASTじゃなかったら変更
+                if (StrCmp(atExBuf, gatDocSaveExtensions[DOC_EXT_AST]))
                 {
-                    StringCchCopy(ptExten, 5, aatExte[0]);
+                    StringCchCopy(ptExten, 5, gatDocSaveExtensions[DOC_EXT_AST]);
                 }
             }
-            else if (isMLT) //    名前無いけど複数頁ならMLTじゃないとダメ
+            else if (isMLT)
             {
-                if (StrCmp(atExBuf, aatExte[1])) //    もしMLTじゃなかったら変更
+                if (StrCmp(atExBuf, gatDocSaveExtensions[DOC_EXT_MLT]))
                 {
-                    StringCchCopy(ptExten, 5, aatExte[1]);
+                    StringCchCopy(ptExten, 5, gatDocSaveExtensions[DOC_EXT_MLT]);
                 }
             }
-            //    一枚なら、TXTでもMLTでも気にしなくてよかばい
         }
 
         StringCchCopy(atFilePath, MAX_PATH, gatBackUpDirty);
-        PathAppend(atFilePath, atFileName); //    Backupファイル名
+        PathAppend(atFilePath, atFileName);
 
         hFile = CreateFile(atFilePath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                            FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -226,7 +266,6 @@ HRESULT DocFileBackup(HWND hWnd)
         {
             NotifyBalloonExist(TEXT("파일 백업에 실패했습니다."),
                                TEXT("꺄아아아아아악!"), NIIF_ERROR);
-            //    gbAutoBUmsg    バックアップ出来なかったメッセージは常に表示がいいか
             return E_HANDLE;
         }
 
@@ -243,7 +282,7 @@ HRESULT DocFileBackup(HWND hWnd)
             cbSplSz = DocMltSeparatorGetAlloc(&pbSplit);
         }
 
-        for (i = 0; iPages > i; i++) //    全頁保存
+        for (i = 0; iPages > i; i++)
         {
             if (isAST)
             {
@@ -274,7 +313,6 @@ HRESULT DocFileBackup(HWND hWnd)
             {
                 iByteSize -= iCrLf;
             }
-            //    最終頁の末端の改行は不要のはず
             WriteFile(hFile, pBuffer, iByteSize - iNullTmt, &wrote, nullptr);
 
             FREE(pBuffer);
@@ -296,12 +334,9 @@ HRESULT DocFileBackup(HWND hWnd)
 }
 //-------------------------------------------------------------------------------------------------
 
-// ファイルに保存する
+// 현재 선택된 파일을 저장한다.
 HRESULT DocFileSave(HWND hWnd, UINT bStyle)
 {
-    CONST TCHAR aatExte[3][5] = {{TEXT(".ast")}, {TEXT(".mlt")}, {TEXT(".txt")}};
-
-    SYSTEMTIME stSysTile;
     OPENFILENAME stSaveFile;
 
     BOOLEAN bOpened;
@@ -312,10 +347,10 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
     HANDLE hFile;
     DWORD wrote;
 
-    LPTSTR ptExten; //    ファイル名の拡張子
+    LPTSTR ptExten;
     TCHAR atExBuf[10];
 
-    LPVOID pBuffer; //    文字列バッファ用ポインター
+    LPVOID pBuffer;
     INT iByteSize, iNullTmt, iCrLf;
 
     LPVOID pbSplit;
@@ -327,10 +362,10 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
     BOOLEAN bForceMLT = FALSE;
     BOOLEAN bNoName = FALSE;
 
-    BOOLEAN bUtf8 = TRUE;  //    기본 저장은 UTF-8 무 BOM
-    BOOLEAN bUnic = FALSE; //    ユニコードで保存セヨ
+    BOOLEAN bUtf8 = TRUE;  // 기본 저장은 UTF-8 무 BOM이다.
+    BOOLEAN bUnic = FALSE;
 
-    UINT_PTR iPages, i; //    頁数
+    UINT_PTR iPages, i;
 
     ZeroMemory(&stSaveFile, sizeof(OPENFILENAME));
 
@@ -338,48 +373,40 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
     ZeroMemory(atFileName, sizeof(atFileName));
     ZeroMemory(atBuffer, sizeof(atBuffer));
 
-    //    保存時は常に選択しているファイルを保存
-
-    iPages = DocNowFilePageCount(); //    総頁数
+    iPages = DocNowFilePageCount();
     if (1 >= iPages)
         isMLT = FALSE;
     else
         isMLT = TRUE;
 
-    // 既存の拡張子がASTなら、それを優先する
-
     isAST = DocAppPageListHasNamedPages(gitFileIt);
 
     if (isAST)
     {
-        idExten = 0;
-    } //    AST
+        idExten = DOC_EXT_AST;
+    }
     else
     {
-        idExten = 1;
-    } //    MLT
-
-    GetLocalTime(&stSysTile);
+        idExten = DOC_EXT_MLT;
+    }
 
     StringCchCopy(atFilePath, MAX_PATH, (*gitFileIt).atFileName);
 
     if (0 == (*gitFileIt).atFileName[0])
         bNoName = TRUE;
 
-    //    リネームか、ファイル名が無かったら保存ダイヤログ開く
+    // 이름이 없거나 다른 이름 저장이면 저장 대화상자를 연다.
     if ((bStyle & D_RENAME) || bNoName)
     {
-        // ここで FileSaveDialogue を出す
         stSaveFile.lStructSize = sizeof(OPENFILENAME);
         stSaveFile.hwndOwner = hWnd;
         stSaveFile.lpstrFilter =
             TEXT("[UTF8]아스키 아트 파일 ( mlt, ast, txt )\0*.mlt;*.ast;*.txt\0\0");
-        stSaveFile.nFilterIndex = 1; //    デフォのフィルタ選択肢
+        stSaveFile.nFilterIndex = 1;
         stSaveFile.lpstrFile = atFilePath;
         stSaveFile.nMaxFile = MAX_PATH;
         stSaveFile.lpstrFileTitle = atFileName;
         stSaveFile.nMaxFileTitle = MAX_STRING;
-        //        stSaveFile.lpstrInitialDir =
         stSaveFile.lpstrTitle = TEXT("어떤 이름으로 저장할까요?");
         stSaveFile.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
@@ -391,37 +418,33 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
         {
             return E_ABORT;
         }
-        //    キャンセルしてたら何もしない
 
         bLastChg = TRUE;
     }
 
-    //    拡張子を確認・ドット込みだよ～ん・拡張子の位置のポインタ確保
-    ptExten = PathFindExtension(atFilePath); //    拡張子が無いなら末端になる
+    // 현재 저장 형식에 맞게 확장자를 보정한다.
+    ptExten = PathFindExtension(atFilePath);
     if (0 == *ptExten)
     {
-        //    拡張子指定がないならそのまま対応のをくっつける
-        StringCchCopy(ptExten, 5, aatExte[idExten]);
+        StringCchCopy(ptExten, 5, gatDocSaveExtensions[idExten]);
         bExtChg = TRUE;
     }
-    else //    既存の拡張子があったら
+    else
     {
         StringCchCopy(atExBuf, 10, ptExten);
-        CharLower(atExBuf); //    比較のために小文字にしちゃう
+        CharLower(atExBuf);
 
-        //    既存の拡張子が、ASTならそれを優先する
-        if (!(StrCmp(atExBuf, aatExte[0]))) //    ASTであるなら
+        // 페이지 이름이 있는 파일은 AST를 우선 유지한다.
+        if (!(StrCmp(atExBuf, gatDocSaveExtensions[DOC_EXT_AST])))
         {
-            //    AST形式を維持する
             isAST = TRUE;
             isMLT = FALSE;
-            idExten = 0;
+            idExten = DOC_EXT_AST;
         }
 
-        //    保存する拡張子がMLTで、既存のASTからリネームなら確認
-        if (!(StrCmp(atExBuf, aatExte[1])))
+        if (!(StrCmp(atExBuf, gatDocSaveExtensions[DOC_EXT_MLT])))
         {
-            if (isAST && (bStyle & D_RENAME)) //    既存ASTかつリネームなら
+            if (isAST && (bStyle & D_RENAME))
             {
                 mbRslt =
                     MessageBox(hWnd,
@@ -433,34 +456,29 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
 
                 isMLT = TRUE;
                 isAST = FALSE;
-                idExten = 1;
+                idExten = DOC_EXT_MLT;
                 bForceMLT = TRUE;
             }
         }
 
-        if (isAST) //    ASTは優先的に適用
+        if (isAST)
         {
-            if (StrCmp(atExBuf, aatExte[0])) //    もしASTじゃなかったら変更
+            if (StrCmp(atExBuf, gatDocSaveExtensions[DOC_EXT_AST]))
             {
-                StringCchCopy(ptExten, 5, aatExte[0]);
+                StringCchCopy(ptExten, 5, gatDocSaveExtensions[DOC_EXT_AST]);
                 bExtChg = TRUE;
             }
         }
-        else if (isMLT) //    名前無いけど複数頁ならMLTじゃないとダメ
+        else if (isMLT)
         {
-            if (StrCmp(atExBuf, aatExte[1])) //    もしMLTじゃなかったら変更
+            if (StrCmp(atExBuf, gatDocSaveExtensions[DOC_EXT_MLT]))
             {
-                StringCchCopy(ptExten, 5, aatExte[1]);
+                StringCchCopy(ptExten, 5, gatDocSaveExtensions[DOC_EXT_MLT]);
                 bExtChg = TRUE;
             }
         }
-        //    一枚なら、TXTでもMLTでも気にしなくてよかばい
     }
 
-    //    上書きなら直前の状態のバックアップとか取るべき
-    //    同じ名前のファイルがあれば、ってことで
-
-    //    オリジナルファイル名に注意
     StringCchCopy((*gitFileIt).atFileName, MAX_PATH, atFilePath);
 
     hFile = CreateFile(atFilePath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
@@ -485,29 +503,27 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
         cbSplSz = DocMltSeparatorGetAlloc(&pbSplit);
     }
 
-    //    本文の取込はユニコードでやる必要がある
+    // UTF-8 저장은 유니코드로 읽어 온 뒤 변환한다.
     if (bUnic || bUtf8)
     {
         bStyle |= D_UNI;
     }
 
-    for (i = 0; iPages > i; i++) //    全頁保存
+    for (i = 0; iPages > i; i++)
     {
-        if (isAST) //    ＡＳＴの場合は、頁先頭にタイトルが入ってる
+        if (isAST)
         {
-            //    返り値の確保バイト数にはＮＵＬＬターミネータ含んでるので注意
             cbSplSz = DocAstSeparatorGetAlloc(gitFileIt, i, bStyle, &pbSplit);
 
             if (bUtf8)
             {
                 cbSplSz = DocUnicode2UTF8(&pbSplit);
             }
-            //    pbSplitの中身を付け替える
 
             WriteFile(hFile, pbSplit, (cbSplSz - iNullTmt), &wrote, nullptr);
             FREE(pbSplit);
         }
-        else //    MLTの場合は、二つ目以降で区切りが必要
+        else
         {
             if (1 <= i)
             {
@@ -529,12 +545,11 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
         {
             iByteSize = DocUnicode2UTF8(&pBuffer);
         }
-        //    pBufferの中身を付け替える
 
         if ((i + 1) == iPages)
         {
             iByteSize -= iCrLf;
-        } //    最終頁の末端の改行は不要のはず
+        }
         WriteFile(hFile, pBuffer, iByteSize - iNullTmt, &wrote, nullptr);
 
         FREE(pBuffer);
@@ -547,30 +562,34 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
 
     DocModifyContent(FALSE);
 
-    //    なんかメッセージ
-    if (bExtChg) //    拡張子変更した場合
+    // 파일명이나 확장자가 바뀌었으면 UI 상태도 함께 갱신한다.
+    if (bExtChg)
     {
-        // InitLastOpen( INIT_SAVE, atFilePath );    //    ラストオーポンを書換
-        DocAppMultiFileTabRename((*gitFileIt).dUnique, atFilePath);
-        DocAppTitleChange(atFilePath);
-        StringCchPrintf(atBuffer, MAX_STRING,
-                        TEXT("%s 확장자로 파일을 저장했습니다."), aatExte[idExten]);
-        NotifyBalloonExist(atBuffer, TEXT("일했꼬꼬"), NIIF_INFO);
+        DOC_APP_SHELL_SYNC_REQUEST stSync{};
+        stSync.dFlags = DOC_APP_SYNC_FILE_TAB_RENAME |
+                        DOC_APP_SYNC_TITLE |
+                        DOC_APP_SYNC_OPEN_HISTORY;
+        stSync.dFileNumber = (*gitFileIt).dUnique;
+        stSync.hWindow = hWnd;
+        stSync.ptText = atFilePath;
+        DocAppShellSync(stSync);
 
-        DocAppOpenHistoryLogging(hWnd,
-                           atFilePath); //    ファイル名変更したので記録取り直し
+        StringCchPrintf(atBuffer, MAX_STRING,
+                        TEXT("%s 확장자로 파일을 저장했습니다."), gatDocSaveExtensions[idExten]);
+        NotifyBalloonExist(atBuffer, TEXT("일했꼬꼬"), NIIF_INFO);
     }
     else
     {
-        //    20110713    新規かリネームしてたらラストオーポンを書換
         if (bLastChg)
         {
-            // InitLastOpen( INIT_SAVE, atFilePath );
-            DocAppMultiFileTabRename((*gitFileIt).dUnique, atFilePath);
-            DocAppTitleChange(atFilePath);
-
-            DocAppOpenHistoryLogging(hWnd,
-                               atFilePath); //    ファイル名変更したので記録取り直し
+            DOC_APP_SHELL_SYNC_REQUEST stSync{};
+            stSync.dFlags = DOC_APP_SYNC_FILE_TAB_RENAME |
+                            DOC_APP_SYNC_TITLE |
+                            DOC_APP_SYNC_OPEN_HISTORY;
+            stSync.dFileNumber = (*gitFileIt).dUnique;
+            stSync.hWindow = hWnd;
+            stSync.ptText = atFilePath;
+            DocAppShellSync(stSync);
         }
 
         if (gbSaveMsgOn)
@@ -580,38 +599,38 @@ HRESULT DocFileSave(HWND hWnd, UINT bStyle)
         }
     }
 
-    //    頁一覧の書き直し
     if (bForceMLT)
     {
-        DocAppPageListRewrite(-1);
+        DOC_APP_SHELL_SYNC_REQUEST stSync{};
+        stSync.dFlags = DOC_APP_SYNC_PAGE_LIST_REWRITE;
+        stSync.iPage = -1;
+        DocAppShellSync(stSync);
     }
 
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
 
-// ユニコード文字列を受け取って、ＵＴＦ８のアドレスを確保してもどす。
+// 유니코드 문자열을 UTF-8 버퍼로 바꿔 돌려준다.
 INT DocUnicode2UTF8(LPVOID *pText)
 {
-    UINT_PTR cchSz;   //    ユニコード用
-    INT cbSize, rslt; //    UTF8用
-    LPVOID pUtf8;     //    確保
+    UINT_PTR cchSz;
+    INT cbSize, rslt;
+    LPVOID pUtf8;
 
     StringCchLength((LPTSTR)(*pText), STRSAFE_MAX_CCH, &cchSz);
 
-    //    必要バイト数確認
+    // 필요한 버퍼 크기를 먼저 구한다.
     cbSize = WideCharToMultiByte(CP_UTF8, 0, (LPTSTR)(*pText), -1, nullptr, 0,
                                  nullptr, nullptr);
-    TRACE(TEXT("cbSize[%d]"), cbSize);
     pUtf8 = (LPSTR)malloc(cbSize);
     ZeroMemory(pUtf8, cbSize);
     rslt = WideCharToMultiByte(CP_UTF8, 0, (LPTSTR)(*pText), -1, (LPSTR)(pUtf8),
                                cbSize, nullptr, nullptr);
-    TRACE(TEXT("rslt[%d]"), rslt);
 
-    FREE(*pText); //    ユニコード文字列のほうは破壊する
+    FREE(*pText);
 
-    *pText = pUtf8; //    ＵＴＦ８のほうに付け替える
+    *pText = pUtf8;
 
     return cbSize;
 }
@@ -636,7 +655,7 @@ UINT DocMltSeparatorGetAlloc(LPVOID *pText)
 }
 //-------------------------------------------------------------------------------------------------
 
-// ページ名前をAST区切り付きで確保する・freeは呼んだ方でやる
+// 페이지 이름을 AST 구분자와 함께 할당해서 돌려준다.
 INT DocAstSeparatorGetAlloc(FILES_ITR itFile, INT dPage, UINT bStyle,
                             LPVOID *pText)
 {
@@ -655,7 +674,7 @@ INT DocAstSeparatorGetAlloc(FILES_ITR itFile, INT dPage, UINT bStyle,
 
     if (bStyle & D_UNI)
     {
-        cbSize = (cchSize + 1) * sizeof(TCHAR); //    nullptrターミネータ
+        cbSize = (cchSize + 1) * sizeof(TCHAR);
 
         *pText = (LPTSTR)malloc(cbSize);
         ZeroMemory(*pText, cbSize);
@@ -665,7 +684,7 @@ INT DocAstSeparatorGetAlloc(FILES_ITR itFile, INT dPage, UINT bStyle,
     {
         cbSize = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, atBuffer,
                                      cchSize, nullptr, 0, nullptr, nullptr);
-        cbSize++; //    nullptrターミネータ
+        cbSize++;
         *pText = (LPSTR)malloc(cbSize);
         ZeroMemory(*pText, cbSize);
         WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, atBuffer, cchSize,
@@ -674,11 +693,12 @@ INT DocAstSeparatorGetAlloc(FILES_ITR itFile, INT dPage, UINT bStyle,
 
     return cbSize;
 }
-//-------------------------------------------------------------------------------------------------Yippee-ki-yay!
 
-// 画像で頁を保存・BMPかPNG、JPEGは向いてない
+// 현재 페이지를 이미지로 저장한다.
 HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
 {
+    UNREFERENCED_PARAMETER(bStyle);
+
     LPVOID pBuffer;
     LPTSTR ptText;
     UINT dLines;
@@ -699,10 +719,9 @@ HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
     HBITMAP hBitmap, hOldBmp;
     HFONT hOldFont;
 
-    //    とりあえづダミー名前でファイル
+    // 현재 파일명과 페이지 번호를 기본 저장 이름으로 사용한다.
     StringCchCopy(atOutName, MAX_PATH, gitFileIt->atFileName);
-    //    拡張子より選択を優先するようにしちゃう
-    PathRemoveExtension(atOutName); //    拡張子あぼ～ん
+    PathRemoveExtension(atOutName);
 
     StringCchPrintf(atPart, MIN_STRING, TEXT("_Page%d"), gixFocusPage);
     StringCchCat(atOutName, MAX_PATH, atPart);
@@ -712,12 +731,12 @@ HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
     stSaveFile.hwndOwner = hWnd;
     stSaveFile.lpstrFilter =
         TEXT("PNG 파일 ( *.png )\0*.png\0BMP 파일 ( *.bmp )\0*.bmp\0\0");
-    stSaveFile.nFilterIndex = 1; //    デフォのフィルタ選択肢
+    stSaveFile.nFilterIndex = 1;
     stSaveFile.lpstrFile = atOutName;
     stSaveFile.nMaxFile = MAX_PATH;
     stSaveFile.lpstrFileTitle = atFileName;
     stSaveFile.nMaxFileTitle = MAX_STRING;
-    //        stSaveFile.lpstrInitialDir =
+    stSaveFile.lpstrDefExt = TEXT("png");
     stSaveFile.lpstrTitle = TEXT("어떤 이름과 확장자로 저장할까요?");
     stSaveFile.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
@@ -730,35 +749,26 @@ HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
         return E_ABORT;
     }
 
-    // 파일 저장할 때 PNG를 기본값으로
-    switch (stSaveFile.nFilterIndex)
-    {
-    default:
-        bType = ISAVE_PNG;
-        break;
-    case 2:
-        bType = ISAVE_BMP;
-        break;
-    }
+    bType = DocImageSaveTypeFromFilter(stSaveFile.nFilterIndex);
+    DocAppendExtensionIfMissing(atOutName, MAX_PATH,
+                                DocImageExtensionFromType(bType));
 
-    dLines = DocNowFilePageLineCount(); // DocPageParamGet( nullptr , nullptr );
-                                        // //    要るのは行数
+    dLines = DocNowFilePageLineCount();
     iDotX = DocPageMaxDotGet(-1, -1);
     iDotY = dLines * LINE_HEIGHT;
-    //    ちゅっと余裕いれとく
+
+    // 렌더링 여백을 조금 더 준다.
     iDotX += 8;
     iDotY += 8;
 
     SetRect(&rect, 4, 4, iDotX - 4, iDotY - 4);
-
-    TRACE(TEXT("해상도 %d x %d"), iDotX, iDotY);
 
     iByteSize =
         DocPageTextGetAlloc(gitFileIt, gixFocusPage, D_UNI, &pBuffer, TRUE);
     ptText = (LPTSTR)pBuffer;
     StringCchLength(ptText, STRSAFE_MAX_CCH, &cchSize);
 
-    //    描画用ビットマップ作成
+    // 메모리 DC에 흰 배경으로 페이지를 먼저 그린다.
     hdc = GetDC(hWnd);
 
     hBitmap = CreateCompatibleBitmap(hdc, iDotX, iDotY);
@@ -774,17 +784,16 @@ HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
     iLine = 0;
     cchLen = 0;
     start = 0;
-    //    文字列全体を見ていく
     for (caret = 0; cchSize > caret;)
     {
-        if (TEXT('\r') == ptText[caret]) //    壱行の終わり
+        if (TEXT('\r') == ptText[caret])
         {
             TextOut(hMemDC, 0, iLine, &(ptText[start]), cchLen);
-            cchLen = 0;    //    文字数リセット
-            caret += 2;    //    次の行の開始位置
-            start = caret; //    開始位置確認
+            cchLen = 0;
+            caret += 2;
+            start = caret;
 
-            iLine += LINE_HEIGHT; //    描画Ｙ位置
+            iLine += LINE_HEIGHT;
         }
         else
         {
@@ -792,20 +801,15 @@ HRESULT DocImageSave(HWND hWnd, UINT bStyle, HFONT hFont)
             caret++;
         }
     }
-    //    最後の行描画
     TextOut(hMemDC, 0, iLine, &(ptText[start]), cchLen);
 
     FREE(pBuffer);
 
     if (SUCCEEDED(ImageFileSaveDC(hMemDC, atOutName, bType)))
     {
-        //    せいこう
-        TRACE(TEXT("%s 를 저장했어요."), atOutName);
     }
     else
     {
-        //    しっぱい
-        TRACE(TEXT("%s 저장에 실패했어요."), atOutName);
     }
 
     SelectBitmap(hMemDC, hOldBmp);

@@ -22,10 +22,8 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     LPACCEL pstAccel;
     INT iEntry;
 
-#ifdef MULTIACT_RELAY
     HWND hWndActed;
     COPYDATASTRUCT stCopyData;
-#endif
 
     INITCOMMONCONTROLSEX iccex;
     iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -54,11 +52,9 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     AppMigrateLegacySettings(gatExePath);
     AppUiResourcesInitialise(hInstance);
 
-#ifdef MULTIACT_RELAY
     dMultiEna = InitParamValue(INIT_LOAD, VL_MULTI_ACT_E, 0);
     if (!(dMultiEna))
     {
-#endif
         SECURITY_DESCRIPTOR stSeqDes;
         SECURITY_ATTRIBUTES secAttribute;
         InitializeSecurityDescriptor(&stSeqDes, SECURITY_DESCRIPTOR_REVISION);
@@ -70,7 +66,6 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         ghAppMutex = CreateMutex(&secAttribute, TRUE, TEXT("SUNDAYMaker"));
         if (ghAppMutex && GetLastError() == ERROR_ALREADY_EXISTS)
         {
-#ifdef MULTIACT_RELAY
             hWndActed = FindWindow(gatMainWindowClass, nullptr);
             SetForegroundWindow(hWndActed);
 
@@ -82,16 +77,11 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
                 SendMessage(hWndActed, WM_COPYDATA, 0, (LPARAM)(&stCopyData));
             }
-#else
-            MessageBox(nullptr, TEXT("已にアプリは起動してるよ！"), TEXT("お燐からのお知らせ"), MB_OK | MB_ICONINFORMATION);
-#endif
             ReleaseMutex(ghAppMutex);
             CloseHandle(ghAppMutex);
             return 0;
         }
-#ifdef MULTIACT_RELAY
     }
-#endif
 
     InitWndwClass(hInstance);
 
@@ -105,7 +95,6 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     iCode = InitParamValue(INIT_LOAD, VL_CLASHCOVER, 0);
     if (iCode)
     {
-        TRACE(TEXT("비정상 종료 가능성 있음"));
         iCode = MessageBox(nullptr, TEXT("프로그램이 비정상적으로 종료된 흔적이 있습니다.\r\n프로그램 기동 전에 백업 파일을 먼저 확인해주세요.\r\n「아니오」를 누르면 파일을 확인할 수 있도록 프로그램을 종료합니다."), TEXT("미안합니다"), MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
         if (IDNO == iCode)
         {
@@ -154,8 +143,6 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         ReleaseMutex(ghAppMutex);
         CloseHandle(ghAppMutex);
     }
-
-    TRACE(TEXT("Program Terminate"));
 
     return (int)msg.wParam;
 }
@@ -227,9 +214,7 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
 
     gdPageByteMax = PAGE_BYTE_MAX;
 
-#ifdef SPMOZI_ENCODE
     gbSpMoziEnc = InitParamValue(INIT_LOAD, VL_SPMOZI_ENC, 0);
-#endif
 
     ghMainWnd = hWnd;
 
@@ -241,14 +226,8 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
 
     hSubMenu = GetSubMenu(ghMainMenu, 0);
     DeleteMenu(hSubMenu, IDM_TREE_RECONSTRUCT, MF_BYCOMMAND);
-#ifndef ACCELERATOR_EDIT
-    DeleteMenu(hSubMenu, IDM_ACCELKEY_EDIT_DLG_OPEN, MF_BYCOMMAND);
-#endif
 
     hSubMenu = GetSubMenu(ghMainMenu, 1);
-#ifndef FIND_STRINGS
-    DeleteMenu(hSubMenu, IDM_FIND_DLG_OPEN, MF_BYCOMMAND);
-#endif
 
     hSubMenu = GetSubMenu(ghMainMenu, 4);
     if (gbTmpltDock)
@@ -290,9 +269,7 @@ BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow, LPTSTR ptArgv)
     OpenHistoryInitialise(hWnd);
     DocInverseInit(TRUE);
 
-#ifdef FIND_STRINGS
     FindDialogueOpen(nullptr, nullptr);
-#endif
 
     SetFocus(ghViewWnd);
 

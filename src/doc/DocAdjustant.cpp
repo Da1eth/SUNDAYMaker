@@ -610,8 +610,6 @@ HRESULT DocRightGuideline(LPVOID pVoid)
 {
     INT iTop, iBottom, i;
 
-    TRACE(ORR_UI_LABEL_RIGHT_GUIDE_SET);
-
     iTop = DocCurrentPage().dSelLineTop;
     iBottom = DocCurrentPage().dSelLineBottom;
 
@@ -740,8 +738,6 @@ INT DocDiffAdjBaseSet(INT yLine)
 {
     INT dDot = 0;
     TCHAR atMessage[MAX_STRING];
-
-    TRACE(ORR_UI_LABEL_DOTDIFF_LOCK);
 
     dDot = DocLineParamGet(yLine, nullptr, nullptr);
 
@@ -942,8 +938,6 @@ HRESULT DocTopLetterInsert(TCHAR ch, PINT pXdot, INT dLine)
     INT iTop, iBottom, i, xDot = 0;
     BOOLEAN bFirst = TRUE, bSeled = FALSE;
 
-    TRACE(ORR_UI_LABEL_INS_TOPSPACE);
-
     //    範囲確認
     iLines = DocNowFilePageLineCount();
     iTop = (*gitFileIt).vcCont.at(gixFocusPage).dSelLineTop;
@@ -1011,8 +1005,6 @@ HRESULT DocTopSpaceErase(PINT pXdot, INT dLine)
         iTop = 0;
     if (0 > iBottom)
         iBottom = iLines - 1;
-
-    TRACE(ORR_UI_LABEL_DEL_TOPSPACE);
     //    選択範囲は、操作した行全体を選択状態にする
 
     itLine = (*gitFileIt).vcCont.at(gixFocusPage).ltPage.begin();
@@ -1081,8 +1073,6 @@ HRESULT DocLastLetterErase(PINT pXdot, INT dLine)
         iTop = 0;
     if (0 > iBottom)
         iBottom = iLines - 1;
-
-    TRACE(ORR_UI_LABEL_DEL_LASTLETTER);
     //    選択してる場合は、操作行を全選択状態にする
     itLine = (*gitFileIt).vcCont.at(gixFocusPage).ltPage.begin();
     std::advance(itLine, iTop); //    位置合わせ
@@ -1148,8 +1138,6 @@ HRESULT DocLastSpaceErase(PINT pXdot, INT dLine)
     RECT rect;
 
     LINE_ITR itLine;
-
-    TRACE(ORR_UI_LABEL_DEL_LASTSPACE);
 
     //    範囲確認
     iLines = DocNowFilePageLineCount();
@@ -1351,8 +1339,6 @@ HRESULT DocPositionShift(UINT vk, PINT pXdot, INT dLine)
 
     pstUndoBuff = &((*gitFileIt).vcCont.at(gixFocusPage).stUndoLog);
 
-    TRACE(TEXT("전체 이동"));
-
     if (VK_RIGHT == vk)
         bRight = TRUE;
     else if (VK_LEFT == vk)
@@ -1507,8 +1493,6 @@ HRESULT DocHeadHalfSpaceExchange(HWND hWnd)
     if (0 > iBottom)
         iBottom = iLines - 1;
 
-    TRACE(TEXT("행의 첫 반각 공백을 유니코드로 변환"));
-
     DocViewClearSelection();
 
     //    容量計算、バッド空白の確認と再描画必要
@@ -1552,7 +1536,6 @@ HRESULT DocHeadHalfSpaceExchange(HWND hWnd)
 }
 //-------------------------------------------------------------------------------------------------
 
-#ifdef DOT_SPLIT_MODE
 // キャレット位置から、左右に１dotずつずらす。文字なら空白に置き換えながら
 HRESULT DocCentreWidthShift(UINT vk, PINT pXdot, INT dLine)
 {
@@ -1576,7 +1559,6 @@ HRESULT DocCentreWidthShift(UINT vk, PINT pXdot, INT dLine)
     pstUndoBuff = &((*gitFileIt).vcCont.at(gixFocusPage).stUndoLog);
 
     iBaseDot = *pXdot; //    基準点、なるべく動かないようにせないかん
-    TRACE(TEXT("중간 이동 %dDot"), iBaseDot);
 
     iFnlDot = iBaseDot;
 
@@ -1740,4 +1722,3 @@ HRESULT DocCentreWidthShift(UINT vk, PINT pXdot, INT dLine)
     return S_OK;
 }
 //-------------------------------------------------------------------------------------------------
-#endif
