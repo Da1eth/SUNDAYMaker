@@ -127,7 +127,7 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (AppModelessDialogHandleMessage(&msg))
             continue;
 
-        if (!TranslateAccelerator(msg.hwnd, ghMainAccelTable, &msg))
+        if (!TranslateAccelerator(ghMainWnd, ghMainAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
