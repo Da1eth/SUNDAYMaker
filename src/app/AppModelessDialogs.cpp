@@ -44,6 +44,8 @@ BOOLEAN AppModelessDialogHandleMessage(LPMSG pstMsg)
 
     if (PaletteEditorHandleMessage(pstMsg))
         return TRUE;
+    if (FrameEditHandleMessage(pstMsg))
+        return TRUE;
 
     return FALSE;
 }
@@ -54,6 +56,7 @@ VOID AppModelessDialogsDestroy(VOID)
     AppModelessDialogDestroy(&ghColourTagDlg);
     AppModelessDialogDestroy(&ghGradientTagDlg);
     PaletteEditorDestroy();
+    FrameEditDestroy();
 }
 
 BOOLEAN AppModelessEditCommandForward(HWND hDlg, UINT id)

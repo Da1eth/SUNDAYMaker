@@ -2,6 +2,7 @@
 #include "InsertUi.h"
 #include "DocViewBridgeInternal.h"
 #include "UiText.h"
+#include "AppUiContextInternal.h"
 
 #define FRAMEINSERTBOX_CLASS TEXT("FRAMEINSBOX_CLASS")
 #define FIB_WIDTH 600
@@ -65,8 +66,6 @@ static TBBUTTON gstFIBTBInfo[] = {
     {FIB_SEP_SMALL, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0, 0}, 0, 0},
     {2, IDM_FRMINSBOX_PADDING, TBSTATE_ENABLED, TBSTYLE_CHECK | TBSTYLE_AUTOSIZE, {0, 0}, 0, 0}};
 
-//-------------------------------------------------------------------------------------------------
-
 extern FILES_ITR gitFileIt; // 今見てるファイルの本体
 extern INT gixFocusPage;    // 注目中のページ・とりあえず０・０インデックス
 
@@ -88,11 +87,14 @@ struct FRAME_STORAGE_STATE
 
 struct FRAME_EDIT_STATE
 {
+    HWND hDlg{};
     INT dNowSel{};
     RECT stOrigRect{};
     LPTSTR ptSample{};
     RECT stSamplePos{};
     BOOLEAN bFrameListChanged{};
+    BOOLEAN bNameModified{};
+    BOOLEAN bNameChanged{};
     vector<FRAMEINFO> vcFrameInfo;
 };
 
@@ -120,7 +122,6 @@ static FRAME_EDIT_STATE gstFrameEdit;
 static FRAME_INSERT_BOX_STATE gstFrameInsert;
 
 extern HFONT ghAaFont; //    AA用フォント
-//-------------------------------------------------------------------------------------------------
 
 INT_PTR CALLBACK FrameEditDlgProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -184,6 +185,8 @@ static HRESULT FrameEditAppendNewRecord(HWND);
 static VOID FrameEditFramesReload(VOID);
 static VOID FrameInsBoxPreviewFree(VOID);
 static VOID FrameInsBoxPreviewRefresh(HWND);
+static VOID FrameEditClose(HWND, INT_PTR);
+static VOID FrameEditFinish(INT_PTR);
 static VOID FramePartsResetLoopState(LPFRAMEITEM *, UINT);
 static BOOLEAN FrameBandPartEnabled(INT, INT, LPFRAMEITEM, BOOLEAN);
 static VOID FrameAppendHorizontalBandLine(wstring &, INT, const FRAME_HORIZONTAL_BAND_SPEC &);
@@ -197,7 +200,6 @@ static VOID FrameInsBoxLayoutCombo(VOID);
 static VOID FrameInsBoxPopulateCombo(VOID);
 static VOID FrameInsBoxSyncFrames(VOID);
 static VOID FrameInsBoxUpdateControls(VOID);
-//-------------------------------------------------------------------------------------------------
 
 static VOID FrameTextCopyToBuffer(LPTSTR ptDest, UINT_PTR cchDest, wstring_view wsText)
 {
@@ -840,7 +842,6 @@ HRESULT FrameInitialise(LPTSTR ptCurrent, HINSTANCE hInstance)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 枠名称の内容でメニューを変更
 HRESULT FrameNameModifyMenu(HWND hWnd)
@@ -875,7 +876,6 @@ HRESULT FrameNameModifyMenu(HWND hWnd)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
 // ポッパップメニュー用に名前をずっこんばっこん
 HRESULT FrameNameModifyPopUp(HMENU hPopMenu, UINT bMode)
@@ -914,9 +914,8 @@ HRESULT FrameNameModifyPopUp(HMENU hPopMenu, UINT bMode)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
-// 枠の名前を引っ張ってくる
+// 말풍선 이름을 가져오기.
 HRESULT FrameNameLoad(UINT dNumber, LPTSTR ptNamed, UINT_PTR cchSize)
 {
     if (!(ptNamed) || 0 >= cchSize)
@@ -929,18 +928,17 @@ HRESULT FrameNameLoad(UINT dNumber, LPTSTR ptNamed, UINT_PTR cchSize)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
 // JSON 레코드와 편집용 FRAMEINFO 사이를 변환한다.
 HRESULT FrameRecordAccess(UINT dMode, UINT dNumber, LPFRAMEINFO pstInfo)
 {
-    if (dMode) //    ロード
+    if (dMode) // 로드
     {
         if (!(pstInfo) || gstFrameStorage.vcFrameRecords.size() <= dNumber)
             return E_INVALIDARG;
         FrameRecordToFrameInfo(gstFrameStorage.vcFrameRecords[dNumber], pstInfo);
     }
-    else //    セーブ
+    else // 저장
     {
         if (!(pstInfo))
             return E_INVALIDARG;
@@ -953,9 +951,8 @@ HRESULT FrameRecordAccess(UINT dMode, UINT dNumber, LPFRAMEINFO pstInfo)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
-// 割り算する。０除算なら０を返す
+// 0으로 나눌 때는 0을 반환한다.
 INT Divinus(INT iLeft, INT iRight)
 {
     INT iAnswer;
@@ -967,30 +964,78 @@ INT Divinus(INT iLeft, INT iRight)
 
     return iAnswer;
 }
-//-------------------------------------------------------------------------------------------------
 
-// 枠設定のダイヤログを開く
+// 말풍선 편집 창을 모델리스로 연다.
 INT_PTR FrameEditDialogue(HINSTANCE hInst, HWND hWnd, UINT dRsv)
 {
-    INT_PTR iRslt;
+    UNREFERENCED_PARAMETER(dRsv);
 
-    gstFrameEdit.dNowSel = 0;
-    gstFrameEdit.bFrameListChanged = FALSE;
-
-    iRslt = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_FRAME_EDIT_DLG_2), hWnd, FrameEditDlgProc, 0);
-
-    //    処理結果によっては、ここでメニューの内容書換
-    if (IDYES == iRslt || gstFrameEdit.bFrameListChanged)
+    if (gstFrameEdit.hDlg)
     {
-        FrameNameModifyMenu(hWnd);
+        SetForegroundWindow(gstFrameEdit.hDlg);
+        return IDOK;
+    }
+
+    gstFrameEdit = FRAME_EDIT_STATE{};
+    gstFrameEdit.hDlg = CreateDialogParam(hInst, MAKEINTRESOURCE(IDD_FRAME_EDIT_DLG_2), hWnd, FrameEditDlgProc, 0);
+    if (!(gstFrameEdit.hDlg))
+        return IDCANCEL;
+
+    ShowWindow(gstFrameEdit.hDlg, SW_SHOW);
+    SetForegroundWindow(gstFrameEdit.hDlg);
+
+    return IDOK;
+}
+
+BOOLEAN FrameEditHandleMessage(LPMSG pstMsg)
+{
+    if (!(pstMsg) || !(gstFrameEdit.hDlg) || gstFrameEdit.hDlg != GetForegroundWindow())
+        return FALSE;
+
+    if (TranslateAccelerator(gstFrameEdit.hDlg, ghMainAccelTable, pstMsg))
+        return TRUE;
+    if (IsDialogMessage(gstFrameEdit.hDlg, pstMsg))
+        return TRUE;
+
+    return FALSE;
+}
+
+VOID FrameEditDestroy(VOID)
+{
+    if (gstFrameEdit.hDlg)
+    {
+        DestroyWindow(gstFrameEdit.hDlg);
+        gstFrameEdit.hDlg = nullptr;
+    }
+}
+
+static VOID FrameEditClose(HWND hDlg, INT_PTR iRslt)
+{
+    FrameEditSampleFree();
+    FrameEditFinish(iRslt);
+    DestroyWindow(hDlg);
+}
+
+static VOID FrameEditFinish(INT_PTR iRslt)
+{
+    HWND hParentWnd;
+
+    hParentWnd = GetParent(gstFrameEdit.hDlg);
+
+    // 저장된 말풍선 목록이 바뀌었으면 메뉴와 삽입 창을 갱신한다.
+    if (hParentWnd && (IDYES == iRslt || gstFrameEdit.bFrameListChanged))
+    {
+        FrameNameModifyMenu(hParentWnd);
         FrameInsBoxSyncFrames();
     }
 
-    return iRslt;
+    gstFrameEdit.hDlg = nullptr;
+    gstFrameEdit.vcFrameInfo.clear();
+    gstFrameEdit.bNameModified = FALSE;
+    gstFrameEdit.bNameChanged = FALSE;
 }
-//-------------------------------------------------------------------------------------------------
 
-// 枠設定ダイヤログプロシージャ
+// 말풍선 편집 창 메시지를 처리한다.
 INT_PTR CALLBACK FrameEditDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -1002,6 +1047,16 @@ INT_PTR CALLBACK FrameEditDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
         return Frm_OnInitDialog(hDlg, (HWND)(wParam), lParam);
     case WM_COMMAND:
         return Frm_OnCommand(hDlg, (INT)(LOWORD(wParam)), (HWND)(lParam), (UINT)HIWORD(wParam));
+    case WM_CLOSE:
+        FrameEditClose(hDlg, IDCANCEL);
+        return (INT_PTR)TRUE;
+    case WM_DESTROY:
+        if (gstFrameEdit.hDlg == hDlg)
+        {
+            FrameEditSampleFree();
+            FrameEditFinish(IDCANCEL);
+        }
+        return (INT_PTR)TRUE;
     case WM_DRAWITEM:
         return Frm_OnDrawItem(hDlg, ((CONST LPDRAWITEMSTRUCT)(lParam)));
     case WM_NOTIFY:
@@ -1014,9 +1069,8 @@ INT_PTR CALLBACK FrameEditDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
     }
     return (INT_PTR)FALSE;
 }
-//-------------------------------------------------------------------------------------------------
 
-// ダイヤログ起動時の初期化
+// 말풍선 편집 창을 초기화한다.
 INT_PTR Frm_OnInitDialog(HWND hDlg, HWND hWndFocus, LPARAM lParam)
 {
     HWND hWorkWnd;
@@ -1028,7 +1082,6 @@ INT_PTR Frm_OnInitDialog(HWND hDlg, HWND hWndFocus, LPARAM lParam)
     gstFrameEdit.stOrigRect.top = 0;
     gstFrameEdit.stOrigRect.left = 0;
 
-    //    コンボックスに名前いれとく
     hWorkWnd = GetDlgItem(hDlg, IDCB_BOX_NAME_SEL);
 
     FrameCountRefresh();
@@ -1037,7 +1090,6 @@ INT_PTR Frm_OnInitDialog(HWND hDlg, HWND hWndFocus, LPARAM lParam)
 
     for (i = 0; gstFrameStorage.dFrameCount > i; i++)
     {
-        //    INIファイルから引っ張って、コンボックスに名前をいれちゃう
         ComboBox_AddString(hWorkWnd, gstFrameEdit.vcFrameInfo[i].atFrameName);
     }
 
@@ -1051,21 +1103,16 @@ INT_PTR Frm_OnInitDialog(HWND hDlg, HWND hWndFocus, LPARAM lParam)
 
     ComboBox_SetCurSel(hWorkWnd, gstFrameEdit.dNowSel);
 
-    //    パーツ情報をいれる
     FrameInfoDisp(hDlg);
 
-    //    初期状態で確保
     FrameEditSampleRefresh(hDlg);
 
     return (INT_PTR)TRUE;
 }
-//-------------------------------------------------------------------------------------------------
 
-// ダイヤログのCOMMANDメッセージの受け取り
+// 말풍선 편집 창의 명령 메시지를 처리한다.
 INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
 {
-    static BOOLEAN cbNameMod = FALSE; //    ダイヤログ終わり用の恒久的なもの
-    static BOOLEAN cbNameChg = FALSE; //    APPLY用
     UINT i;
     INT iRslt;
     HWND hCmboxWnd;
@@ -1080,8 +1127,7 @@ INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
 
     case IDCANCEL:
     case IDB_CANCEL:
-        FrameEditSampleFree();
-        EndDialog(hDlg, IDCANCEL);
+        FrameEditClose(hDlg, IDCANCEL);
         return (INT_PTR)TRUE;
 
     case IDB_APPLY:
@@ -1090,18 +1136,17 @@ INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
         for (i = 0; gstFrameStorage.dFrameCount > i; i++)
         {
             FrameRecordAccess(INIT_SAVE, i, &(gstFrameEdit.vcFrameInfo[i]));
-            if (cbNameChg)
+            if (gstFrameEdit.bNameChanged)
             {
-                ComboBox_DeleteString(hCmboxWnd, 0);                        // 先頭消して
-                ComboBox_AddString(hCmboxWnd, gstFrameEdit.vcFrameInfo[i].atFrameName); // 末尾に付け足す
+                ComboBox_DeleteString(hCmboxWnd, 0);
+                ComboBox_AddString(hCmboxWnd, gstFrameEdit.vcFrameInfo[i].atFrameName);
             }
         }
         ComboBox_SetCurSel(hCmboxWnd, gstFrameEdit.dNowSel);
-        cbNameChg = FALSE;
+        gstFrameEdit.bNameChanged = FALSE;
         if (IDB_OK == id)
         {
-            FrameEditSampleFree();
-            EndDialog(hDlg, cbNameMod ? IDYES : IDOK);
+            FrameEditClose(hDlg, gstFrameEdit.bNameModified ? IDYES : IDOK);
         }
         return (INT_PTR)TRUE;
 
@@ -1120,7 +1165,7 @@ INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
         return (INT_PTR)TRUE;
 
     case IDS_FRAME_IMAGE:
-        if (STN_DBLCLK == codeNotify) //    ダボークルックされた
+        if (STN_DBLCLK == codeNotify)
         {
             InvalidateRect(hWndCtl, nullptr, TRUE);
         }
@@ -1140,16 +1185,16 @@ INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
         FrameEditAppendNewRecord(hDlg);
         return (INT_PTR)TRUE;
 
-    case IDB_BOXP_NAME_APPLY: //    名称を変更した
+    case IDB_BOXP_NAME_APPLY:
         if (!(pstInfo))
             return (INT_PTR)TRUE;
         Edit_GetText(GetDlgItem(hDlg, IDE_BOXP_NAME_EDIT), pstInfo->atFrameName, MAX_STRING);
-        cbNameMod = TRUE;
-        cbNameChg = TRUE;
+        gstFrameEdit.bNameModified = TRUE;
+        gstFrameEdit.bNameChanged = TRUE;
         return (INT_PTR)TRUE;
 
     case IDCB_BOX_NAME_SEL:
-        if (CBN_SELCHANGE == codeNotify) //    選択が変更された
+        if (CBN_SELCHANGE == codeNotify)
         {
             gstFrameEdit.dNowSel = ComboBox_GetCurSel(hWndCtl);
             FrameInfoDisp(hDlg);
@@ -1163,9 +1208,8 @@ INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
 
     return (INT_PTR)FALSE;
 }
-//-------------------------------------------------------------------------------------------------
 
-// 各パーツが更新されたら
+// 각 말풍선 파츠가 변경되면 미리보기를 갱신한다.
 HRESULT FramePartsUpdate(HWND hDlg, HWND hWndCtl, LPFRAMEITEM pstItem)
 {
     TCHAR atBuffer[PARTS_CCH];
@@ -1176,25 +1220,22 @@ HRESULT FramePartsUpdate(HWND hDlg, HWND hWndCtl, LPFRAMEITEM pstItem)
         atBuffer[PARTS_CCH - 1] = 0;
         StringCchCopy(pstItem->atParts, PARTS_CCH, atBuffer);
     }
-    else //    文字がなかったら、全角空白にしちゃう
+    else
     {
         StringCchCopy(pstItem->atParts, PARTS_CCH, TEXT("　"));
     }
 
     pstItem->iLine = DocStringInfoCount(pstItem->atParts, 0, &(pstItem->dDot), nullptr);
 
-    //    ついでに再描画
     FrameEditSampleRefresh(hDlg);
     InvalidateRect(GetDlgItem(hDlg, IDS_FRAME_IMAGE), nullptr, TRUE);
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
-// ダイヤログのサイズ変更が完了する前に送られてくる
+// 말풍선 편집 창 최소 크기 설정
 INT_PTR Frm_OnWindowPosChanging(HWND hDlg, LPWINDOWPOS pstWpos)
 {
-    //    移動がなかったときは何もしないでおｋ
     if (SWP_NOSIZE & pstWpos->flags)
         return FALSE;
 
@@ -1205,9 +1246,8 @@ INT_PTR Frm_OnWindowPosChanging(HWND hDlg, LPWINDOWPOS pstWpos)
 
     return (INT_PTR)TRUE;
 }
-//-------------------------------------------------------------------------------------------------
 
-// ダイヤログがサイズ変更されたとき
+// 미리보기 영역 조정
 INT_PTR Frm_OnSize(HWND hDlg, UINT state, INT cx, INT cy)
 {
     HWND hSmpWnd;
@@ -1215,7 +1255,6 @@ INT_PTR Frm_OnSize(HWND hDlg, UINT state, INT cx, INT cy)
 
     hSmpWnd = GetDlgItem(hDlg, IDS_FRAME_IMAGE);
 
-    //    下半分に常に全開
     xx = cx - gstFrameEdit.stSamplePos.right;
     yy = cy - gstFrameEdit.stSamplePos.bottom;
 
@@ -1227,9 +1266,8 @@ INT_PTR Frm_OnSize(HWND hDlg, UINT state, INT cx, INT cy)
 
     return (INT_PTR)TRUE;
 }
-//-------------------------------------------------------------------------------------------------
 
-// オーナードローの処理・スタティックのアレ
+// 말풍선 미리보기 영역을 그린다.
 INT_PTR Frm_OnDrawItem(HWND hDlg, CONST LPDRAWITEMSTRUCT pstDrawItem)
 {
     if (IDS_FRAME_IMAGE != pstDrawItem->CtlID)
@@ -1239,20 +1277,17 @@ INT_PTR Frm_OnDrawItem(HWND hDlg, CONST LPDRAWITEMSTRUCT pstDrawItem)
 
     FillRect(pstDrawItem->hDC, &(pstDrawItem->rcItem), GetSysColorBrush(COLOR_WINDOW));
     SetBkMode(pstDrawItem->hDC, TRANSPARENT);
-    // ここから複数行処理すればいいか
 
     DrawText(pstDrawItem->hDC, gstFrameEdit.ptSample, -1, &(pstDrawItem->rcItem), DT_LEFT | DT_NOPREFIX | DT_NOCLIP | DT_WORDBREAK);
 
     return (INT_PTR)TRUE;
 }
-//-------------------------------------------------------------------------------------------------
 
 /*
 描画幅は決まっている。枠指定なら外から、範囲指定なら、文字列＋左右の幅がＭＡＸ幅
 
 左上パーツと右上パーツの幅を確認して、残りが上パーツ使う。使う個数は幅から算出
 占有行数が異なるなら、下側を合わせる。右側は途中で切る事も考慮
-
 
 床部分も処理は同じ。占有行数異なるなら、上側を合わせる。
 
@@ -1282,7 +1317,6 @@ UINT FrameMakeMultiSubLine(CONST BOOLEAN bEnable, LPFRAMEITEM pstItem, LPTSTR pt
 
     return 1;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 枠パーツの、天井と床の占有行数と、左柱のドット数を確保する
 INT FrameMultiSizeGet(LPFRAMEINFO pstInfo, PINT piUpLine, PINT piDnLine)
@@ -1309,7 +1343,6 @@ INT FrameMultiSizeGet(LPFRAMEINFO pstInfo, PINT piUpLine, PINT piDnLine)
 
     return pstInfo->stDaybreak.dDot;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 文字列を受けて、前パディングして、幅ぴったりになるようにパディングしたり切ったりする
 UINT StringWidthAdjust(CONST UINT iFwOffs, LPTSTR ptStr, CONST UINT_PTR cchSz, CONST INT iMaxDot)
@@ -1380,7 +1413,6 @@ UINT StringWidthAdjust(CONST UINT iFwOffs, LPTSTR ptStr, CONST UINT_PTR cchSz, C
 
     return iDot;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 外枠に合わせて、複数行枠を作る
 LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO pstInfo)
@@ -1518,7 +1550,6 @@ LPTSTR FrameMakeOutsideBoundary(CONST INT iWidth, CONST INT iHeight, LPFRAMEINFO
 
     return ptBufStr;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 内枠に合わせて、複数行枠を作る
 LPTSTR FrameMakeInsideBoundary(UINT dType, PINT piValue, LPFRAMEINFO pstInfo)
@@ -1651,7 +1682,6 @@ LPTSTR FrameMakeInsideBoundary(UINT dType, PINT piValue, LPFRAMEINFO pstInfo)
 
     return ptBufStr;
 }
-//-------------------------------------------------------------------------------------------------
 
 // ノーティファイメッセージの処理
 INT_PTR Frm_OnNotify(HWND hDlg, INT idFrom, LPNMHDR pstNmhdr)
@@ -1718,7 +1748,6 @@ INT_PTR Frm_OnNotify(HWND hDlg, INT idFrom, LPNMHDR pstNmhdr)
 
     return (INT_PTR)FALSE;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 지정한 프레임 JSON 레코드를 편집용 구조체로 로드하고 도트 정보를 계산한다.
 HRESULT FrameDataGet(UINT dNumber, LPFRAMEINFO pstFrame)
@@ -1728,7 +1757,6 @@ HRESULT FrameDataGet(UINT dNumber, LPFRAMEINFO pstFrame)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
 // エディットボックスに設定内容を入れる
 HRESULT FrameInfoDisp(HWND hDlg)
@@ -1763,7 +1791,6 @@ HRESULT FrameInfoDisp(HWND hDlg)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 枠を入れる
 HRESULT DocFrameInsert(INT dMode, INT dStyle)
@@ -1929,7 +1956,6 @@ HRESULT DocFrameInsert(INT dMode, INT dStyle)
     }
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 複数行Frameの、￥￥・￥ｎ・￥ｓ＜＝＞￥・0x0D0A・半角空白の相互変換
 VOID FrameDataTranslate(LPTSTR ptData, UINT bMode)
@@ -1999,7 +2025,6 @@ VOID FrameDataTranslate(LPTSTR ptData, UINT bMode)
 
     return;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 改行を含む文字列を受け取って、指定行の内容をバッファに入れる
 UINT FrameMultiSubstring(LPCTSTR ptSrc, CONST UINT dLine, LPTSTR ptDest, CONST UINT_PTR cchSz, CONST INT iUseDot)
@@ -2049,7 +2074,6 @@ UINT FrameMultiSubstring(LPCTSTR ptSrc, CONST UINT dLine, LPTSTR ptDest, CONST U
     iLnCnt++; //    ０インデックスなので１増やすのが正解
     return iLnCnt;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 挿入ウインドウについて
 
@@ -2083,7 +2107,6 @@ HWND FrameInsBoxCreate(HINSTANCE hInst, HWND hPrWnd)
 
     return gstFrameInsert.hWnd;
 }
-//-------------------------------------------------------------------------------------------------
 
 LRESULT CALLBACK gpfFrameTBProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -2103,7 +2126,6 @@ LRESULT CALLBACK gpfFrameTBProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
     return CallWindowProc(gstFrameInsert.pfOrigToolbarProc, hWnd, msg, wParam, lParam);
 }
-//-------------------------------------------------------------------------------------------------
 
 // フレームサイズを確保
 INT FrameInsBoxSizeGet(LPRECT pstRect)
@@ -2121,7 +2143,6 @@ INT FrameInsBoxSizeGet(LPRECT pstRect)
 
     return iTopOffset;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 挿入実行
 HRESULT FrameInsBoxDoInsert(HWND hWnd)
@@ -2156,7 +2177,6 @@ HRESULT FrameInsBoxDoInsert(HWND hWnd)
 
     return S_OK;
 }
-//-------------------------------------------------------------------------------------------------
 
 // ウインドウプロシージャ
 LRESULT CALLBACK FrameInsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -2180,7 +2200,6 @@ LRESULT CALLBACK FrameInsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
-//-------------------------------------------------------------------------------------------------
 
 // COMMANDメッセージの受け取り。ボタン押されたとかで発生
 VOID Fib_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
@@ -2231,7 +2250,6 @@ VOID Fib_OnCommand(HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify)
 
     return;
 }
-//-------------------------------------------------------------------------------------------------
 
 // キーダウンが発生・キーボードで移動用
 VOID Fib_OnKey(HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
@@ -2266,7 +2284,6 @@ VOID Fib_OnKey(HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
 
     return;
 }
-//-------------------------------------------------------------------------------------------------
 
 // PAINT。無効領域が出来たときに発生。背景の扱いに注意。背景を塗りつぶしてから、オブジェクトを描画
 VOID Fib_OnPaint(HWND hWnd)
@@ -2289,7 +2306,6 @@ VOID Fib_OnPaint(HWND hWnd)
 
     return;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 描画
 VOID FrameInsBoxFrmDraw(HDC hDC)
@@ -2372,9 +2388,6 @@ VOID FrameDrawItem(HDC hDC, INT iY, LPTSTR ptLine)
 
     return;
 }
-
-//-------------------------------------------------------------------------------------------------
-
 // ウインドウを閉じるときに発生。デバイスコンテキストとか確保した画面構造のメモリとかも終了。
 VOID Fib_OnDestroy(HWND hWnd)
 {
@@ -2386,7 +2399,6 @@ VOID Fib_OnDestroy(HWND hWnd)
 
     return;
 }
-//-------------------------------------------------------------------------------------------------
 
 // 動かされているときに発生・マウスでウインドウドラッグ中とか
 VOID Fib_OnMoving(HWND hWnd, LPRECT pstPos)
@@ -2398,14 +2410,12 @@ VOID Fib_OnMoving(HWND hWnd, LPRECT pstPos)
 
     return;
 }
-//-------------------------------------------------------------------------------------------------
 
 // ウィンドウのサイズ変更が完了する前に送られてくる
 BOOL Fib_OnWindowPosChanging(HWND hWnd, LPWINDOWPOS pstWpos)
 {
     return InsertUiSnapWindowYToViewLine(ghViewWnd, &(gstFrameInsert.stGeometry), pstWpos);
 }
-//-------------------------------------------------------------------------------------------------
 
 // ウィンドウのサイズ変更が完了したら送られてくる
 VOID Fib_OnWindowPosChanged(HWND hWnd, const LPWINDOWPOS pstWpos)
@@ -2434,7 +2444,6 @@ VOID Fib_OnWindowPosChanged(HWND hWnd, const LPWINDOWPOS pstWpos)
 
     return;
 }
-//-------------------------------------------------------------------------------------------------
 
 // ビューが移動した
 HRESULT FrameMoveFromView(HWND hWnd, UINT state)
@@ -2444,4 +2453,3 @@ HRESULT FrameMoveFromView(HWND hWnd, UINT state)
 
     return InsertUiMoveFromView(ghViewWnd, gstFrameInsert.hWnd, state, &(gstFrameInsert.stGeometry));
 }
-//-------------------------------------------------------------------------------------------------
