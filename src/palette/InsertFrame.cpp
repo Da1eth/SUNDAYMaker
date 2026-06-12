@@ -3,6 +3,7 @@
 #include "DocViewBridgeInternal.h"
 #include "UiText.h"
 #include "AppUiContextInternal.h"
+#include "AppModuleInternal.h"
 
 #define FRAMEINSERTBOX_CLASS TEXT("FRAMEINSBOX_CLASS")
 #define FIB_WIDTH 600
@@ -1124,6 +1125,13 @@ INT_PTR Frm_OnCommand(HWND hDlg, INT id, HWND hWndCtl, UINT codeNotify)
     {
     default:
         break;
+
+    case IDM_COPY:
+    case IDM_CUT:
+    case IDM_PASTE:
+    case IDM_UNDO:
+    case IDM_ALLSEL:
+        return AppModelessEditCommandForward(hDlg, id) ? (INT_PTR)TRUE : (INT_PTR)FALSE;
 
     case IDCANCEL:
     case IDB_CANCEL:

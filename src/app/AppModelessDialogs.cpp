@@ -62,6 +62,7 @@ VOID AppModelessDialogsDestroy(VOID)
 BOOLEAN AppModelessEditCommandForward(HWND hDlg, UINT id)
 {
     HWND hFocusWnd;
+    INT iTextLength;
     UINT uMessage;
 
     switch (id)
@@ -78,6 +79,9 @@ BOOLEAN AppModelessEditCommandForward(HWND hDlg, UINT id)
     case IDM_UNDO:
         uMessage = WM_UNDO;
         break;
+    case IDM_ALLSEL:
+        uMessage = 0;
+        break;
     default:
         return FALSE;
     }
@@ -86,6 +90,14 @@ BOOLEAN AppModelessEditCommandForward(HWND hDlg, UINT id)
     if (!(hFocusWnd) || !(IsChild(hDlg, hFocusWnd)))
         return FALSE;
 
-    SendMessage(hFocusWnd, uMessage, 0, 0);
+    if (IDM_ALLSEL == id)
+    {
+        iTextLength = GetWindowTextLength(hFocusWnd);
+        SendMessage(hFocusWnd, EM_SETSEL, 0, iTextLength);
+    }
+    else
+    {
+        SendMessage(hFocusWnd, uMessage, 0, 0);
+    }
     return TRUE;
 }
