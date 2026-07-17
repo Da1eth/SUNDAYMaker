@@ -21,6 +21,7 @@
 #define ORR_UI_LABEL_COLOUR_EDIT_OPEN      ORR_UI_TEXT("글씨 색상 설정")
 #define ORR_UI_LABEL_UNICODE_TOGGLE        ORR_UI_TEXT("유니코드 문자 사용")
 #define ORR_UI_LABEL_ACCELKEY_EDIT_DLG_OPEN ORR_UI_TEXT("단축키 설정")
+#define ORR_UI_LABEL_MNEMONICKEY_EDIT_DLG_OPEN ORR_UI_TEXT("니모닉 키 설정")
 #define ORR_UI_LABEL_ABOUT                 ORR_UI_TEXT("버전 정보")
 #define ORR_UI_LABEL_EXIT                  ORR_UI_TEXT("종료")
 
@@ -140,6 +141,7 @@
 #define ORR_UI_LABEL_POSITION_RESET        ORR_UI_TEXT("창 배치 리셋")
 #define ORR_UI_LABEL_OPEN_HIS_CLEAR        ORR_UI_TEXT("열어본 파일 기록 지우기")
 #define ORR_UI_LABEL_REBER_DORESET         ORR_UI_TEXT("툴바를 초기 상태로 되돌리기")
+#define ORR_UI_LABEL_LINE_BRUSH_TMPL_VIEW   ORR_UI_TEXT("팔레트 표시/숨김")
 
 #ifndef RC_INVOKED
 

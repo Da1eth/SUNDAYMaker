@@ -282,7 +282,7 @@ BOOLEAN AppFileTabHandleContextMenu(HWND hWnd, HWND hWndContext,
 
     hMenu = LoadMenu(stUiContext.hInstance, MAKEINTRESOURCE(IDM_MULTIFILE_POPUP));
     hSubMenu = GetSubMenu(hMenu, 0);
-    MenuMnemonicApply(hSubMenu);
+    MenuMnemonicApplyScoped(hSubMenu, MENU_MNEMONIC_DOCUMENT_TAB);
 
     stTcHitInfo.pt = stPos;
     ScreenToClient(AppFileTabHandleGet(), &(stTcHitInfo.pt));
@@ -296,7 +296,13 @@ BOOLEAN AppFileTabHandleContextMenu(HWND hWnd, HWND hWndContext,
 
     MultiFileTabSelectDocument(dNumber);
 
-    StringCchCat(atText, MAX_PATH, TEXT(" 파일 닫기(&Q)"));
+    StringCchCat(atText, MAX_PATH, TEXT(" 파일 닫기"));
+    {
+        TCHAR atMenuText[MAX_PATH];
+        MenuMnemonicTextBuild(atText, MENU_MNEMONIC_DOCUMENT_TAB,
+                              IDM_FILE_CLOSE, TEXT('Q'), atMenuText, MAX_PATH);
+        StringCchCopy(atText, MAX_PATH, atMenuText);
+    }
     StringCchLength(atText, MAX_PATH, &cchSize);
 
     ZeroMemory(&stMenuItemInfo, sizeof(MENUITEMINFO));

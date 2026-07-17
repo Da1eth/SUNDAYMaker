@@ -32,6 +32,7 @@
 #define IDD_ACCEL_KEY_DLG               235
 #define IDD_COLOUR_TAG_DLG              236
 #define IDD_GRADIENT_TAG_DLG            237
+#define IDD_MNEMONIC_KEY_DLG            238
 #define IDBMPQ_MAIN_TB_FIRST            301
 #define IDBMP_FILE_NEW                  301
 #define IDBMQ_FILE_NEW                  302
@@ -394,6 +395,7 @@
 #define IDM_TMPLT_GROUP_NEXT            32823
 #define IDM_MENUEDIT_DLG_OPEN           32825
 #define IDM_ACCELKEY_EDIT_DLG_OPEN      32826
+#define IDM_MNEMONICKEY_EDIT_DLG_OPEN   32828
 #define IDM_SQUARE_PASTE                32827
 #define IDM_REBER_DORESET               32851
 #define IDM_FIND_DLG_OPEN               32861
@@ -495,6 +497,17 @@
 #define IDM_DB_THUMB_DEMIBOLD           33036
 #define IDM_DB_THUMB_ULTRABOLD          33038
 #define IDM_PALETTE_EDIT_OPEN           33041
+#define IDC_MNEMONIC_TAB                1283
+#define IDLV_MNEMONIC_LIST              1284
+#define IDE_MNEMONIC_MAIN               1285
+#define IDE_MNEMONIC_CONTEXT            1286
+#define IDB_MNEMONIC_CLEAR_MAIN         1287
+#define IDB_MNEMONIC_CLEAR_CONTEXT      1288
+#define IDB_MNEMONIC_INIT               1289
+#define IDS_MNEMONIC_CONTEXT_LABEL      1290
+#define IDS_MNEMONIC_MAIN_LABEL         1291
+#define IDB_MNEMONIC_SET_MAIN           1292
+#define IDB_MNEMONIC_SET_CONTEXT        1293
 #define IDM_PLUGIN_ITEM_BASE            34000
 #define IDC_STATIC                      -1
 
@@ -503,9 +516,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        238
+#define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         33042
-#define _APS_NEXT_CONTROL_VALUE         1283
+#define _APS_NEXT_CONTROL_VALUE         1294
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

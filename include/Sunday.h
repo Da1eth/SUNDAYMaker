@@ -373,6 +373,7 @@ HRESULT        InitToolBarLayout( UINT, INT, LPREBARLAYOUTINFO );
 LPACCEL        AccelKeyTableGetAlloc( LPINT  );
 LPACCEL        AccelKeyTableLoadAlloc( LPINT );
 HRESULT        AccelKeyDlgOpen( HWND );
+HRESULT        MenuMnemonicDlgOpen( HWND );
 HACCEL        AccelKeyHandleGet( HINSTANCE  );
 
 HACCEL        AccelKeyTableCreate( LPACCEL, INT );

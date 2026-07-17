@@ -1,5 +1,6 @@
 #include "Sunday.h"
 #include "AppModuleInternal.h"
+#include "MenuMnemonic.h"
 
 namespace
 {
@@ -169,10 +170,18 @@ UINT AppTrayIconPopupMenuTrack(HWND hWnd)
         return 0;
     }
 
-    AppendMenu(hPopupMenu, MF_STRING, gbWindowHiddenToTray ? kTrayCommandRestore : kTrayCommandMinimise,
-               gbWindowHiddenToTray ? TEXT("창 복구") : TEXT("트레이로 최소화"));
+    TCHAR atMenuText[MAX_STRING];
+    MenuMnemonicTextBuild(
+        gbWindowHiddenToTray ? TEXT("창 복구") : TEXT("트레이로 최소화"),
+        MENU_MNEMONIC_OTHER, gbWindowHiddenToTray ? 60102 : 60101,
+        gbWindowHiddenToTray ? TEXT('R') : TEXT('M'), atMenuText, MAX_STRING);
+    AppendMenu(hPopupMenu, MF_STRING,
+               gbWindowHiddenToTray ? kTrayCommandRestore : kTrayCommandMinimise,
+               atMenuText);
     AppendMenu(hPopupMenu, MF_SEPARATOR, 0, nullptr);
-    AppendMenu(hPopupMenu, MF_STRING, kTrayCommandExit, TEXT("종료"));
+    MenuMnemonicTextBuild(TEXT("종료"), MENU_MNEMONIC_OTHER, 60103,
+                          TEXT('X'), atMenuText, MAX_STRING);
+    AppendMenu(hPopupMenu, MF_STRING, kTrayCommandExit, atMenuText);
 
     GetCursorPos(&stPoint);
     SetForegroundWindow(hWnd);

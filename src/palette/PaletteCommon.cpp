@@ -1,6 +1,7 @@
 #include "Palette.h"
 #include "AppLayoutInternal.h"
 #include "AppUiContextInternal.h"
+#include "MenuMnemonic.h"
 
 #define INSERT_PALETTE_CLASS TEXT("INSERT_PALETTE")
 #define LT_WIDTH 240
@@ -262,6 +263,7 @@ HRESULT DockingTabContextMenu(HWND hWnd, HWND hWndContext, LONG xPos, LONG yPos)
     else
         AppendMenu(hPopupMenu, MF_STRING, IDM_LINE_BRUSH_TMPL_VIEW, TEXT("팔레트 표시"));
 
+    MenuMnemonicApplyScoped(hPopupMenu, MENU_MNEMONIC_OTHER);
     TrackPopupMenu(hPopupMenu, 0, xPos, yPos, 0, hWnd, nullptr);
     DestroyMenu(hPopupMenu);
 

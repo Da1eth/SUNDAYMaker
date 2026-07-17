@@ -235,6 +235,10 @@ static BOOLEAN OperationHandleDialogCommands(HWND hWnd, INT id, HWND hWndCtl)
         AccelKeyDlgOpen(hWnd);
         return TRUE;
 
+    case IDM_MNEMONICKEY_EDIT_DLG_OPEN:
+        MenuMnemonicDlgOpen(hWnd);
+        return TRUE;
+
     case IDM_FIND_DLG_OPEN:
         FindDialogueOpen(stUiContext.hInstance, hWnd);
         return TRUE;

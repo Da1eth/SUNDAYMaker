@@ -1,4 +1,5 @@
 #include "AppModuleInternal.h"
+#include "MenuMnemonic.h"
 #include "UiText.h"
 
 static HWND ghRebarWnd;
@@ -519,6 +520,7 @@ LRESULT ToolBarOnContextMenu(HWND hWnd, HWND hWndContext, LONG xPos, LONG yPos)
 
     hPopupMenu = CreatePopupMenu();
     AppendMenu(hPopupMenu, MF_STRING, IDM_REBER_DORESET, UiTextGetLabel(IDM_REBER_DORESET));
+    MenuMnemonicApplyScoped(hPopupMenu, MENU_MNEMONIC_OTHER);
     TrackPopupMenu(hPopupMenu, 0, xPos, yPos, 0, hWnd, nullptr);
     DestroyMenu(hPopupMenu);
 

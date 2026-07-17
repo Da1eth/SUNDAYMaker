@@ -49,6 +49,7 @@ set(APP_SOURCES
     ${ORR_SRC_APP_DIR}/ContextCtrl.cpp
     ${ORR_SRC_APP_DIR}/ImageExport.cpp
     ${ORR_SRC_APP_DIR}/MenuMnemonic.cpp
+    ${ORR_SRC_APP_DIR}/MnemonicCtrl.cpp
     ${ORR_SRC_APP_DIR}/MenuPicker.cpp
     ${ORR_SRC_APP_DIR}/Sunday.cpp
     ${ORR_SRC_APP_DIR}/PageCtrl.cpp

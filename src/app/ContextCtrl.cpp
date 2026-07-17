@@ -315,7 +315,8 @@ VOID CntxEditBuild(VOID)
         ContextPopupAppendItem(gstContextMenuState.hPopupMenu, stItem);
     }
 
-    MenuMnemonicApply(gstContextMenuState.hPopupMenu);
+    MenuMnemonicApplyScoped(gstContextMenuState.hPopupMenu,
+                            MENU_MNEMONIC_EDITOR_CONTEXT);
 }
 
 HRESULT CntxEditDlgOpen(HWND hWnd)

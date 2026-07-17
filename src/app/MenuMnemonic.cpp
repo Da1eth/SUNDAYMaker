@@ -13,9 +13,22 @@ struct MnemonicEntry
 
 struct SubmenuMnemonicEntry
 {
+    UINT dItemId;
     LPCTSTR ptLabel;
     TCHAR cMnemonic;
 };
+
+constexpr UINT MNID_MAIN_FILE = 60001;
+constexpr UINT MNID_MAIN_EDIT = 60002;
+constexpr UINT MNID_MAIN_INSERT = 60003;
+constexpr UINT MNID_MAIN_TRANSFORM = 60004;
+constexpr UINT MNID_MAIN_VIEW = 60005;
+constexpr UINT MNID_OPEN_HISTORY = 60006;
+constexpr UINT MNID_UNISPACE = 60007;
+constexpr UINT MNID_COLOUR = 60008;
+constexpr UINT MNID_FRAME = 60009;
+constexpr UINT MNID_USER = 60010;
+constexpr UINT MNID_DOT_ADJUST = 60011;
 
 // 니모닉 테이블
 constexpr MnemonicEntry gstMnemonicTable[] = {
@@ -31,6 +44,7 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
     {IDM_MENUEDIT_DLG_OPEN, TEXT('E')},
     {IDM_COLOUR_EDIT_OPEN, TEXT('L')},
     {IDM_ACCELKEY_EDIT_DLG_OPEN, TEXT('K')},
+    {IDM_MNEMONICKEY_EDIT_DLG_OPEN, TEXT('V')},
     {IDM_ABOUT, TEXT('A')},
     {IDM_EXIT, TEXT('Q')},
 
@@ -120,11 +134,17 @@ constexpr MnemonicEntry gstMnemonicTable[] = {
 };
 
 constexpr SubmenuMnemonicEntry gstSubmenuMnemonicTable[] = {
-    {ORR_UI_LABEL_OPEN_HISTORY, TEXT('H')},
-    {ORR_UI_LABEL_MN_UNISPACE, TEXT('S')},
-    {ORR_UI_LABEL_MN_COLOUR_SEL, TEXT('C')},
-    {ORR_UI_LABEL_MN_INSFRAME_SEL, TEXT('F')},
-    {ORR_UI_LABEL_MN_USER_REFS, TEXT('U')},
+    {MNID_MAIN_FILE, TEXT("파일"), TEXT('F')},
+    {MNID_MAIN_EDIT, TEXT("편집"), TEXT('E')},
+    {MNID_MAIN_INSERT, TEXT("삽입"), TEXT('I')},
+    {MNID_MAIN_TRANSFORM, TEXT("변형"), TEXT('P')},
+    {MNID_MAIN_VIEW, TEXT("표시"), TEXT('N')},
+    {MNID_OPEN_HISTORY, ORR_UI_LABEL_OPEN_HISTORY, TEXT('H')},
+    {MNID_UNISPACE, ORR_UI_LABEL_MN_UNISPACE, TEXT('S')},
+    {MNID_COLOUR, ORR_UI_LABEL_MN_COLOUR_SEL, TEXT('C')},
+    {MNID_FRAME, ORR_UI_LABEL_MN_INSFRAME_SEL, TEXT('F')},
+    {MNID_USER, ORR_UI_LABEL_MN_USER_REFS, TEXT('U')},
+    {MNID_DOT_ADJUST, TEXT("도트 조정"), TEXT('A')},
 };
 
 constexpr INT giMnemonicCount =
@@ -134,7 +154,52 @@ constexpr INT giSubmenuMnemonicCount =
     static_cast<INT>(sizeof(gstSubmenuMnemonicTable) /
                      sizeof(gstSubmenuMnemonicTable[0]));
 
-TCHAR MnemonicCharGet(UINT dCommandId)
+LPCTSTR ScopeNameGet(MENU_MNEMONIC_SCOPE eScope)
+{
+    switch (eScope)
+    {
+    case MENU_MNEMONIC_MAIN: return TEXT("Main");
+    case MENU_MNEMONIC_EDITOR_CONTEXT: return TEXT("EditorContext");
+    case MENU_MNEMONIC_PAGE_LIST: return TEXT("PageList");
+    case MENU_MNEMONIC_LAYER_BOX: return TEXT("LayerBox");
+    case MENU_MNEMONIC_DOCUMENT_TAB: return TEXT("DocumentTab");
+    default: return TEXT("Other");
+    }
+}
+
+TCHAR MnemonicSettingGet(MENU_MNEMONIC_SCOPE eScope, UINT dCommandId,
+                         TCHAR cDefault)
+{
+    TCHAR atKey[48];
+    TCHAR atValue[8];
+    LPCTSTR ptPath = CntxIniPathGet();
+
+    if (!ptPath || !ptPath[0])
+        return cDefault;
+
+    StringCchPrintf(atKey, 48, TEXT("%s_%u"), ScopeNameGet(eScope), dCommandId);
+    GetPrivateProfileString(TEXT("Mnemonic"), atKey, TEXT(""), atValue, 8,
+                            ptPath);
+    if (!atValue[0])
+        return cDefault;
+    if (TEXT('-') == atValue[0])
+        return 0;
+    return (TCHAR)_totupper(atValue[0]);
+}
+
+void MnemonicSettingPut(MENU_MNEMONIC_SCOPE eScope, UINT dCommandId,
+                        TCHAR cMnemonic)
+{
+    TCHAR atKey[48];
+    TCHAR atValue[2] = {cMnemonic ? (TCHAR)_totupper(cMnemonic) : TEXT('-'), 0};
+    LPCTSTR ptPath = CntxIniPathGet();
+    if (!ptPath || !ptPath[0])
+        return;
+    StringCchPrintf(atKey, 48, TEXT("%s_%u"), ScopeNameGet(eScope), dCommandId);
+    WritePrivateProfileString(TEXT("Mnemonic"), atKey, atValue, ptPath);
+}
+
+TCHAR MnemonicDefaultCharGet(UINT dCommandId)
 {
     for (INT i = 0; giMnemonicCount > i; i++)
     {
@@ -144,7 +209,15 @@ TCHAR MnemonicCharGet(UINT dCommandId)
     return 0;
 }
 
-TCHAR SubmenuMnemonicCharGet(LPCTSTR ptText)
+TCHAR MnemonicCharGet(MENU_MNEMONIC_SCOPE eScope, UINT dCommandId)
+{
+    TCHAR cDefault = MnemonicDefaultCharGet(dCommandId);
+    if (MENU_MNEMONIC_DOCUMENT_TAB == eScope && IDM_FILE_CLOSE == dCommandId)
+        cDefault = TEXT('Q');
+    return MnemonicSettingGet(eScope, dCommandId, cDefault);
+}
+
+TCHAR SubmenuMnemonicCharGet(MENU_MNEMONIC_SCOPE eScope, LPCTSTR ptText)
 {
     if (!ptText)
         return 0;
@@ -152,7 +225,9 @@ TCHAR SubmenuMnemonicCharGet(LPCTSTR ptText)
     for (INT i = 0; giSubmenuMnemonicCount > i; i++)
     {
         if (0 == lstrcmp(ptText, gstSubmenuMnemonicTable[i].ptLabel))
-            return gstSubmenuMnemonicTable[i].cMnemonic;
+            return MnemonicSettingGet(eScope,
+                                      gstSubmenuMnemonicTable[i].dItemId,
+                                      gstSubmenuMnemonicTable[i].cMnemonic);
     }
 
     return 0;
@@ -171,10 +246,11 @@ BOOL TextAlreadyHasMnemonic(LPCTSTR ptText)
     return FALSE;
 }
 
-void MenuMnemonicApplyRecursive(HMENU hMenu)
+void MenuMnemonicApplyRecursive(HMENU hMenu, MENU_MNEMONIC_SCOPE eScope)
 {
     INT iCount = GetMenuItemCount(hMenu);
     TCHAR atText[MAX_STRING];
+    TCHAR atAccelerator[MAX_STRING];
     MENUITEMINFO stMii;
 
     for (INT i = 0; iCount > i; i++)
@@ -190,20 +266,39 @@ void MenuMnemonicApplyRecursive(HMENU hMenu)
 
         // 서브메뉴가 있으면 재귀
         if (stMii.hSubMenu)
-            MenuMnemonicApplyRecursive(stMii.hSubMenu);
+            MenuMnemonicApplyRecursive(stMii.hSubMenu, eScope);
 
         // 세퍼레이터는 건너뛰기
         if (stMii.fType & MFT_SEPARATOR)
             continue;
 
-        // 이미 니모닉이 있으면 건너뛰기
-        if (TextAlreadyHasMnemonic(atText))
+        // 메뉴의 단축키 표시는 "\tCtrl+..." 꼴로 니모닉 뒤에 붙는다.
+        // 니모닉만 교체할 수 있도록 잠시 분리했다가 마지막에 다시 붙인다.
+        atAccelerator[0] = 0;
+        LPTSTR ptAccelerator = StrChr(atText, TEXT('\t'));
+        if (ptAccelerator)
+        {
+            StringCchCopy(atAccelerator, MAX_STRING, ptAccelerator);
+            *ptAccelerator = 0;
+        }
+
+        // 다시 적용할 때 기존 "(&X)" 접미사를 제거한다.
+        BOOL bRemovedMnemonic = FALSE;
+        size_t cchText = lstrlen(atText);
+        if (4 <= cchText && TEXT('(') == atText[cchText - 4] &&
+            TEXT('&') == atText[cchText - 3] &&
+            TEXT(')') == atText[cchText - 1])
+        {
+            atText[cchText - 4] = 0;
+            bRemovedMnemonic = TRUE;
+        }
+        else if (TextAlreadyHasMnemonic(atText))
             continue;
 
-        TCHAR cMnemonic = MnemonicCharGet(stMii.wID);
+        TCHAR cMnemonic = MnemonicCharGet(eScope, stMii.wID);
         if (0 == cMnemonic && stMii.hSubMenu)
-            cMnemonic = SubmenuMnemonicCharGet(atText);
-        if (0 == cMnemonic)
+            cMnemonic = SubmenuMnemonicCharGet(eScope, atText);
+        if (0 == cMnemonic && !bRemovedMnemonic)
             continue;
 
         // "텍스트" → "텍스트(&X)" 형태로 변환
@@ -213,9 +308,13 @@ void MenuMnemonicApplyRecursive(HMENU hMenu)
         if (cchLen + 4 >= MAX_STRING)
             continue;
 
-        TCHAR atSuffix[8];
-        StringCchPrintf(atSuffix, 8, TEXT("(&%c)"), cMnemonic);
-        StringCchCat(atText, MAX_STRING, atSuffix);
+        if (cMnemonic)
+        {
+            TCHAR atSuffix[8];
+            StringCchPrintf(atSuffix, 8, TEXT("(&%c)"), cMnemonic);
+            StringCchCat(atText, MAX_STRING, atSuffix);
+        }
+        StringCchCat(atText, MAX_STRING, atAccelerator);
 
         stMii.fMask = MIIM_STRING;
         stMii.dwTypeData = atText;
@@ -228,5 +327,61 @@ void MenuMnemonicApply(HMENU hMenu)
 {
     if (!hMenu)
         return;
-    MenuMnemonicApplyRecursive(hMenu);
+    MenuMnemonicApplyRecursive(hMenu, MENU_MNEMONIC_MAIN);
+}
+
+void MenuMnemonicApplyScoped(HMENU hMenu, MENU_MNEMONIC_SCOPE eScope)
+{
+    if (!hMenu)
+        return;
+    MenuMnemonicApplyRecursive(hMenu, eScope);
+}
+
+TCHAR MenuMnemonicValueGet(MENU_MNEMONIC_SCOPE eScope, UINT dItemId,
+                           TCHAR cDefault)
+{
+    return MnemonicSettingGet(eScope, dItemId, cDefault);
+}
+
+void MenuMnemonicValueSet(MENU_MNEMONIC_SCOPE eScope, UINT dItemId,
+                          TCHAR cMnemonic)
+{
+    MnemonicSettingPut(eScope, dItemId, cMnemonic);
+}
+
+TCHAR MenuMnemonicDefaultGet(MENU_MNEMONIC_SCOPE eScope, UINT dItemId)
+{
+    if (MENU_MNEMONIC_OTHER == eScope)
+    {
+        if (60101 == dItemId) return TEXT('M');
+        if (60102 == dItemId) return TEXT('R');
+        if (60103 == dItemId) return TEXT('X');
+    }
+    TCHAR cDefault = MnemonicDefaultCharGet(dItemId);
+    for (INT i = 0; giSubmenuMnemonicCount > i; i++)
+    {
+        if (gstSubmenuMnemonicTable[i].dItemId == dItemId)
+        {
+            cDefault = gstSubmenuMnemonicTable[i].cMnemonic;
+            break;
+        }
+    }
+    if (MENU_MNEMONIC_DOCUMENT_TAB == eScope && IDM_FILE_CLOSE == dItemId)
+        return TEXT('Q');
+    return cDefault;
+}
+
+void MenuMnemonicTextBuild(LPCTSTR ptLabel, MENU_MNEMONIC_SCOPE eScope,
+                           UINT dItemId, TCHAR cDefault, LPTSTR ptText,
+                           size_t cchText)
+{
+    StringCchCopy(ptText, cchText, ptLabel ? ptLabel : TEXT(""));
+    const TCHAR cMnemonic =
+        MnemonicSettingGet(eScope, dItemId, cDefault);
+    if (cMnemonic)
+    {
+        TCHAR atSuffix[8];
+        StringCchPrintf(atSuffix, 8, TEXT("(&%c)"), cMnemonic);
+        StringCchCat(ptText, cchText, atSuffix);
+    }
 }
