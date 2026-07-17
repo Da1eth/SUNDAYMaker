@@ -3,6 +3,19 @@
 //-------------------------------------------------------------------------------------------------
 
 static BOOLEAN gbGroupUndo; // 真ならグループアンドゥをする
+static BOOLEAN gbDeferredUndoGroup;
+static UINT gdDeferredUndoBegin;
+static UINT gdDeferredUndoEnd;
+static LPUNDOBUFF gpDeferredUndoBuffer;
+
+struct DEFERRED_UNDO_GROUP
+{
+    LPUNDOBUFF pstBuffer;
+    UINT dBegin;
+    UINT dEnd;
+};
+
+static vector<DEFERRED_UNDO_GROUP> gvcDeferredUndoGroups;
 //-------------------------------------------------------------------------------------------------
 
 INT SqnUndoExec(LPUNDOBUFF, PINT, PINT);
@@ -41,6 +54,67 @@ HRESULT SqnSetting(VOID)
     gbGroupUndo = 1;
 
     return S_OK;
+}
+//-------------------------------------------------------------------------------------------------
+
+// TSF 등 하나의 논리 입력이 여러 문서 연산으로 구성될 때, 그 사이에
+// 기록되는 모든 연산을 동일한 undo group으로 묶는다.
+VOID DocUndoGroupBegin(VOID)
+{
+    if (!(gbDeferredUndoGroup))
+    {
+        auto &stUndo = DocCurrentPage().stUndoLog;
+        gbDeferredUndoGroup = TRUE;
+        // Redo 항목이 남아 있다면 첫 실제 편집에서 제거되므로 현재
+        // sequence 위치를 병합 시작점으로 사용한다.
+        gdDeferredUndoBegin = stUndo.dNowSqn;
+        gdDeferredUndoEnd = gdDeferredUndoBegin;
+        gpDeferredUndoBuffer = &stUndo;
+    }
+}
+//-------------------------------------------------------------------------------------------------
+
+VOID DocUndoGroupEnd(VOID)
+{
+    if (!(gbDeferredUndoGroup))
+    {
+        return;
+    }
+
+    if (gpDeferredUndoBuffer && gdDeferredUndoBegin < gdDeferredUndoEnd)
+    {
+        gvcDeferredUndoGroups.push_back(
+            {gpDeferredUndoBuffer, gdDeferredUndoBegin, gdDeferredUndoEnd});
+    }
+
+    gbDeferredUndoGroup = FALSE;
+    gdDeferredUndoBegin = 0;
+    gdDeferredUndoEnd = 0;
+    gpDeferredUndoBuffer = nullptr;
+}
+//-------------------------------------------------------------------------------------------------
+
+VOID DocUndoGroupFlush(VOID)
+{
+    for (const auto &stGroup : gvcDeferredUndoGroups)
+    {
+        if (!(stGroup.pstBuffer) ||
+            stGroup.dBegin >= stGroup.pstBuffer->vcOpeSqn.size())
+        {
+            continue;
+        }
+
+        const UINT dEnd =
+            min(stGroup.dEnd,
+                static_cast<UINT>(stGroup.pstBuffer->vcOpeSqn.size()));
+        const UINT dGroup =
+            stGroup.pstBuffer->vcOpeSqn[stGroup.dBegin].ixGroup;
+        for (UINT i = stGroup.dBegin; i < dEnd; ++i)
+        {
+            stGroup.pstBuffer->vcOpeSqn[i].ixGroup = dGroup;
+        }
+    }
+    gvcDeferredUndoGroups.clear();
 }
 //-------------------------------------------------------------------------------------------------
 
@@ -188,6 +262,10 @@ UINT SqnAppendSquare(LPUNDOBUFF pstBuff, UINT dCmd, LPCTSTR ptStr, LPPOINT pstPt
     }
 
     pstBuff->dNowSqn = pstBuff->vcOpeSqn.size();
+    if (gbDeferredUndoGroup && gpDeferredUndoBuffer == pstBuff)
+    {
+        gdDeferredUndoEnd = pstBuff->dNowSqn;
+    }
 
     DocModifyContent(TRUE);
 
@@ -230,6 +308,10 @@ UINT SqnAppendString(LPUNDOBUFF pstBuff, UINT dCmd, LPCTSTR ptStr, INT xDot, INT
     pstBuff->vcOpeSqn.push_back(stOpe);
 
     pstBuff->dNowSqn = pstBuff->vcOpeSqn.size();
+    if (gbDeferredUndoGroup && gpDeferredUndoBuffer == pstBuff)
+    {
+        gdDeferredUndoEnd = pstBuff->dNowSqn;
+    }
 
     DocModifyContent(TRUE);
 
