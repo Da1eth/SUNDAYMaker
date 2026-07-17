@@ -46,7 +46,7 @@ VOID EditChangeSetApply(const EDIT_CHANGESET &stChangeSet)
     switch (stChangeSet.dCaretKind)
     {
     case EDIT_CHANGESET_CARET_MOVE:
-        ViewDrawCaret(stChangeSet.dCaretXdot, stChangeSet.dCaretLine, TRUE);
+        ViewPosResetCaret(stChangeSet.dCaretXdot, stChangeSet.dCaretLine);
         break;
 
     default:

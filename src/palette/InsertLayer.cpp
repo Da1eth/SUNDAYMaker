@@ -423,7 +423,6 @@ static VOID LayerHandleInsertCommand(HWND hWnd, UINT id)
     INT iYln;
 
     LayerContentsImportable(hWnd, id, &iXpos, &iYln, 0);
-    DocViewResetCaret(iXpos, iYln);
     DocPageInfoRenew(-1, 1);
     EditChangeSetApply(stChangeSet);
     if (gstLayerState.bQuickClose)
