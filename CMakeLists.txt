@@ -47,6 +47,7 @@ set(APP_SOURCES
     ${ORR_SRC_APP_DIR}/AppTrayIcon.cpp
     ${ORR_SRC_APP_DIR}/CommonUtil.cpp
     ${ORR_SRC_APP_DIR}/ContextCtrl.cpp
+    ${ORR_SRC_APP_DIR}/CrashReporting.cpp
     ${ORR_SRC_APP_DIR}/ImageExport.cpp
     ${ORR_SRC_APP_DIR}/MenuMnemonic.cpp
     ${ORR_SRC_APP_DIR}/MnemonicCtrl.cpp
@@ -113,6 +114,7 @@ set(HEADERS
     ${ORR_INCLUDE_DIR}/AppCommandRegistry.h
     ${ORR_INCLUDE_DIR}/AppModuleInternal.h
     ${ORR_INCLUDE_DIR}/ChangeSet.h
+    ${ORR_INCLUDE_DIR}/CrashReporting.h
     ${ORR_INCLUDE_DIR}/EditorController.h
     ${ORR_INCLUDE_DIR}/InsertUi.h
     ${ORR_INCLUDE_DIR}/SettingsIniStore.h
@@ -195,6 +197,7 @@ target_link_libraries(Sunday PRIVATE
     shell32
     comdlg32
     comctl32
+    dbghelp
     imm32
     ole32
     shlwapi

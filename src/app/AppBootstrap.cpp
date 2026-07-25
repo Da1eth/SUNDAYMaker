@@ -1,6 +1,7 @@
 #include "Sunday.h"
 #include "Palette.h"
 #include "AppModuleInternal.h"
+#include "CrashReporting.h"
 #include "UiText.h"
 
 static HANDLE ghAppMutex;
@@ -45,6 +46,8 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     GetModuleFileName(hInstance, gatExePath, MAX_PATH);
     PathRemoveFileSpec(gatExePath);
+
+    CrashReportingInitialise(gatExePath);
 
     StringCchCopy(gatIniPath, MAX_PATH, gatExePath);
     PathAppend(gatIniPath, SETTINGS_INI_FILE);
@@ -95,7 +98,7 @@ INT APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     iCode = InitParamValue(INIT_LOAD, VL_CLASHCOVER, 0);
     if (iCode)
     {
-        iCode = MessageBox(nullptr, TEXT("프로그램이 비정상적으로 종료된 흔적이 있습니다.\r\n프로그램 기동 전에 백업 파일을 먼저 확인해주세요.\r\n「아니오」를 누르면 파일을 확인할 수 있도록 프로그램을 종료합니다."), TEXT("미안합니다"), MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+        iCode = MessageBox(nullptr, TEXT("프로그램이 비정상적으로 종료된 흔적이 있습니다.\r\n프로그램 기동 전에 백업 파일을 먼저 확인해주세요.\r\n크래시 정보는 실행 파일 옆의 CrashLogs 폴더에 저장됩니다.\r\n「아니오」를 누르면 파일을 확인할 수 있도록 프로그램을 종료합니다."), TEXT("미안합니다"), MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
         if (IDNO == iCode)
         {
             return 0;
