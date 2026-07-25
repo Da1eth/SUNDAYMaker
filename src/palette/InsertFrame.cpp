@@ -172,6 +172,7 @@ static HRESULT FrameRecordsLoad(VOID);
 static HRESULT FrameRecordsWrite(VOID);
 static HRESULT FrameRecordsEnsureDefault(VOID);
 static VOID FrameTextCopyToBuffer(LPTSTR, UINT_PTR, wstring_view);
+static VOID FramePartLineEndingsNormalize(LPTSTR);
 static VOID FrameRecordToFrameInfo(const JSON_FRAME_RECORD &, LPFRAMEINFO);
 static JSON_FRAME_RECORD FrameInfoToFrameRecord(const FRAMEINFO &);
 static JSON_FRAME_RECORD FrameCreateDefaultRecord(VOID);
@@ -215,6 +216,30 @@ static VOID FrameTextCopyToBuffer(LPTSTR ptDest, UINT_PTR cchDest, wstring_view 
 
     CopyMemory(ptDest, wsText.data(), cchCopy * sizeof(TCHAR));
     ptDest[cchCopy] = 0;
+}
+
+static VOID FramePartLineEndingsNormalize(LPTSTR ptText)
+{
+    UINT_PTR iRead;
+    UINT_PTR iWrite;
+
+    if (!(ptText))
+        return;
+
+    for (iRead = 0, iWrite = 0; ptText[iRead]; iRead++)
+    {
+        if (TEXT('\r') == ptText[iRead])
+        {
+            if (TEXT('\n') == ptText[iRead + 1])
+                iRead++;
+            ptText[iWrite++] = TEXT('\n');
+        }
+        else
+        {
+            ptText[iWrite++] = ptText[iRead];
+        }
+    }
+    ptText[iWrite] = 0;
 }
 
 static VOID FrameRecordToFrameInfo(const JSON_FRAME_RECORD &stRecord, LPFRAMEINFO pstInfo)
@@ -720,9 +745,9 @@ static LPTSTR FrameJoinLines(const vector<wstring> &vcLines, BOOLEAN bTrailingCr
         cchTotal += vcLines[i].size();
         if (0 < i)
             cchTotal += cchSep;
-        if (bTrailingCrLf)
-            cchTotal += cchSep;
     }
+    if (bTrailingCrLf && !(vcLines.empty()))
+        cchTotal += cchSep;
 
     ptBuffer = (LPTSTR)malloc(cchTotal * sizeof(TCHAR));
     if (!(ptBuffer))
@@ -734,9 +759,9 @@ static LPTSTR FrameJoinLines(const vector<wstring> &vcLines, BOOLEAN bTrailingCr
         if (0 < i)
             StringCchCat(ptBuffer, cchTotal, TEXT("\r\n"));
         StringCchCat(ptBuffer, cchTotal, vcLines[i].c_str());
-        if (bTrailingCrLf)
-            StringCchCat(ptBuffer, cchTotal, TEXT("\r\n"));
     }
+    if (bTrailingCrLf && !(vcLines.empty()))
+        StringCchCat(ptBuffer, cchTotal, TEXT("\r\n"));
 
     return ptBuffer;
 }
@@ -1226,6 +1251,7 @@ HRESULT FramePartsUpdate(HWND hDlg, HWND hWndCtl, LPFRAMEITEM pstItem)
     {
         Edit_GetText(hWndCtl, atBuffer, PARTS_CCH);
         atBuffer[PARTS_CCH - 1] = 0;
+        FramePartLineEndingsNormalize(atBuffer);
         StringCchCopy(pstItem->atParts, PARTS_CCH, atBuffer);
     }
     else
@@ -1987,7 +2013,6 @@ VOID FrameDataTranslate(LPTSTR ptData, UINT bMode)
                 i++; //    次の文字が重要
                 if ('n' == ptData[i])
                 {
-                    atBuffer[j++] = 0x000D;
                     atBuffer[j] = 0x000A;
                 }
                 else if ('s' == ptData[i])
@@ -2011,11 +2036,12 @@ VOID FrameDataTranslate(LPTSTR ptData, UINT bMode)
                 atBuffer[j++] = 0x005C;
                 atBuffer[j] = 0x005C; //    重ねる
             }
-            else if (0x000D == ptData[i]) //    改行はいった
+            else if (0x000D == ptData[i] || 0x000A == ptData[i]) //    改行はいった
             {
                 atBuffer[j++] = 0x005C;
                 atBuffer[j] = TEXT('n'); //    エスケープシーケンス
-                i++;                     //    次に進める
+                if (0x000D == ptData[i] && cchLen > (i + 1) && 0x000A == ptData[i + 1])
+                    i++;
             }
             else if (0x0020 == ptData[i]) //    半角空白はいった
             {
@@ -2050,9 +2076,10 @@ UINT FrameMultiSubstring(LPCTSTR ptSrc, CONST UINT dLine, LPTSTR ptDest, CONST U
     d = 0;
     for (c = 0; cchSrc > c; c++)
     {
-        if (0x000D == ptSrc[c]) //    かいぎょうはっけん
+        if (0x000D == ptSrc[c] || 0x000A == ptSrc[c]) //    かいぎょうはっけん
         {
-            c++;      //    0x0Aを飛ばす
+            if (0x000D == ptSrc[c] && cchSrc > (c + 1) && 0x000A == ptSrc[c + 1])
+                c++;
             iLnCnt++; //    フォーカス行数
         }
         else //    普通の文字

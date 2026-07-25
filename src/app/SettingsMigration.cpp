@@ -361,7 +361,7 @@ namespace
                 i++;
                 if (TEXT('n') == wsText[i])
                 {
-                    wsOut += TEXT("\r\n");
+                    wsOut.push_back(TEXT('\n'));
                 }
                 else if (TEXT('s') == wsText[i])
                 {

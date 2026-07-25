@@ -172,6 +172,97 @@ namespace
         return ordered_json(JsonWideToUtf8(wsText));
     }
 
+    wstring JsonNormalizeFramePartLineEndings(wstring_view wsText)
+    {
+        wstring wsNormalized;
+
+        wsNormalized.reserve(wsText.size());
+        for (size_t i = 0; wsText.size() > i; i++)
+        {
+            if (TEXT('\r') == wsText[i])
+            {
+                if (wsText.size() > (i + 1) && TEXT('\n') == wsText[i + 1])
+                    i++;
+                wsNormalized.push_back(TEXT('\n'));
+            }
+            else
+            {
+                wsNormalized.push_back(wsText[i]);
+            }
+        }
+
+        return wsNormalized;
+    }
+
+    BOOLEAN JsonReadOptionalFramePartField(const ordered_json &stObject, const char *pcKey, wstring *pText)
+    {
+        if (!(JsonReadOptionalWideStringField(stObject, pcKey, pText)))
+            return FALSE;
+
+        *pText = JsonNormalizeFramePartLineEndings(*pText);
+        return TRUE;
+    }
+
+    ordered_json JsonFramePartValue(wstring_view wsText)
+    {
+        return JsonWideStringValue(JsonNormalizeFramePartLineEndings(wsText));
+    }
+
+    BOOLEAN JsonNormalizeFrameDocumentLineEndings(ordered_json *pDocument)
+    {
+        ordered_json *pstFrames;
+        BOOLEAN bChanged = FALSE;
+
+        if (!(pDocument) || !(pDocument->is_object()))
+            return FALSE;
+
+        auto itFrames = pDocument->find("frames");
+        if (pDocument->end() == itFrames || !(itFrames->is_array()))
+            return FALSE;
+        pstFrames = &(*itFrames);
+
+        for (ordered_json &stFrame : *pstFrames)
+        {
+            if (!(stFrame.is_object()))
+                continue;
+
+            auto itParts = stFrame.find("parts");
+            if (stFrame.end() == itParts || !(itParts->is_object()))
+                continue;
+
+            for (auto &stPart : itParts->items())
+            {
+                string sText;
+                string sNormalized;
+
+                if (!(stPart.value().is_string()))
+                    continue;
+
+                sText = stPart.value().get<string>();
+                sNormalized.reserve(sText.size());
+                for (size_t i = 0; sText.size() > i; i++)
+                {
+                    if ('\r' == sText[i])
+                    {
+                        if (sText.size() > (i + 1) && '\n' == sText[i + 1])
+                            i++;
+                        sNormalized.push_back('\n');
+                        bChanged = TRUE;
+                    }
+                    else
+                    {
+                        sNormalized.push_back(sText[i]);
+                    }
+                }
+
+                if (sText != sNormalized)
+                    stPart.value() = std::move(sNormalized);
+            }
+        }
+
+        return bChanged;
+    }
+
     HRESULT JsonLoadFlipEntryArray(const ordered_json &stRoot, const char *pcKey, vector<JSON_FLIP_ENTRY> *pEntries)
     {
         const ordered_json *pstArray;
@@ -276,21 +367,21 @@ namespace
             {
                 if (!(pstParts->is_object()))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "daybreak", &(stRecord.wsDaybreak))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "daybreak", &(stRecord.wsDaybreak))))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "morning", &(stRecord.wsMorning))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "morning", &(stRecord.wsMorning))))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "noon", &(stRecord.wsNoon))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "noon", &(stRecord.wsNoon))))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "afternoon", &(stRecord.wsAfternoon))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "afternoon", &(stRecord.wsAfternoon))))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "nightfall", &(stRecord.wsNightfall))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "nightfall", &(stRecord.wsNightfall))))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "twilight", &(stRecord.wsTwilight))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "twilight", &(stRecord.wsTwilight))))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "midnight", &(stRecord.wsMidnight))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "midnight", &(stRecord.wsMidnight))))
                     return E_FAIL;
-                if (!(JsonReadOptionalWideStringField(*pstParts, "dawn", &(stRecord.wsDawn))))
+                if (!(JsonReadOptionalFramePartField(*pstParts, "dawn", &(stRecord.wsDawn))))
                     return E_FAIL;
             }
 
@@ -406,13 +497,22 @@ HRESULT AppWritePaletteGroups(LPCTSTR ptFilePath, const vector<JSON_TEMPLATE_GRO
 HRESULT AppLoadFrameRecords(LPCTSTR ptFilePath, vector<JSON_FRAME_RECORD> *pRecords)
 {
     ordered_json stRoot;
+    BOOLEAN bMigrated;
     HRESULT hRslt;
 
     hRslt = JsonReadDocument(ptFilePath, &stRoot);
     if (FAILED(hRslt))
         return hRslt;
 
-    return JsonLoadFrameRecordArray(stRoot, pRecords);
+    bMigrated = JsonNormalizeFrameDocumentLineEndings(&stRoot);
+    hRslt = JsonLoadFrameRecordArray(stRoot, pRecords);
+    if (FAILED(hRslt))
+        return hRslt;
+
+    if (bMigrated)
+        JsonWriteDocument(ptFilePath, stRoot);
+
+    return S_OK;
 }
 
 HRESULT AppWriteFrameRecords(LPCTSTR ptFilePath, const vector<JSON_FRAME_RECORD> &vcRecords)
@@ -428,14 +528,14 @@ HRESULT AppWriteFrameRecords(LPCTSTR ptFilePath, const vector<JSON_FRAME_RECORD>
 
         stItem["name"] = JsonWideStringValue(stRecord.wsName);
 
-        stParts["daybreak"] = JsonWideStringValue(stRecord.wsDaybreak);
-        stParts["morning"] = JsonWideStringValue(stRecord.wsMorning);
-        stParts["noon"] = JsonWideStringValue(stRecord.wsNoon);
-        stParts["afternoon"] = JsonWideStringValue(stRecord.wsAfternoon);
-        stParts["nightfall"] = JsonWideStringValue(stRecord.wsNightfall);
-        stParts["twilight"] = JsonWideStringValue(stRecord.wsTwilight);
-        stParts["midnight"] = JsonWideStringValue(stRecord.wsMidnight);
-        stParts["dawn"] = JsonWideStringValue(stRecord.wsDawn);
+        stParts["daybreak"] = JsonFramePartValue(stRecord.wsDaybreak);
+        stParts["morning"] = JsonFramePartValue(stRecord.wsMorning);
+        stParts["noon"] = JsonFramePartValue(stRecord.wsNoon);
+        stParts["afternoon"] = JsonFramePartValue(stRecord.wsAfternoon);
+        stParts["nightfall"] = JsonFramePartValue(stRecord.wsNightfall);
+        stParts["twilight"] = JsonFramePartValue(stRecord.wsTwilight);
+        stParts["midnight"] = JsonFramePartValue(stRecord.wsMidnight);
+        stParts["dawn"] = JsonFramePartValue(stRecord.wsDawn);
         stItem["parts"] = stParts;
 
         stOffset["left"] = stRecord.dLeftOffset;

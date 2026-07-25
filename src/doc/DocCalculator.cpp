@@ -544,7 +544,7 @@ INT DocStringInfoCount(LPCTSTR ptStr, UINT_PTR cchSize, PINT pMaxDot,
 
     for (d = 0, e = 0; cchSize >= d; d++) //    終端処理が必要
     {
-        if (cchSize <= d || 0x000D == ptStr[d])
+        if (cchSize <= d || TEXT('\r') == ptStr[d] || TEXT('\n') == ptStr[d])
         {
             iLine++; //    壱行
             iDot = ViewStringWidthGet(wsBuffer.c_str());
@@ -560,7 +560,8 @@ INT DocStringInfoCount(LPCTSTR ptStr, UINT_PTR cchSize, PINT pMaxDot,
             if (cchSize <= d)
                 break; //    終わりならここまで
 
-            d++; //    次の行の為に
+            if (TEXT('\r') == ptStr[d] && cchSize > (d + 1) && TEXT('\n') == ptStr[d + 1])
+                d++;
 
             e = 0;
             wsBuffer.clear();
