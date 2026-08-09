@@ -732,9 +732,6 @@ UINT        DocRangeDeleteByMozi( INT, INT, INT, INT, PBOOLEAN );
 
 INT            DocUndoExecute( PINT, PINT );
 INT            DocRedoExecute( PINT, PINT );
-VOID           DocUndoGroupBegin( VOID );
-VOID           DocUndoGroupEnd( VOID );
-VOID           DocUndoGroupFlush( VOID );
 
 LPARAM        DocFileInflate( LPTSTR );
 INT            DocFileCloseCheck( HWND );

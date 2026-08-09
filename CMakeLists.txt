@@ -98,7 +98,6 @@ set(VIEW_SOURCES
     ${ORR_SRC_VIEW_DIR}/ViewCentralRedraw.cpp
     ${ORR_SRC_VIEW_DIR}/ViewKeyButton.cpp
     ${ORR_SRC_VIEW_DIR}/ViewSelect.cpp
-    ${ORR_SRC_VIEW_DIR}/ViewTextStore.cpp
     ${ORR_SRC_VIEW_DIR}/ViewTrace.cpp
 )
 
@@ -126,7 +125,6 @@ set(HEADERS
     ${ORR_INCLUDE_DIR}/TextEncoding.h
     ${ORR_INCLUDE_DIR}/UiText.h
     ${ORR_INCLUDE_DIR}/ViewCentralInternal.h
-    ${ORR_INCLUDE_DIR}/ViewTextStore.h
 )
 
 # SQLite3 빌드
@@ -199,10 +197,8 @@ target_link_libraries(Sunday PRIVATE
     comctl32
     dbghelp
     imm32
-    ole32
     shlwapi
     sqlite3
-    uuid
 )
 
 if(MSVC)

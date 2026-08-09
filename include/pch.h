@@ -49,11 +49,8 @@
 #endif
 
 #include <imm.h>
-#include <msctf.h>
-#include <textstor.h>
 #ifdef _MSC_VER
 #pragma comment(lib, "imm32.lib")
-#pragma comment(lib, "msctf.lib")
 #endif
 
 #include "Sqlite3/sqlite3.h"

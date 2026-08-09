@@ -1,10 +1,8 @@
 #include "ViewCentralInternal.h"
-#include "ViewTextStore.h"
 #include "AppLayoutInternal.h"
 #include "Palette.h"
 
 #define EDIT_VIEW_CLASS TEXT("EDIT_VIEW")
-constexpr UINT WMP_TSF_FLUSH_PENDING_ACTIONS = WM_APP + 22;
 
 static LRESULT CALLBACK ViewWndProc(HWND, UINT, WPARAM, LPARAM);
 static BOOLEAN Evw_OnCreate(HWND, LPCREATESTRUCT);
@@ -276,11 +274,6 @@ HWND ViewInitialise(HINSTANCE hInstance, HWND hParentWnd, LPRECT pstFrame, LPTST
     caret.dLine = 0;
     ViewDrawCaret(caret.dXdot, caret.dLine, 1);
 
-    // The text store snapshots the active page during initialisation, so it
-    // must be created only after DocInitialise/DocActivateEmptyCreate and the
-    // editor caret are ready.
-    ViewTextStoreInitialise(ghViewWnd);
-
     gdXmemory = 0;
 
     ViewNowPosStatus();
@@ -471,6 +464,7 @@ static LRESULT CALLBACK ViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         HANDLE_MSG(hWnd, WM_HSCROLL, Evw_OnHScroll);
         HANDLE_MSG(hWnd, WM_KEYDOWN, Evw_OnKey);
         HANDLE_MSG(hWnd, WM_KEYUP, Evw_OnKey);
+        HANDLE_MSG(hWnd, WM_CHAR, Evw_OnChar);
         HANDLE_MSG(hWnd, WM_MOUSEMOVE, Evw_OnMouseMove);
         HANDLE_MSG(hWnd, WM_MOUSEWHEEL, Evw_OnMouseWheel);
         HANDLE_MSG(hWnd, WM_LBUTTONDOWN, Evw_OnLButtonDown);
@@ -480,18 +474,10 @@ static LRESULT CALLBACK ViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         HANDLE_MSG(hWnd, WM_CONTEXTMENU, Evw_OnContextMenu);
 
     case WM_SETFOCUS:
-        ViewTextStoreSetFocus(TRUE);
         ViewShowCaret();
         break;
 
-    case WM_CHAR:
-        Evw_OnChar(hWnd, static_cast<TCHAR>(wParam),
-                   static_cast<INT>(LOWORD(lParam)));
-        ViewTextStoreNotifyExternalChange();
-        return 0;
-
     case WM_KILLFOCUS:
-        ViewTextStoreSetFocus(FALSE);
         ViewHideCaret();
         break;
 
@@ -522,14 +508,8 @@ static LRESULT CALLBACK ViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         break;
 
     case WM_IME_COMPOSITION:
-        if (ViewTextStoreIsComposing())
-            return 0;
         Evw_OnImeComposition(hWnd, wParam, lParam);
         break;
-
-    case WMP_TSF_FLUSH_PENDING_ACTIONS:
-        ViewTextStoreFlushPendingActions();
-        return 0;
 
     default:
         break;
@@ -566,7 +546,6 @@ static VOID Evw_OnPaint(HWND hWnd)
 
 static VOID Evw_OnDestroy(HWND hWnd)
 {
-    ViewTextStoreDestroy();
     SetWindowFont(hWnd, GetStockFont(DEFAULT_GUI_FONT), FALSE);
     DeleteFont(ghRulerFont);
     DeleteFont(ghNumFont4L);
